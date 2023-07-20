@@ -1,4 +1,5 @@
-import LogicLayer from "./layer"
+import LogicLayer from "./layers/layer"
+import XPSChecker from "./utils/xps"
 
 export default class LogicCore {
     private cache: HTMLCanvasElement
@@ -12,6 +13,8 @@ export default class LogicCore {
     private layers: LogicLayer[] = []
 
     private dirty = true
+
+    private xps = new XPSChecker()
 
     constructor(stage?: HTMLCanvasElement) {
         this.cache = document.createElement('canvas')
@@ -28,17 +31,26 @@ export default class LogicCore {
     }
 
     public render() {
+        this.xps.start()
         const { width, height } = this
         if (this.dirty) {
             this.cacheCtx.clearRect(0, 0, width, height)
+            this.xps.check('clear')
             this.layers.forEach(layer => {
-                layer.onReloc(this.cacheCtx)
+                const rendered = layer.onReloc(this.cacheCtx)
+                if (rendered) {
+                    this.xps.check(layer.name)
+                }
             })
         }
         this.stageCtx.clearRect(0, 0, width, height)
         this.stageCtx.drawImage(this.cache, 0, 0)
+        this.xps.check('draw')
         this.layers.forEach(layer => {
-            layer.onPaint(this.stageCtx)
+            const rendered = layer.onPaint(this.stageCtx)
+            if (rendered) {
+                this.xps.check(layer.name)
+            }
         })
     }
 

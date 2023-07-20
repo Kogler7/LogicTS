@@ -5,11 +5,11 @@
 <script setup lang="ts">
 import { onMounted } from "vue"
 import LogicCore from "../logic/core"
-import LogicLayer from "../logic/layer"
+import LogicLayer from "../logic/layers/layer"
 
 class Layer extends LogicLayer {
-    constructor() {
-        super()
+    constructor(name: string) {
+        super(name)
     }
 
     public onReloc(ctx: CanvasRenderingContext2D): boolean {
@@ -30,10 +30,10 @@ class Layer extends LogicLayer {
 onMounted(() => {
     const scene = document.getElementById("scene") as HTMLCanvasElement
     const core = new LogicCore()
-    core.connect(scene)
-    const layer = new Layer()
+    const layer = new Layer('layer')
     core.mount(layer)
-    core.render()
+    core.connect(scene)
+    // core.render()
 })
 
-</script>
+</script>../logic/layers/layer
