@@ -48,7 +48,6 @@ export default class ScopedEventNotifier {
     }
 
     public fire(event: string, ...args: any[]): boolean {
-        console.log('event', event, 'fired.')
         for (const callback of this._callbacks) {
             const res = callback(...args)
             if (res === false) {

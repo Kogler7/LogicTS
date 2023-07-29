@@ -4,6 +4,7 @@ import EventHandler from "./handlers/event"
 import CursorHandler from "./handlers/cursor"
 import ScopedEventNotifier from "./notifiers/scoped"
 import StackedEventNotifier from "./notifiers/stacked"
+import { Rect } from "./common/types2D"
 
 export default class LogicCore {
     private _cache: HTMLCanvasElement
@@ -20,6 +21,7 @@ export default class LogicCore {
     private _dirty = true
 
     private _xps = new XPSChecker()
+    private _fps: string = ''
 
     private _scopedNotifier = new ScopedEventNotifier()
     private _stackedNotifier = new StackedEventNotifier()
@@ -64,6 +66,8 @@ export default class LogicCore {
                 this._xps.check(layer.name)
             }
         })
+        this._xps.check('FPS', '')
+        this._fps = this._xps.get('FPS')
     }
 
     public render() {
@@ -72,8 +76,8 @@ export default class LogicCore {
         }
         this._renderRequested = true
         window.requestAnimationFrame(() => {
-            this._renderRequested = false
             this._render()
+            this._renderRequested = false
         })
     }
 
@@ -176,5 +180,13 @@ export default class LogicCore {
 
     public reset() {
         console.log('reset')
+    }
+
+    public get fps(): string {
+        return this._fps
+    }
+
+    public get focusRect(): Rect | null {
+        return this._eventHandler.focusRect
     }
 }

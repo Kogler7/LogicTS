@@ -14,9 +14,9 @@ export default class EventHandler {
 
     private _targetEl: HTMLElement | null = null
 
-    private _lastPos: Point = new Point()
-    private _focusPos: Point = new Point()
-    private _focusRect: Rect | null = null
+    public lastPos: Point = new Point()
+    public focusPos: Point = new Point()
+    public focusRect: Rect | null = null
 
     private _altKey = false
     private _ctrlKey = false
@@ -34,7 +34,8 @@ export default class EventHandler {
 
     constructor(core: LogicCore) {
         this._core = core
-        console.log(this._core)
+        core.on('', true, () => { core.render() })
+        core.on('reloc', true, () => { core.rerender() })
     }
 
     public bind(el: HTMLElement) {
@@ -75,14 +76,14 @@ export default class EventHandler {
 
     private _onMouseDown(e: MouseEvent) {
         if (!this._core.emit('mousedown', e)) return
-        this._lastPos = new Point(e.offsetX, e.offsetY)
+        this.lastPos = new Point(e.offsetX, e.offsetY)
         // left button
         if (e.button === 0) {
             if (!this._core.emit('leftdown', e)) return
             this._framed = false
             this._framing = true
-            this._focusPos = this._lastPos
-            this._focusRect = null
+            this.focusPos = this.lastPos
+            this.focusRect = null
             this._core.fire('frame.begin', e)
         }
         // middle button
@@ -91,12 +92,12 @@ export default class EventHandler {
             this._sliding = !this._sliding
             if (this._sliding) {
                 this._core.setCursor('all-scroll')
-                this._core.fire('slide.begin', e, this._lastPos)
+                this._core.fire('slide.begin', e)
                 this._tryStartReloc()
             }
             else {
                 this._core.popCursor('all-scroll')
-                this._core.fire('slide.end', e, this._lastPos)
+                this._core.fire('slide.end', e)
                 this._tryEndReloc()
             }
         }
@@ -106,7 +107,7 @@ export default class EventHandler {
             if (this._sliding) return
             this._dragging = true
             this._core.setCursor('grabbing')
-            this._core.fire('drag.begin', e, this._lastPos)
+            this._core.fire('drag.begin', e)
             this._tryStartReloc()
         }
     }
@@ -121,13 +122,12 @@ export default class EventHandler {
         else if (this._framing) {
             this._framed = true
             const pos = new Point(e.offsetX, e.offsetY)
-            const rect = Rect.fromVertices(this._lastPos, pos)
-            this._focusRect = rect
+            const rect = Rect.fromVertices(this.lastPos, pos)
+            this.focusRect = rect
             this._core.fire('frame.ing', e, rect)
-        } else if (!this._framed) {
-            this._focusPos = new Point(e.offsetX, e.offsetY)
-            this._core.fire('hover', e, this._focusPos)
         }
+        this.focusPos = new Point(e.offsetX, e.offsetY)
+        this._core.fire('hover', e)
     }
 
     private _onMouseUp(e: MouseEvent) {
@@ -140,7 +140,7 @@ export default class EventHandler {
         }
         else if (this._framing) {
             this._framing = false
-            this._core.fire('frame.end', e, this._focusRect)
+            this._core.fire('frame.end', e)
         }
     }
 

@@ -20,16 +20,26 @@ class Layer extends LogicLayer {
     }
 
     public onReloc(ctx: CanvasRenderingContext2D): boolean {
-        ctx.fillStyle = "#000000"
-        ctx.fillRect(0, 0, 1000, 800)
+        ctx.strokeStyle = "#ff0000"
+        ctx.lineWidth = 10
+        ctx.strokeRect(0, 0, 1000, 800)
         return true
     }
 
     public onPaint(ctx: CanvasRenderingContext2D): boolean {
         // 绘制边框
-        ctx.strokeStyle = "#ff0000"
-        ctx.lineWidth = 10
-        ctx.strokeRect(0, 0, 1000, 800)
+        const rect = this.core?.focusRect
+        if (rect) {
+            ctx.fillStyle = "rgba(200, 200, 255, 0.1)"
+            ctx.fillRect(rect.left, rect.top, rect.width, rect.height)
+            ctx.strokeStyle = "rgba(200, 200, 255, 0.5)"
+            ctx.lineWidth = 1
+            ctx.strokeRect(rect.left, rect.top, rect.width, rect.height)
+        }
+        // 写一行字
+        ctx.font = "24px Arial"
+        ctx.fillStyle = "#ff0000"
+        ctx.fillText(this.core!.fps, 30, 50)
         return true
     }
 }
