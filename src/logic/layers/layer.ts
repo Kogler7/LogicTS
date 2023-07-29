@@ -1,7 +1,7 @@
 import LogicCore from '../core';
 
 export default class LogicLayer {
-    private core?: LogicCore
+    private _core?: LogicCore
     public name: string
 
     constructor(name: string = 'unnamed') {
@@ -9,7 +9,7 @@ export default class LogicLayer {
     }
 
     public onMount(core: LogicCore) {
-        this.core = core
+        this._core = core
     }
 
     public onReloc(ctx: CanvasRenderingContext2D): boolean {

@@ -1,70 +1,127 @@
 import LogicLayer from "./layers/layer"
 import XPSChecker from "./utils/xps"
+import EventHandler from "./handlers/event"
+import CursorHandler from "./handlers/cursor"
+import ScopedEventNotifier from "./notifiers/scoped"
+import StackedEventNotifier from "./notifiers/stacked"
 
 export default class LogicCore {
-    private cache: HTMLCanvasElement
-    private cacheCtx: CanvasRenderingContext2D
-    private stage: HTMLCanvasElement
-    private stageCtx: CanvasRenderingContext2D
+    private _cache: HTMLCanvasElement
+    private _cacheCtx: CanvasRenderingContext2D
+    private _stage: HTMLCanvasElement
+    private _stageCtx: CanvasRenderingContext2D
 
-    private width: number = 100
-    private height: number = 100
+    private _stageWidth: number = 100
+    private _stageHeight: number = 100
 
-    private layers: LogicLayer[] = []
+    private _layers: LogicLayer[] = []
 
-    private dirty = true
+    private _renderRequested = false
+    private _dirty = true
 
-    private xps = new XPSChecker()
+    private _xps = new XPSChecker()
+
+    private _scopedNotifier = new ScopedEventNotifier()
+    private _stackedNotifier = new StackedEventNotifier()
+    private _eventHandler = new EventHandler(this)
+    private _cursorHandler = new CursorHandler()
 
     constructor(stage?: HTMLCanvasElement) {
-        this.cache = document.createElement('canvas')
-        const cacheCtx = this.cache.getContext('2d')
+        this._cache = document.createElement('canvas')
+        const cacheCtx = this._cache.getContext('2d')
         if (!cacheCtx) {
             throw new Error('cache context is null')
         }
-        this.cacheCtx = cacheCtx
-        this.stage = this.cache
-        this.stageCtx = this.cacheCtx
+        this._cacheCtx = cacheCtx
+        this._stage = this._cache
+        this._stageCtx = this._cacheCtx
         if (stage) {
             this.connect(stage)
         }
     }
 
-    public render() {
-        this.xps.start()
-        const { width, height } = this
-        if (this.dirty) {
-            this.cacheCtx.clearRect(0, 0, width, height)
-            this.xps.check('clear')
-            this.layers.forEach(layer => {
-                const rendered = layer.onReloc(this.cacheCtx)
+    private _render() {
+        this._xps.start()
+        const { _stageWidth: width, _stageHeight: height } = this
+        if (this._dirty) {
+            this._cacheCtx.clearRect(0, 0, width, height)
+            this._xps.check('clear')
+            this._layers.forEach(layer => {
+                const rendered = layer.onReloc(this._cacheCtx)
                 if (rendered) {
-                    this.xps.check(layer.name)
+                    this._xps.check(layer.name)
                 }
             })
         }
-        this.stageCtx.clearRect(0, 0, width, height)
-        this.stageCtx.drawImage(this.cache, 0, 0)
-        this.xps.check('draw')
-        this.layers.forEach(layer => {
-            const rendered = layer.onPaint(this.stageCtx)
+        if (this._stage !== this._cache) {
+            this._stageCtx.clearRect(0, 0, width, height)
+            this._stageCtx.drawImage(this._cache, 0, 0)
+            this._xps.check('draw')
+        }
+        this._layers.forEach(layer => {
+            const rendered = layer.onPaint(this._stageCtx)
             if (rendered) {
-                this.xps.check(layer.name)
+                this._xps.check(layer.name)
             }
         })
     }
 
-    public forceReloc() {
-        this.dirty = true
+    public render() {
+        if (this._renderRequested) {
+            return
+        }
+        this._renderRequested = true
+        window.requestAnimationFrame(() => {
+            this._renderRequested = false
+            this._render()
+        })
+    }
+
+    public rerender() {
+        this._dirty = true
         this.render()
     }
 
     public markDirty() {
-        this.dirty = true
+        this._dirty = true
+    }
+
+    public on(event: string, callback: Function, level: number = 0, scoped: boolean = false) {
+        if (scoped) {
+            this._scopedNotifier.on(event, callback)
+        } else {
+            this._stackedNotifier.on(event, callback, level)
+        }
+    }
+
+    public off(event: string, callback: Function, scoped: boolean = false) {
+        if (scoped) {
+            this._scopedNotifier.off(event, callback)
+        } else {
+            this._stackedNotifier.off(event, callback)
+        }
+    }
+
+    // fire event to scoped listeners via scoped notifier
+    public fire(event: string, ...args: any[]): boolean {
+        return this._scopedNotifier.fire(event, ...args)
+    }
+
+    // emit event to stacked layers via stacked notifier
+    public emit(event: string, ...args: any[]): boolean {
+        return this._stackedNotifier.emit(event, ...args)
+    }
+
+    public setCursor(cursor: string) {
+        this._cursorHandler.set(cursor)
+    }
+
+    public popCursor(cursor: string) {
+        this._cursorHandler.pop(cursor)
     }
 
     public mount(layer: LogicLayer) {
-        this.layers.push(layer)
+        this._layers.push(layer)
     }
 
     public unmount() {
@@ -72,24 +129,32 @@ export default class LogicCore {
     }
 
     public connect(stage: HTMLCanvasElement) {
-        this.stage = stage
+        this._eventHandler.bind(stage)
+        this._cursorHandler.bind(stage)
+        this._stage = stage
         const stageCtx = stage.getContext('2d')
         if (!stageCtx) {
             throw new Error('stage context is null')
         }
-        this.stageCtx = stageCtx
+        this._stageCtx = stageCtx
         const { width, height } = stage
-        this.width = width
-        this.height = height
-        this.cache.width = width
-        this.cache.height = height
-        this.cacheCtx.clearRect(0, 0, width, height)
-        this.dirty = true
+        this._stageWidth = width
+        this._stageHeight = height
+        this._cache.width = width
+        this._cache.height = height
+        this._cacheCtx.clearRect(0, 0, width, height)
+        this._dirty = true
         this.render()
     }
 
     public disconnect() {
-        console.log('disconnect')
+        this._eventHandler.unbind()
+        this._stage = this._cache
+        this._stageCtx = this._cacheCtx
+        this._stageWidth = this._cache.width
+        this._stageHeight = this._cache.height
+        this._dirty = true
+        this.render()
     }
 
     public attach() {
