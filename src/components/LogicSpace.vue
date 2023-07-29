@@ -12,6 +12,13 @@ class Layer extends LogicLayer {
         super(name)
     }
 
+    public onMount() {
+        console.log("layer mounted")
+        this.core?.on("reloc", true, () => {
+            console.log("layer update")
+        })
+    }
+
     public onReloc(ctx: CanvasRenderingContext2D): boolean {
         ctx.fillStyle = "#000000"
         ctx.fillRect(0, 0, 1000, 800)

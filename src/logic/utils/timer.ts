@@ -4,7 +4,7 @@ export default class Timer {
     private _initial: number
     private _interval: number
 
-    constructor(callback: Function, initial: number = 5, interval: number = 2) {
+    constructor(callback: Function, initial: number = 24, interval: number = 16.7) {
         this._callback = callback
         this._initial = initial
         this._interval = interval

@@ -60,17 +60,17 @@ export default class EventHandler {
         }
     }
 
-    private _tryStartViewUpdate() {
+    private _tryStartReloc() {
         if (this._updating) return
         this._updating = true
-        this._core.fire('update.begin')
+        this._core.fire('reloc.begin')
     }
 
-    private _tryEndViewUpdate() {
+    private _tryEndReloc() {
         if (!this._updating) return
         if (this._zooming || this._sliding || this._dragging) return
         this._updating = false
-        this._core.fire('update.end')
+        this._core.fire('reloc.end')
     }
 
     private _onMouseDown(e: MouseEvent) {
@@ -92,12 +92,12 @@ export default class EventHandler {
             if (this._sliding) {
                 this._core.setCursor('all-scroll')
                 this._core.fire('slide.begin', e, this._lastPos)
-                this._tryStartViewUpdate()
+                this._tryStartReloc()
             }
             else {
                 this._core.popCursor('all-scroll')
                 this._core.fire('slide.end', e, this._lastPos)
-                this._tryEndViewUpdate()
+                this._tryEndReloc()
             }
         }
         // right button
@@ -107,7 +107,7 @@ export default class EventHandler {
             this._dragging = true
             this._core.setCursor('grabbing')
             this._core.fire('drag.begin', e, this._lastPos)
-            this._tryStartViewUpdate()
+            this._tryStartReloc()
         }
     }
 
@@ -115,14 +115,15 @@ export default class EventHandler {
         if (!this._core.emit('mousemove', e)) return
         if (this._sliding) return
         else if (this._dragging) {
-            this._core.fire('drag.move', e)
+            this._core.fire('drag.ing', e)
+            this._core.fire('reloc.ing', e)
         }
         else if (this._framing) {
             this._framed = true
             const pos = new Point(e.offsetX, e.offsetY)
             const rect = Rect.fromVertices(this._lastPos, pos)
             this._focusRect = rect
-            this._core.fire('frame.move', e, rect)
+            this._core.fire('frame.ing', e, rect)
         } else if (!this._framed) {
             this._focusPos = new Point(e.offsetX, e.offsetY)
             this._core.fire('hover', e, this._focusPos)
@@ -135,7 +136,7 @@ export default class EventHandler {
             this._dragging = false
             this._core.popCursor('grabbing')
             this._core.fire('drag.end', e)
-            this._tryEndViewUpdate()
+            this._tryEndReloc()
         }
         else if (this._framing) {
             this._framing = false
@@ -148,17 +149,18 @@ export default class EventHandler {
         if (this._sliding) return
         if (!this._zooming) {
             this._core.fire('zoom.begin', e)
-            this._tryStartViewUpdate()
+            this._tryStartReloc()
             this._countdownTimer = new Timer(() => {
                 this._zooming = false
                 this._core.fire('zoom.end', e)
-                this._tryEndViewUpdate()
+                this._tryEndReloc()
                 this._countdownTimer = null
             })
         }
         this._zooming = true
         this._countdownTimer?.reset()
-        this._core.fire('zoom.act', e)
+        this._core.fire('zoom.ing', e)
+        this._core.fire('reloc.ing', e)
     }
 
     private _onKeyDown(e: KeyboardEvent) {

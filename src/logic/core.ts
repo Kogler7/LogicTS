@@ -86,7 +86,7 @@ export default class LogicCore {
         this._dirty = true
     }
 
-    public on(event: string, callback: Function, level: number = 0, scoped: boolean = false) {
+    public on(event: string, scoped: boolean, callback: Function, level: number = 0) {
         if (scoped) {
             this._scopedNotifier.on(event, callback)
         } else {
@@ -94,7 +94,7 @@ export default class LogicCore {
         }
     }
 
-    public off(event: string, callback: Function, scoped: boolean = false) {
+    public off(event: string, scoped: boolean, callback: Function) {
         if (scoped) {
             this._scopedNotifier.off(event, callback)
         } else {
@@ -121,6 +121,7 @@ export default class LogicCore {
     }
 
     public mount(layer: LogicLayer) {
+        layer._onMount(this)
         this._layers.push(layer)
     }
 

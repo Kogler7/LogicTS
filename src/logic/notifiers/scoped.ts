@@ -11,15 +11,17 @@ export default class ScopedEventNotifier {
         let first: string
         if (idx < 0) {
             first = event
+            event = ''
         } else {
             first = event.substring(0, idx)
+            event = event.substring(idx + 1)
         }
-        let child = this._children.get(event)
+        let child = this._children.get(first)
         if (!child) {
             child = new ScopedEventNotifier()
-            this._children.set(event, child)
+            this._children.set(first, child)
         }
-        child.on(event.substring(idx + 1), callback)
+        child.on(event, callback)
     }
 
     public off(event: string, callback: Function) {
@@ -34,16 +36,19 @@ export default class ScopedEventNotifier {
         let first: string
         if (idx < 0) {
             first = event
+            event = ''
         } else {
             first = event.substring(0, idx)
+            event = event.substring(idx + 1)
         }
-        const child = this._children.get(event)
+        const child = this._children.get(first)
         if (child) {
-            child.off(event.substring(idx + 1), callback)
+            child.off(event, callback)
         }
     }
 
     public fire(event: string, ...args: any[]): boolean {
+        console.log('event', event, 'fired.')
         for (const callback of this._callbacks) {
             const res = callback(...args)
             if (res === false) {
@@ -54,12 +59,14 @@ export default class ScopedEventNotifier {
         let first: string
         if (idx < 0) {
             first = event
+            event = ''
         } else {
             first = event.substring(0, idx)
+            event = event.substring(idx + 1)
         }
-        const child = this._children.get(event)
+        const child = this._children.get(first)
         if (child) {
-            return child.fire(event.substring(idx + 1), ...args)
+            return child.fire(event, ...args)
         }
         return true
     }
