@@ -4,6 +4,7 @@ import Timer from "../utils/timer"
 
 export default class EventHandler {
     private _core: LogicCore
+    private _targetEl: HTMLElement | null = null
 
     private _framed = false
     private _framing = false
@@ -12,7 +13,7 @@ export default class EventHandler {
     private _dragging = false
     private _updating = false
 
-    private _targetEl: HTMLElement | null = null
+    private _frameStartPos: Point = new Point()
 
     public lastPos: Point = new Point()
     public focusPos: Point = new Point()
@@ -35,7 +36,7 @@ export default class EventHandler {
     constructor(core: LogicCore) {
         this._core = core
         core.on('', true, () => { core.render() })
-        core.on('reloc', true, () => { core.rerender() })
+        core.on('reloc', true, () => { core.renderAll() })
     }
 
     public bind(el: HTMLElement) {
@@ -76,13 +77,13 @@ export default class EventHandler {
 
     private _onMouseDown(e: MouseEvent) {
         if (!this._core.emit('mousedown', e)) return
-        this.lastPos = new Point(e.offsetX, e.offsetY)
+        this.focusPos = new Point(e.offsetX, e.offsetY)
         // left button
         if (e.button === 0) {
             if (!this._core.emit('leftdown', e)) return
             this._framed = false
             this._framing = true
-            this.focusPos = this.lastPos
+            this._frameStartPos = this.focusPos
             this.focusRect = null
             this._core.fire('frame.begin', e)
         }
@@ -110,10 +111,12 @@ export default class EventHandler {
             this._core.fire('drag.begin', e)
             this._tryStartReloc()
         }
+        this.lastPos = this.focusPos
     }
 
     private _onMouseMove(e: MouseEvent) {
         if (!this._core.emit('mousemove', e)) return
+        this.focusPos = new Point(e.offsetX, e.offsetY)
         if (this._sliding) return
         else if (this._dragging) {
             this._core.fire('drag.ing', e)
@@ -121,13 +124,12 @@ export default class EventHandler {
         }
         else if (this._framing) {
             this._framed = true
-            const pos = new Point(e.offsetX, e.offsetY)
-            const rect = Rect.fromVertices(this.lastPos, pos)
+            const rect = Rect.fromVertices(this._frameStartPos, this.focusPos)
             this.focusRect = rect
             this._core.fire('frame.ing', e, rect)
         }
-        this.focusPos = new Point(e.offsetX, e.offsetY)
         this._core.fire('hover', e)
+        this.lastPos = this.focusPos
     }
 
     private _onMouseUp(e: MouseEvent) {
@@ -140,6 +142,8 @@ export default class EventHandler {
         }
         else if (this._framing) {
             this._framing = false
+            this._framed = false
+            this.focusRect = null
             this._core.fire('frame.end', e)
         }
     }

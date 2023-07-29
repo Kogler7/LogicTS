@@ -18,7 +18,7 @@ export class Size implements Comparable, Hashable, Printable {
 		return new Size(0, 0)
 	}
 
-	public multiply(factor: number): Size {
+	public times(factor: number): Size {
 		return new Size(this.width * factor, this.height * factor)
 	}
 
@@ -70,6 +70,22 @@ export class Point implements Comparable, Hashable, Printable {
 		return this.x <= p.x && this.y <= p.y
 	}
 
+	public round(): Point {
+		return new Point(Math.round(this.x), Math.round(this.y))
+	}
+
+	public floor(): Point {
+		return new Point(Math.floor(this.x), Math.floor(this.y))
+	}
+
+	public ceil(): Point {
+		return new Point(Math.ceil(this.x), Math.ceil(this.y))
+	}
+
+	public decimal(): Point {
+		return new Point(this.x - Math.floor(this.x), this.y - Math.floor(this.y))
+	}
+
 	public plus(p: Point): Point {
 		return new Point(this.x + p.x, this.y + p.y)
 	}
@@ -78,12 +94,18 @@ export class Point implements Comparable, Hashable, Printable {
 		return new Point(this.x - p.x, this.y - p.y)
 	}
 
-	public multiply(factor: number): Point {
+	public times(factor: number): Point {
 		return new Point(this.x * factor, this.y * factor)
 	}
 
 	public divide(factor: number): Point {
 		return new Point(this.x / factor, this.y / factor)
+	}
+
+	public mod(factor: number): Point {
+		const x = this.x / factor
+		const y = this.y / factor
+		return new Point(this.x - Math.floor(x) * factor, this.y - Math.floor(y) * factor)
 	}
 
 	/**
@@ -285,6 +307,10 @@ export class Vector implements Comparable, Hashable, Printable {
 		return new Vector(0, 0)
 	}
 
+	static fromPoints(p1: Point, p2: Point): Vector {
+		return new Vector(p2.x - p1.x, p2.y - p1.y)
+	}
+
 	public plus(v: Vector): Vector {
 		return new Vector(this.vx + v.vx, this.vy + v.vy)
 	}
@@ -297,12 +323,12 @@ export class Vector implements Comparable, Hashable, Printable {
 		return new Vector(-this.vx, -this.vy)
 	}
 
-	public multiply(v: Vector): Vector {
-		return new Vector(this.vx * v.vx, this.vy * v.vy)
+	public times(v: number): Vector {
+		return new Vector(this.vx * v, this.vy * v)
 	}
 
-	public divide(v: Vector): Vector {
-		return new Vector(this.vx / v.vx, this.vy / v.vy)
+	public divide(v: number): Vector {
+		return new Vector(this.vx / v, this.vy / v)
 	}
 
 	public equals(v: Vector): boolean {
@@ -485,8 +511,8 @@ export class Rect implements Comparable, Hashable, Printable {
 		]
 	}
 
-	public multiply(factor: number): Rect {
-		return new Rect(this.pos.multiply(factor), this.size.multiply(factor))
+	public times(factor: number): Rect {
+		return new Rect(this.pos.times(factor), this.size.times(factor))
 	}
 
 	/**

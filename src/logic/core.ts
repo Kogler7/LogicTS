@@ -2,9 +2,10 @@ import LogicLayer from "./layers/layer"
 import XPSChecker from "./utils/xps"
 import EventHandler from "./handlers/event"
 import CursorHandler from "./handlers/cursor"
+import LayoutHandler from "./handlers/layout"
 import ScopedEventNotifier from "./notifiers/scoped"
 import StackedEventNotifier from "./notifiers/stacked"
-import { Rect } from "./common/types2D"
+import { Point, Rect } from "./common/types2D"
 
 export default class LogicCore {
     private _cache: HTMLCanvasElement
@@ -27,6 +28,7 @@ export default class LogicCore {
     private _stackedNotifier = new StackedEventNotifier()
     private _eventHandler = new EventHandler(this)
     private _cursorHandler = new CursorHandler()
+    private _layoutHandler = new LayoutHandler(this)
 
     constructor(stage?: HTMLCanvasElement) {
         this._cache = document.createElement('canvas')
@@ -54,6 +56,7 @@ export default class LogicCore {
                     this._xps.check(layer.name)
                 }
             })
+            this._dirty = false
         }
         if (this._stage !== this._cache) {
             this._stageCtx.clearRect(0, 0, width, height)
@@ -81,7 +84,7 @@ export default class LogicCore {
         })
     }
 
-    public rerender() {
+    public renderAll() {
         this._dirty = true
         this.render()
     }
@@ -136,6 +139,7 @@ export default class LogicCore {
     public connect(stage: HTMLCanvasElement) {
         this._eventHandler.bind(stage)
         this._cursorHandler.bind(stage)
+        this._layoutHandler.bind(stage)
         this._stage = stage
         const stageCtx = stage.getContext('2d')
         if (!stageCtx) {
@@ -154,6 +158,7 @@ export default class LogicCore {
 
     public disconnect() {
         this._eventHandler.unbind()
+        this._layoutHandler.unbind()
         this._stage = this._cache
         this._stageCtx = this._cacheCtx
         this._stageWidth = this._cache.width
@@ -182,11 +187,55 @@ export default class LogicCore {
         console.log('reset')
     }
 
+    public get stageWidth(): number {
+        return this._stageWidth
+    }
+
+    public get stageHeight(): number {
+        return this._stageHeight
+    }
+
     public get fps(): string {
         return this._fps
     }
 
+    public get loginOrigin(): Point {
+        return this._layoutHandler.logicOrigin
+    }
+
+    public get loginLength(): number {
+        return this._layoutHandler.logicLength
+    }
+
+    public get lastPos(): Point {
+        return this._eventHandler.lastPos
+    }
+
+    public get focusPos(): Point {
+        return this._eventHandler.focusPos
+    }
+
     public get focusRect(): Rect | null {
         return this._eventHandler.focusRect
+    }
+
+    public crd2pos(crd: Point): Point {
+        return this._layoutHandler.crd2pos(crd)
+    }
+
+    public pos2crd(pos: Point): Point {
+        return this._layoutHandler.pos2crd(pos)
+    }
+
+    public get zoomLevel(): number {
+        return this._layoutHandler.zoomLevel
+    }
+
+    public get levelUpFactor(): number {
+        return this._layoutHandler.levelUpFactor
+    }
+
+    public get gridWidth(): number {
+        return this._layoutHandler.gridWidth
     }
 }
