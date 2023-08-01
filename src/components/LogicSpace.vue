@@ -6,17 +6,9 @@
 import { onMounted } from "vue"
 import LogicCore from "../logic/core"
 import LogicLayer from "../logic/layers/layer"
-import { Rect } from "../logic/common/types2D"
+import { Point, Rect } from "../logic/common/types2D"
 
 class FrameLayer extends LogicLayer {
-    constructor(name: string) {
-        super(name)
-    }
-
-    public onMount() {
-        console.log("layer mounted")
-    }
-
     public onReloc(ctx: CanvasRenderingContext2D): boolean {
         ctx.strokeStyle = "#ff0000"
         ctx.lineWidth = 2
@@ -46,31 +38,21 @@ class FrameLayer extends LogicLayer {
 class MeshLayer extends LogicLayer {
     private _showBaseLines: boolean = true
 
-    constructor(name: string) {
-        super(name)
-    }
-
     public onMount() {
-        this.core?.on("drag.begin", true, () => {
-            this._showBaseLines = true
+        this.core?.on("reloc.begin", true, () => {
+            this._showBaseLines = false
         })
-        this.core?.on("drag.end", true, () => {
+        this.core?.on("reloc.end", true, () => {
             this._showBaseLines = true
         })
     }
 
     public onReloc(ctx: CanvasRenderingContext2D): boolean {
-        let rect = Rect.fromLTWH(10, 10, 4, 4)
-        rect = new Rect(this.core!.crd2pos(rect.pos), rect.size.times(this.core!.loginLength))
-        ctx.strokeStyle = "#ff0000"
-        ctx.lineWidth = 2
-        ctx.strokeRect(rect.left, rect.top, rect.width, rect.height)
+        const origin = new Point(0, 0)
         // draw mesh
-        const { loginOrigin: origin, stageWidth, stageHeight, gridWidth, levelUpFactor } = this.core!
-        console.log(gridWidth)
-        const startPos = this.core!.crd2pos(origin).mod(gridWidth)
-        // const originPos = this.core!.crd2pos(origin)
-        // const startPos = originPos.minus(originPos.divide(gridWidth).floor().times(gridWidth))
+        const { stageWidth, stageHeight, gridWidth, levelUpFactor } = this.core!
+        // console.log(gridWidth)
+        let startPos = this.core!.crd2pos(origin).mod(gridWidth)
         // draw base lines
         if (this._showBaseLines) {
             ctx.beginPath()
@@ -87,23 +69,65 @@ class MeshLayer extends LogicLayer {
             ctx.stroke()
         }
         // draw locating lines
-        // ctx.beginPath()
-        // ctx.strokeStyle = "rgba(200, 200, 200, 0.5)"
-        // ctx.lineWidth = 1
-        // const step = gridWidth * levelUpFactor
-        // for (let x = startPos.x; x < stageWidth; x += step) {
-        //     ctx.moveTo(x, 0)
-        //     ctx.lineTo(x, stageHeight)
-        // }
-        // for (let y = startPos.y; y < stageHeight; y += step) {
-        //     ctx.moveTo(0, y)
-        //     ctx.lineTo(stageWidth, y)
-        // }
-        // ctx.stroke()
+        ctx.beginPath()
+        ctx.strokeStyle = "rgba(200, 200, 200, 0.5)"
+        ctx.lineWidth = 1
+        const step = gridWidth * levelUpFactor
+        startPos = this.core!.crd2pos(origin).mod(step)
+        for (let x = startPos.x; x < stageWidth; x += step) {
+            ctx.moveTo(x, 0)
+            ctx.lineTo(x, stageHeight)
+        }
+        for (let y = startPos.y; y < stageHeight; y += step) {
+            ctx.moveTo(0, y)
+            ctx.lineTo(stageWidth, y)
+        }
+        ctx.stroke()
         return true
     }
+}
 
-    public onPaint(ctx: CanvasRenderingContext2D): boolean {
+class ScalarLayer extends LogicLayer {
+    private _plateWidth: number = 20
+
+    public onReloc(ctx: CanvasRenderingContext2D): boolean {
+        const topPlateRect = Rect.fromLTRB(
+            this._plateWidth,
+            0,
+            this.core!.stageWidth,
+            this._plateWidth
+        )
+        const leftPlateRect = Rect.fromLTRB(
+            0,
+            this._plateWidth,
+            this._plateWidth,
+            this.core!.stageHeight
+        )
+        ctx.lineWidth = 1
+        ctx.strokeStyle = "rgba(232, 232, 232, 1)"
+        ctx.beginPath()
+        ctx.moveTo(topPlateRect.left, topPlateRect.top)
+        ctx.lineTo(topPlateRect.left, topPlateRect.bottom)
+        ctx.lineTo(topPlateRect.right, topPlateRect.bottom)
+        ctx.lineTo(topPlateRect.right, topPlateRect.top)
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo(leftPlateRect.left, leftPlateRect.top)
+        ctx.lineTo(leftPlateRect.right, leftPlateRect.top)
+        ctx.lineTo(leftPlateRect.right, leftPlateRect.bottom)
+        ctx.lineTo(leftPlateRect.left, leftPlateRect.bottom)
+        ctx.stroke()
+        return true
+    }
+}
+
+class TestLayer extends LogicLayer {
+    public onReloc(ctx: CanvasRenderingContext2D): boolean {
+        const rect = Rect.fromLTWH(10, 10, 4, 4)
+        const rectPos = new Rect(this.core!.crd2pos(rect.pos), rect.size.times(this.core!.logicWidth))
+        ctx.strokeStyle = "#ff0000"
+        ctx.lineWidth = 2
+        ctx.strokeRect(rectPos.left, rectPos.top, rectPos.width, rectPos.height)
         return true
     }
 }
@@ -111,12 +135,16 @@ class MeshLayer extends LogicLayer {
 onMounted(() => {
     const scene = document.getElementById("scene") as HTMLCanvasElement
     const core = new LogicCore()
-    const frameLayer = new FrameLayer('layer')
-    const meshLayer = new MeshLayer('mesh')
+    const frameLayer = new FrameLayer('frame', 2)
+    const scalarLayer = new ScalarLayer('scalar', 3)
+    const meshLayer = new MeshLayer('mesh', -1)
+    const testLayer = new TestLayer('test', 1)
     core.mount(frameLayer)
+    core.mount(scalarLayer)
     core.mount(meshLayer)
+    core.mount(testLayer)
     core.connect(scene)
     // core.render()
 })
 
-</script>../logic/layers/layer
+</script>

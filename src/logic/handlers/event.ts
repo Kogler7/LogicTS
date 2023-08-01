@@ -10,7 +10,7 @@ export default class EventHandler {
     private _framing = false
     private _zooming = false
     private _sliding = false
-    private _dragging = false
+    private _panning = false
     private _updating = false
 
     private _frameStartPos: Point = new Point()
@@ -70,7 +70,7 @@ export default class EventHandler {
 
     private _tryEndReloc() {
         if (!this._updating) return
-        if (this._zooming || this._sliding || this._dragging) return
+        if (this._zooming || this._sliding || this._panning) return
         this._updating = false
         this._core.fire('reloc.end')
     }
@@ -106,9 +106,9 @@ export default class EventHandler {
         else if (e.button === 2) {
             if (!this._core.emit('rightdown', e)) return
             if (this._sliding) return
-            this._dragging = true
+            this._panning = true
             this._core.setCursor('grabbing')
-            this._core.fire('drag.begin', e)
+            this._core.fire('pan.begin', e)
             this._tryStartReloc()
         }
         this.lastPos = this.focusPos
@@ -118,8 +118,8 @@ export default class EventHandler {
         if (!this._core.emit('mousemove', e)) return
         this.focusPos = new Point(e.offsetX, e.offsetY)
         if (this._sliding) return
-        else if (this._dragging) {
-            this._core.fire('drag.ing', e)
+        else if (this._panning) {
+            this._core.fire('pan.ing', e)
             this._core.fire('reloc.ing', e)
         }
         else if (this._framing) {
@@ -134,10 +134,10 @@ export default class EventHandler {
 
     private _onMouseUp(e: MouseEvent) {
         if (!this._core.emit('mouseup', e)) return
-        if (this._dragging) {
-            this._dragging = false
+        if (this._panning) {
+            this._panning = false
             this._core.popCursor('grabbing')
-            this._core.fire('drag.end', e)
+            this._core.fire('pan.end', e)
             this._tryEndReloc()
         }
         else if (this._framing) {

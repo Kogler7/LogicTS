@@ -7,8 +7,10 @@ export default class LayoutHandler {
 
     private _cache: Map<HTMLElement, any> = new Map()
 
-    public logicOrigin: Point = new Point()
-    public logicLength: number = 25
+    public originBias: Point = new Point()
+    public logicWidth: number = 25
+    public logicWidthMin: number = 1
+    public logicWidthMax: number = 100
 
     public zoomStep: number = 0.1
     public zoomLevel: number = 0
@@ -17,11 +19,11 @@ export default class LayoutHandler {
     public gridWidthMin: number = 10
     public gridWidthMax: number = this.gridWidthMin * this.levelUpFactor
     public gridWidthFactor: number = this.levelUpFactor ** this.zoomLevel
-    public gridWidth: number = this.logicLength * this.gridWidthFactor
+    public gridWidth: number = this.logicWidth * this.gridWidthFactor
 
     constructor(core: LogicCore) {
         this._core = core
-        core.on('drag.ing', true, () => {
+        core.on('pan.ing', true, () => {
             const { lastPos, focusPos } = this._core
             this._translate(Vector.fromPoints(lastPos, focusPos))
         })
@@ -35,45 +37,55 @@ export default class LayoutHandler {
         this._targetEl = el
         const cachedData = this._cache.get(el)
         if (cachedData) {
-            this.logicOrigin = cachedData.logicOrigin
-            this.logicLength = cachedData.logicLength
+            this.originBias = cachedData.logicOrigin
+            this.logicWidth = cachedData.logicLength
         }
     }
 
     public unbind() {
         if (this._targetEl) {
             this._cache.set(this._targetEl, {
-                logicOrigin: this.logicOrigin,
-                logicLength: this.logicLength
+                logicOrigin: this.originBias,
+                logicLength: this.logicWidth
             })
         }
         this._targetEl = null
     }
 
     public crd2pos(crd: Point): Point {
-        const { logicOrigin: origin, logicLength: length } = this
+        const { originBias: origin, logicWidth: length } = this
         return crd.plus(origin).times(length)
     }
 
     public pos2crd(pos: Point): Point {
-        const { logicOrigin: origin, logicLength: length } = this
+        const { originBias: origin, logicWidth: length } = this
         return pos.divide(length).minus(origin)
     }
 
     private _translate(delta: Vector) {
-        this.logicOrigin = this.logicOrigin.shift(delta.divide(this.logicLength))
+        this.originBias = this.originBias.shift(delta.divide(this.logicWidth))
     }
 
     private _zoomAt(angle: number, center: Point) {
-        const { logicLength: length, logicOrigin: origin } = this
-        const factor = -this.zoomStep / 293.33 * 5
+        const { logicWidth: length, originBias: origin } = this
+        const factor = -this.zoomStep / 293.33 * 5 / this.gridWidthFactor
         const delta = angle * factor
-        const lastCtrCrd = this.pos2crd(center)
+        // prevent zoom out too much, in case of unexpected behavior
+        if (delta < 0 && length + delta <= this.logicWidthMin) {
+            console.warn('Zoom out too much, logicWidthMin reached.')
+            return
+        }
+        // prevent zoom in too much, in case of unexpected behavior
+        if (delta > 0 && length + delta >= this.logicWidthMax) {
+            console.warn('Zoom in too much, logicWidthMax reached.')
+            return
+        }
         // update logicLength and logicOrigin
-        this.logicLength = length + delta
+        const lastCtrCrd = this.pos2crd(center)
+        this.logicWidth = length + delta
         const newCtrCrd = this.pos2crd(center)
         const crdBias = Vector.fromPoints(lastCtrCrd, newCtrCrd)
-        this.logicOrigin = origin.shift(crdBias)
+        this.originBias = origin.shift(crdBias)
         // update grid related properties
         if (this.gridWidth < this.gridWidthMin) {
             if (this.zoomLevel < this.levelMax) {
@@ -86,6 +98,6 @@ export default class LayoutHandler {
             }
         }
         this.gridWidthFactor = this.levelUpFactor ** this.zoomLevel
-        this.gridWidth = this.logicLength * this.gridWidthFactor
+        this.gridWidth = this.logicWidth * this.gridWidthFactor
     }
 }

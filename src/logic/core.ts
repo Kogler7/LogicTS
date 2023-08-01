@@ -51,9 +51,11 @@ export default class LogicCore {
             this._cacheCtx.clearRect(0, 0, width, height)
             this._xps.check('clear')
             this._layers.forEach(layer => {
-                const rendered = layer.onReloc(this._cacheCtx)
-                if (rendered) {
-                    this._xps.check(layer.name)
+                if (layer.visible) {
+                    const rendered = layer.onReloc(this._cacheCtx)
+                    if (rendered) {
+                        this._xps.check(layer.name)
+                    }
                 }
             })
             this._dirty = false
@@ -64,9 +66,11 @@ export default class LogicCore {
             this._xps.check('draw')
         }
         this._layers.forEach(layer => {
-            const rendered = layer.onPaint(this._stageCtx)
-            if (rendered) {
-                this._xps.check(layer.name)
+            if (layer.visible) {
+                const rendered = layer.onPaint(this._stageCtx)
+                if (rendered) {
+                    this._xps.check(layer.name)
+                }
             }
         })
         this._xps.check('FPS', '')
@@ -130,10 +134,26 @@ export default class LogicCore {
     public mount(layer: LogicLayer) {
         layer._onMount(this)
         this._layers.push(layer)
+        this._layers.sort((a, b) => a.level - b.level)
+        // check name duplication without blocking
+        setTimeout(() => {
+            const names = this._layers.map(layer => layer.name)
+            const duplicates = names.filter((name, index) => names.indexOf(name) !== index)
+            if (duplicates.length > 0) {
+                throw new Error(`Duplicated layer names detected: ${duplicates.join(', ')}`)
+            }
+        })
     }
 
-    public unmount() {
-        console.log('unmount')
+    public unmount(name: string) {
+        for (let i = 0; i < this._layers.length; i++) {
+            if (this._layers[i].name === name) {
+                const layer = this._layers[i]
+                layer.onUnmount()
+                this._layers.splice(i, 1)
+                break
+            }
+        }
     }
 
     public connect(stage: HTMLCanvasElement) {
@@ -199,12 +219,12 @@ export default class LogicCore {
         return this._fps
     }
 
-    public get loginOrigin(): Point {
-        return this._layoutHandler.logicOrigin
+    public get originBias(): Point {
+        return this._layoutHandler.originBias
     }
 
-    public get loginLength(): number {
-        return this._layoutHandler.logicLength
+    public get logicWidth(): number {
+        return this._layoutHandler.logicWidth
     }
 
     public get lastPos(): Point {
