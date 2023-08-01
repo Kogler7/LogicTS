@@ -86,6 +86,11 @@ export class Point implements Comparable, Hashable, Printable {
 		return new Point(this.x - Math.floor(this.x), this.y - Math.floor(this.y))
 	}
 
+	// add 0.5 to avoid the point being rounded to the wrong position
+	public float(): Point {
+		return new Point(Math.round(this.x) + 0.5, Math.round(this.y) + 0.5)
+	}
+
 	public plus(p: Point): Point {
 		return new Point(this.x + p.x, this.y + p.y)
 	}
@@ -433,6 +438,13 @@ export class Rect implements Comparable, Hashable, Printable {
 	 */
 	public shift(v: Vector): Rect {
 		return new Rect(this.pos.shift(v), this.size.copy())
+	}
+
+	public float(): Rect {
+		const res = new Rect(this.pos.float(), this.size.copy())
+		res.right = Math.round(res.right) + 0.5
+		res.bottom = Math.round(res.bottom) + 0.5
+		return res
 	}
 
 	public scale(factor: number, center: Point): Rect {

@@ -18,7 +18,7 @@ class FrameLayer extends LogicLayer {
 
     public onPaint(ctx: CanvasRenderingContext2D): boolean {
         // 绘制边框
-        const rect = this.core?.focusRect
+        const rect = this.core?.focusRect?.float()
         if (rect) {
             ctx.fillStyle = "rgba(200, 200, 255, 0.1)"
             ctx.fillRect(rect.left, rect.top, rect.width, rect.height)
@@ -30,7 +30,7 @@ class FrameLayer extends LogicLayer {
         ctx.font = "16px Arial"
         ctx.fillStyle = "#ff0000"
         const text = `level: ${this.core!.zoomLevel}; ` + this.core!.fps
-        ctx.fillText(text, 20, 30)
+        ctx.fillText(text, 40, 50)
         return true
     }
 }
@@ -52,7 +52,7 @@ class MeshLayer extends LogicLayer {
         // draw mesh
         const { stageWidth, stageHeight, gridWidth, levelUpFactor } = this.core!
         // console.log(gridWidth)
-        let startPos = this.core!.crd2pos(origin).mod(gridWidth)
+        let startPos = this.core!.crd2pos(origin).mod(gridWidth).float()
         // draw base lines
         if (this._showBaseLines) {
             ctx.beginPath()
@@ -73,7 +73,7 @@ class MeshLayer extends LogicLayer {
         ctx.strokeStyle = "rgba(200, 200, 200, 0.5)"
         ctx.lineWidth = 1
         const step = gridWidth * levelUpFactor
-        startPos = this.core!.crd2pos(origin).mod(step)
+        startPos = this.core!.crd2pos(origin).mod(step).float()
         for (let x = startPos.x; x < stageWidth; x += step) {
             ctx.moveTo(x, 0)
             ctx.lineTo(x, stageHeight)
@@ -124,9 +124,9 @@ class ScalarLayer extends LogicLayer {
 class TestLayer extends LogicLayer {
     public onReloc(ctx: CanvasRenderingContext2D): boolean {
         const rect = Rect.fromLTWH(10, 10, 4, 4)
-        const rectPos = new Rect(this.core!.crd2pos(rect.pos), rect.size.times(this.core!.logicWidth))
+        const rectPos = new Rect(this.core!.crd2pos(rect.pos), rect.size.times(this.core!.logicWidth)).float()
         ctx.strokeStyle = "#ff0000"
-        ctx.lineWidth = 2
+        ctx.lineWidth = 3
         ctx.strokeRect(rectPos.left, rectPos.top, rectPos.width, rectPos.height)
         return true
     }
@@ -144,6 +144,7 @@ onMounted(() => {
     core.mount(meshLayer)
     core.mount(testLayer)
     core.connect(scene)
+    console.log(core)
     // core.render()
 })
 

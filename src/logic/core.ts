@@ -8,6 +8,7 @@ import StackedEventNotifier from "./notifiers/stacked"
 import { Point, Rect } from "./common/types2D"
 
 export default class LogicCore {
+    private _dpr: number = window.devicePixelRatio || 1
     private _cache: HTMLCanvasElement
     private _cacheCtx: CanvasRenderingContext2D
     private _stage: HTMLCanvasElement
@@ -166,12 +167,15 @@ export default class LogicCore {
             throw new Error('stage context is null')
         }
         this._stageCtx = stageCtx
-        const { width, height } = stage
-        this._stageWidth = width
-        this._stageHeight = height
-        this._cache.width = width
-        this._cache.height = height
-        this._cacheCtx.clearRect(0, 0, width, height)
+        // configure stage size, with dpr considered
+        const { width: cssWidth, height: cssHeight } = stage.getBoundingClientRect()
+        stage.style.width = `${cssWidth}px`
+        stage.style.height = `${cssHeight}px`
+        this._stageWidth = cssWidth * this._dpr
+        this._stageHeight = cssHeight * this._dpr
+        this._cache.width = this._stageWidth
+        this._cache.height = this._stageHeight
+        this._cacheCtx.clearRect(0, 0, this._stageWidth, this._stageHeight)
         this._dirty = true
         this.render()
     }

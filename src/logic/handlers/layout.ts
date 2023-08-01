@@ -8,24 +8,24 @@ export default class LayoutHandler {
     private _cache: Map<HTMLElement, any> = new Map()
 
     public originBias: Point = new Point()
-    public logicWidth: number = 25
-    public logicWidthMin: number = 1
-    public logicWidthMax: number = 100
+    public logicWidth: number = 25 // 25 pixels per logic unit by default
+    public logicWidthMin: number = 1 // 1 pixel per logic unit at least
+    public logicWidthMax: number = 100 // 100 pixels per logic unit at most
 
-    public zoomStep: number = 0.1
-    public zoomLevel: number = 0
-    public levelMax: number = 2
-    public levelUpFactor: number = 4
-    public gridWidthMin: number = 10
-    public gridWidthMax: number = this.gridWidthMin * this.levelUpFactor
-    public gridWidthFactor: number = this.levelUpFactor ** this.zoomLevel
-    public gridWidth: number = this.logicWidth * this.gridWidthFactor
+    public zoomSpeed: number = 0.5 // logic unit per wheel event (deltaY)
+    public zoomLevel: number = 0 // current zoom level, 0 by default
+    public levelMax: number = 2 // 2 levels at most
+    public levelUpFactor: number = 4 // four times bigger each level
+    public gridWidthMin: number = 10 // pixels per grid at least
+    public gridWidthMax: number = this.gridWidthMin * this.levelUpFactor // pixels per grid at most
+    public gridWidthFactor: number = this.levelUpFactor ** this.zoomLevel // 1, 4, 16...
+    public gridWidth: number = this.logicWidth * this.gridWidthFactor // pixels per grid (logic unit)
 
     constructor(core: LogicCore) {
         this._core = core
         core.on('pan.ing', true, () => {
             const { lastPos, focusPos } = this._core
-            this._translate(Vector.fromPoints(lastPos, focusPos))
+            this._panTo(Vector.fromPoints(lastPos, focusPos))
         })
         core.on('zoom.ing', true, (e: WheelEvent) => {
             const { focusPos } = this._core
@@ -62,13 +62,14 @@ export default class LayoutHandler {
         return pos.divide(length).minus(origin)
     }
 
-    private _translate(delta: Vector) {
+    private _panTo(delta: Vector) {
         this.originBias = this.originBias.shift(delta.divide(this.logicWidth))
     }
 
     private _zoomAt(angle: number, center: Point) {
         const { logicWidth: length, originBias: origin } = this
-        const factor = -this.zoomStep / 293.33 * 5 / this.gridWidthFactor
+        const angle2zoomUnit = 1 / 293.33 // zoom unit per wheel event (deltaY)
+        const factor = - this.zoomSpeed * angle2zoomUnit / this.gridWidthFactor
         const delta = angle * factor
         // prevent zoom out too much, in case of unexpected behavior
         if (delta < 0 && length + delta <= this.logicWidthMin) {
