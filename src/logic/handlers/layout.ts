@@ -1,5 +1,6 @@
 import { Point, Vector } from "../common/types2D"
 import LogicCore from "../core"
+import { Animation, BezierCurves } from "../utils/anime"
 
 export default class LayoutHandler {
     private _core: LogicCore
@@ -21,6 +22,9 @@ export default class LayoutHandler {
     public gridWidthFactor: number = this.levelUpFactor ** this.zoomLevel // 1, 4, 16...
     public gridWidth: number = this.logicWidth * this.gridWidthFactor // pixels per grid (logic unit)
 
+    private _sliding = false
+    private _slideVector: Vector = new Vector()
+
     constructor(core: LogicCore) {
         this._core = core
         core.on('pan.ing', true, () => {
@@ -30,6 +34,37 @@ export default class LayoutHandler {
         core.on('zoom.ing', true, (e: WheelEvent) => {
             const { focusPos } = this._core
             this._zoomAt(e.deltaY, focusPos)
+        })
+        core.on('slide.ing', true, () => {
+            const vec = Vector.fromPoints(
+                this._core.focusPos,
+                this._core.anchorPos
+            ).divide(this.logicWidth * 30)
+            this._slideVector = vec
+        })
+        core.on('slide.begin', true, () => {
+            this._sliding = true
+            this._slideVector = new Vector()
+            this._trySlide()
+        })
+        core.on('slide.end', true, () => {
+            this._sliding = false
+            this._slideVector = new Vector()
+        })
+        // double click middle button to reset originBias
+        core.on('doubleclick.middle', true, () => {
+            const bias = this.originBias.copy()
+            const anime = new Animation(
+                (value: number) => {
+                    this.originBias = bias.times(1 - value)
+                    this._core.renderAll()
+                },
+                300,
+                BezierCurves.easeInOut,
+                () => { this._core.fire('reloc.begin') },
+                () => { this._core.fire('reloc.end') }
+            )
+            anime.start()
         })
     }
 
@@ -100,5 +135,14 @@ export default class LayoutHandler {
         }
         this.gridWidthFactor = this.levelUpFactor ** this.zoomLevel
         this.gridWidth = this.logicWidth * this.gridWidthFactor
+    }
+
+    private _trySlide() {
+        if (!this._sliding) {
+            return
+        }
+        this.originBias = this.originBias.shift(this._slideVector)
+        this._core.renderAll() // force render
+        requestAnimationFrame(this._trySlide.bind(this))
     }
 }

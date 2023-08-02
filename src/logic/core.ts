@@ -125,11 +125,11 @@ export default class LogicCore {
     }
 
     public setCursor(cursor: string) {
-        this._cursorHandler.set(cursor)
+        this._cursorHandler.push(cursor)
     }
 
     public popCursor(cursor: string) {
-        this._cursorHandler.pop(cursor)
+        this._cursorHandler.recall(cursor)
     }
 
     public mount(layer: LogicLayer) {
@@ -175,6 +175,8 @@ export default class LogicCore {
         this._stageHeight = cssHeight * this._dpr
         this._cache.width = this._stageWidth
         this._cache.height = this._stageHeight
+        // this._stageCtx.scale(this._dpr, this._dpr)
+        // this._cacheCtx.scale(this._dpr, this._dpr)
         this._cacheCtx.clearRect(0, 0, this._stageWidth, this._stageHeight)
         this._dirty = true
         this.render()
@@ -233,6 +235,10 @@ export default class LogicCore {
 
     public get lastPos(): Point {
         return this._eventHandler.lastPos
+    }
+
+    public get anchorPos(): Point {
+        return this._eventHandler.anchorPos
     }
 
     public get focusPos(): Point {

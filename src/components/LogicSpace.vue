@@ -91,32 +91,20 @@ class ScalarLayer extends LogicLayer {
     private _plateWidth: number = 20
 
     public onReloc(ctx: CanvasRenderingContext2D): boolean {
-        const topPlateRect = Rect.fromLTRB(
-            this._plateWidth,
-            0,
-            this.core!.stageWidth,
-            this._plateWidth
-        )
-        const leftPlateRect = Rect.fromLTRB(
-            0,
-            this._plateWidth,
-            this._plateWidth,
-            this.core!.stageHeight
-        )
-        ctx.lineWidth = 1
-        ctx.strokeStyle = "rgba(232, 232, 232, 1)"
-        ctx.beginPath()
-        ctx.moveTo(topPlateRect.left, topPlateRect.top)
-        ctx.lineTo(topPlateRect.left, topPlateRect.bottom)
-        ctx.lineTo(topPlateRect.right, topPlateRect.bottom)
-        ctx.lineTo(topPlateRect.right, topPlateRect.top)
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.moveTo(leftPlateRect.left, leftPlateRect.top)
-        ctx.lineTo(leftPlateRect.right, leftPlateRect.top)
-        ctx.lineTo(leftPlateRect.right, leftPlateRect.bottom)
-        ctx.lineTo(leftPlateRect.left, leftPlateRect.bottom)
-        ctx.stroke()
+        ctx.font = "14px Arial"
+        ctx.fillStyle = "rgba(100, 100, 100, 1)"
+        const offset = 10
+        const { gridWidth, levelUpFactor, originBias: origin, logicWidth } = this.core!
+        const step = gridWidth * levelUpFactor
+        const startPos = this.core!.crd2pos(new Point(0, 0)).mod(step).float()
+        for (let x = startPos.x; x < this.core!.stageWidth; x += step) {
+            const text = (x / logicWidth - origin.x).toFixed(0)
+            ctx.fillText(text, x + offset, offset * 2)
+        }
+        for (let y = startPos.y; y < this.core!.stageHeight; y += step) {
+            const text = (y / logicWidth - origin.y).toFixed(0)
+            ctx.fillText(text, offset, y + offset * 2)
+        }
         return true
     }
 }

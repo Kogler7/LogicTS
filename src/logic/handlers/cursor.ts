@@ -13,6 +13,12 @@ export default class CursorHandler {
         return 'default'
     }
 
+    private set _top(cursor: string) {
+        if (this._cursorStack.length > 0) {
+            this._cursorStack[this._cursorStack.length - 1] = cursor
+        }
+    }
+
     private _update() {
         if (!this._targetEl) {
             return
@@ -20,7 +26,7 @@ export default class CursorHandler {
         this._targetEl.style.cursor = this._top
     }
 
-    public set(cursor: string) {
+    public push(cursor: string) {
         if (this._top === cursor) {
             return
         }
@@ -28,13 +34,25 @@ export default class CursorHandler {
         this._update()
     }
 
-    public pop(cursor: string) {
+    public recall(cursor: string) {
         for (let i = this._cursorStack.length - 1; i >= 0; i--) {
             if (this._cursorStack[i] === cursor) {
                 this._cursorStack.splice(i, 1)
                 this._update()
                 return
             }
+        }
+    }
+
+    public set(cursor: string) {
+        this._top = cursor
+        this._update()
+    }
+
+    public pop() {
+        if (this._cursorStack.length > 0) {
+            this._cursorStack.pop()
+            this._update()
         }
     }
 }

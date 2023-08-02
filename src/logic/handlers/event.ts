@@ -6,7 +6,6 @@ export default class EventHandler {
     private _core: LogicCore
     private _targetEl: HTMLElement | null = null
 
-    private _framed = false
     private _framing = false
     private _zooming = false
     private _sliding = false
@@ -16,6 +15,7 @@ export default class EventHandler {
     private _frameStartPos: Point = new Point()
 
     public lastPos: Point = new Point()
+    public anchorPos: Point = new Point()
     public focusPos: Point = new Point()
     public focusRect: Rect | null = null
 
@@ -24,6 +24,7 @@ export default class EventHandler {
     private _shiftKey = false
 
     private _countdownTimer: Timer | null = null
+    private _waitingForDoubleClick = false
 
     // make sure the context of these functions is EventHandler
     private _handleMouseDown = this._onMouseDown.bind(this)
@@ -78,10 +79,10 @@ export default class EventHandler {
     private _onMouseDown(e: MouseEvent) {
         if (!this._core.emit('mousedown', e)) return
         this.focusPos = new Point(e.offsetX, e.offsetY)
+        this.anchorPos = this.focusPos
         // left button
         if (e.button === 0) {
             if (!this._core.emit('leftdown', e)) return
-            this._framed = false
             this._framing = true
             this._frameStartPos = this.focusPos
             this.focusRect = null
@@ -112,18 +113,31 @@ export default class EventHandler {
             this._tryStartReloc()
         }
         this.lastPos = this.focusPos
+        // check double click
+        if (this._waitingForDoubleClick) {
+            const button = ['left', 'middle', 'right'][e.button]
+            this._core.fire('doubleclick.' + button, e)
+        }
+        else {
+            this._waitingForDoubleClick = true
+            setTimeout(() => {
+                this._waitingForDoubleClick = false
+            }, 300)
+        }
     }
 
     private _onMouseMove(e: MouseEvent) {
         if (!this._core.emit('mousemove', e)) return
         this.focusPos = new Point(e.offsetX, e.offsetY)
-        if (this._sliding) return
+        if (this._sliding) {
+            this._core.fire('slide.ing', e)
+            this._core.fire('reloc.ing', e)
+        }
         else if (this._panning) {
             this._core.fire('pan.ing', e)
             this._core.fire('reloc.ing', e)
         }
         else if (this._framing) {
-            this._framed = true
             const rect = Rect.fromVertices(this._frameStartPos, this.focusPos)
             this.focusRect = rect
             this._core.fire('frame.ing', e, rect)
@@ -142,7 +156,6 @@ export default class EventHandler {
         }
         else if (this._framing) {
             this._framing = false
-            this._framed = false
             this.focusRect = null
             this._core.fire('frame.end', e)
         }
