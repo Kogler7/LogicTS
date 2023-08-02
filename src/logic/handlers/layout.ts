@@ -1,6 +1,6 @@
 import { Point, Vector } from "../common/types2D"
 import LogicCore from "../core"
-import { Animation, BezierCurves } from "../utils/anime"
+import { Animation, Curves } from "../utils/anime"
 
 export default class LayoutHandler {
     private _core: LogicCore
@@ -57,10 +57,10 @@ export default class LayoutHandler {
             const anime = new Animation(
                 (value: number) => {
                     this.originBias = bias.times(1 - value)
-                    this._core.renderAll()
+                    this._core.fire('reloc.ing')
                 },
                 300,
-                BezierCurves.easeInOut,
+                Curves.easeInOut,
                 () => { this._core.fire('reloc.begin') },
                 () => { this._core.fire('reloc.end') }
             )

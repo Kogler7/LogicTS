@@ -1,11 +1,11 @@
-import { CubicBezier, BezierCurves } from "./bezier"
+import { Curve, Curves } from "./curve"
 
-export { CubicBezier, BezierCurves }
+export { Curves }
 
 export class Animation {
     private _callback: Function
     private _duration: number
-    private _curve: CubicBezier
+    private _curve: Curve
     private _onStart: Function | null = null
     private _onEnd: Function | null = null
 
@@ -15,7 +15,7 @@ export class Animation {
     constructor(
         callback: Function,
         duration: number = 1000,
-        curve: CubicBezier = BezierCurves.linear,
+        curve: Curve = Curves.linear,
         onStart: Function | null = null,
         onEnd: Function | null = null
     ) {

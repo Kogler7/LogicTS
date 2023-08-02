@@ -1,4 +1,14 @@
-export class CubicBezier {
+export interface Curve {
+    transform(t: number): number
+}
+
+export class LinearCurve implements Curve {
+    public transform(t: number) {
+        return t
+    }
+}
+
+export class CubicBezierCurve implements Curve {
     private _p1: number
     private _p2: number
     private _p3: number
@@ -32,10 +42,10 @@ export class CubicBezier {
     }
 }
 
-export const BezierCurves = {
-    easeInOut: new CubicBezier(0.42, 0, 0.58, 1),
-    easeOut: new CubicBezier(0, 0, 0.58, 1),
-    easeIn: new CubicBezier(0.42, 0, 1, 1),
-    ease: new CubicBezier(0.25, 0.1, 0.25, 1),
-    linear: new CubicBezier(0, 0, 1, 1)
+export const Curves = {
+    linear: new LinearCurve(),
+    easeInOut: new CubicBezierCurve(0.42, 0, 0.58, 1),
+    easeOut: new CubicBezierCurve(0, 0, 0.58, 1),
+    easeIn: new CubicBezierCurve(0.42, 0, 1, 1),
+    ease: new CubicBezierCurve(0.25, 0.1, 0.25, 1),
 }
