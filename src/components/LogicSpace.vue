@@ -6,7 +6,8 @@
 import { onMounted } from "vue"
 import LogicCore from "../logic/core"
 import LogicLayer from "../logic/layers/layer"
-import { Point, Rect } from "../logic/common/types2D"
+import { Point, Rect } from "@/common/types2D"
+import { uid_rt, uid2hex, hex2uid, arr2uid } from "@/common/uid"
 
 class FrameLayer extends LogicLayer {
     public onReloc(ctx: CanvasRenderingContext2D): boolean {
@@ -98,11 +99,11 @@ class ScalarLayer extends LogicLayer {
         const step = gridWidth * levelUpFactor
         const startPos = this.core!.crd2pos(new Point(0, 0)).mod(step).float()
         for (let x = startPos.x; x < this.core!.stageWidth; x += step) {
-            const text = (x / logicWidth - origin.x).toFixed(0)
+            const text = Math.floor(x / logicWidth - origin.x).toString()
             ctx.fillText(text, x + offset, offset * 2)
         }
         for (let y = startPos.y; y < this.core!.stageHeight; y += step) {
-            const text = (y / logicWidth - origin.y).toFixed(0)
+            const text = Math.floor(y / logicWidth - origin.y).toString()
             ctx.fillText(text, offset, y + offset * 2)
         }
         return true
@@ -116,6 +117,13 @@ class TestLayer extends LogicLayer {
         ctx.strokeStyle = "#ff0000"
         ctx.lineWidth = 3
         ctx.strokeRect(rectPos.left, rectPos.top, rectPos.width, rectPos.height)
+        const id = uid_rt()
+        const c = uid2hex(id)
+        ctx.fillStyle = c
+        console.log(id, c, hex2uid(c))
+        ctx.fillRect(rectPos.left, rectPos.top, rectPos.width, rectPos.height)
+        const data = ctx.getImageData(rectPos.left + 1, rectPos.top + 1, 1, 1).data
+        console.log(data, arr2uid(data))
         return true
     }
 }
@@ -136,4 +144,4 @@ onMounted(() => {
     // core.render()
 })
 
-</script>
+</script>../common/types2D../common/uid

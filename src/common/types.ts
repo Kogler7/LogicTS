@@ -1,15 +1,4 @@
-export type uuid = number
 export type hash = number | string
-
-let _uuid_cnt = 0
-
-export function uuid_t(): uuid {
-    return Date.now() * 0x1000 + _uuid_cnt++ % 0x1000
-}
-
-export function uuid_c(): uuid {
-    return _uuid_cnt++
-}
 
 export interface Comparable {
     equals(obj: Comparable): boolean

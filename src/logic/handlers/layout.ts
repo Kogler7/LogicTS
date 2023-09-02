@@ -1,4 +1,4 @@
-import { Point, Vector } from "../common/types2D"
+import { Point, Vector } from "../../common/types2D"
 import LogicCore from "../core"
 import { Animation, Curves } from "../utils/anime"
 
@@ -17,7 +17,7 @@ export default class LayoutHandler {
     public zoomLevel: number = 0 // current zoom level, 0 by default
     public levelMax: number = 2 // 2 levels at most
     public levelUpFactor: number = 4 // four times bigger each level
-    public gridWidthMin: number = 10 // pixels per grid at least
+    public gridWidthMin: number = 16 // pixels per grid at least
     public gridWidthMax: number = this.gridWidthMin * this.levelUpFactor // pixels per grid at most
     public gridWidthFactor: number = this.levelUpFactor ** this.zoomLevel // 1, 4, 16...
     public gridWidth: number = this.logicWidth * this.gridWidthFactor // pixels per grid (logic unit)

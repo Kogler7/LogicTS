@@ -5,7 +5,7 @@ import CursorHandler from "./handlers/cursor"
 import LayoutHandler from "./handlers/layout"
 import ScopedEventNotifier from "./notifiers/scoped"
 import StackedEventNotifier from "./notifiers/stacked"
-import { Point, Rect } from "./common/types2D"
+import { Point, Rect } from "../common/types2D"
 
 export default class LogicCore {
     private _dpr: number = window.devicePixelRatio || 1

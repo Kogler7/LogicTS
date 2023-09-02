@@ -1,5 +1,5 @@
 import LogicCore from "../core"
-import { Point, Rect } from "../common/types2D"
+import { Point, Rect } from "../../common/types2D"
 import Timer from "../utils/timer"
 
 export default class EventHandler {
@@ -36,11 +36,13 @@ export default class EventHandler {
 
     constructor(core: LogicCore) {
         this._core = core
-        core.on('', true, () => { core.render() })
+        // for any event related to relocating, we should rerender the whole canvas
         core.on('reloc', true, () => { core.renderAll() })
     }
 
     public bind(el: HTMLElement) {
+        // bind event listeners to the target element, and set it focusable
+        // so that we can receive keyboard and mouse events
         console.log("bind", this._core)
         el.addEventListener('mousedown', this._handleMouseDown)
         el.addEventListener('mousemove', this._handleMouseMove)
@@ -53,6 +55,8 @@ export default class EventHandler {
     }
 
     public unbind() {
+        // unbind event listeners from the target element
+        // to prevent receiving unwanted events
         if (this._targetEl) {
             this._targetEl.removeEventListener('mousedown', this._handleMouseDown)
             this._targetEl.removeEventListener('mousemove', this._handleMouseMove)
