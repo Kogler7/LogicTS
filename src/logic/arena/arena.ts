@@ -11,8 +11,8 @@ export interface IObjectArena {
     posOccupied(pos: Point): uid | null
     lineOccupied(line: Line, except: uid): uid | null
     rectOccupied(rect: Rect, except: uid, fill: boolean): uid | null
-    lineOccupiedList(line: Line, except: uid): uid[]
-    rectOccupiedList(rect: Rect, except: uid, fill: boolean): uid[]
+    lineOccupiedSet(line: Line, except: uid): Set<uid>
+    rectOccupiedSet(rect: Rect, except: uid, fill: boolean): Set<uid>
 }
 
 export class QueryObjectArena implements IObjectArena {
@@ -114,29 +114,29 @@ export class QueryObjectArena implements IObjectArena {
         return null
     }
 
-    public lineOccupiedList(line: Line, except: uid): uid[] {
-        let ret: uid[] = []
+    public lineOccupiedSet(line: Line, except: uid = -1): Set<uid> {
+        let ret:Set<uid> = new Set()
         for (let [k, v] of this._objects) {
             if (k === except) continue
             if (v.intersectsLine(line)) {
-                ret.push(k)
+                ret.add(k)
             }
         }
         return ret
     }
 
-    public rectOccupiedList(rect: Rect, except: uid, fill: boolean): uid[] {
-        let ret: uid[] = []
+    public rectOccupiedSet(rect: Rect, except: uid = -1, fill: boolean = true): Set<uid> {
+        let ret: Set<uid> = new Set()
         for (let [k, v] of this._objects) {
             if (k === except) continue
             if (fill) {
                 if (v.intersectsRect(rect)) {
-                    ret.push(k)
+                    ret.add(k)
                 }
             } else {
                 for (let line of rect.edges) {
                     if (v.intersectsLine(line)) {
-                        ret.push(k)
+                        ret.add(k)
                         break
                     }
                 }

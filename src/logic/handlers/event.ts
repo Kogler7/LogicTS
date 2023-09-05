@@ -18,6 +18,7 @@ export default class EventHandler {
     public anchorPos: Point = new Point()
     public focusPos: Point = new Point()
     public focusRect: Rect | null = null
+    public focusLogicFloorRect: Rect = Rect.zero()
 
     private _altKey = false
     private _ctrlKey = false
@@ -92,6 +93,7 @@ export default class EventHandler {
             this._framing = true
             this._frameStartPos = this.focusPos
             this.focusRect = null
+            this.focusLogicFloorRect = Rect.zero()
             this._core.fire('frame.begin', e)
         }
         // middle button
@@ -146,6 +148,11 @@ export default class EventHandler {
         else if (this._framing) {
             const rect = Rect.fromVertices(this._frameStartPos, this.focusPos)
             this.focusRect = rect
+            const newFloorRect = this._core.pos2crdRect(rect).shrink()
+            if (!this.focusLogicFloorRect?.equals(newFloorRect)) {
+                this._core.fire('frame.change', this.focusLogicFloorRect, newFloorRect)
+                this.focusLogicFloorRect = newFloorRect
+            }
             this._core.fire('frame.ing', e, rect)
         }
         this._core.fire('hover', e)
@@ -188,11 +195,9 @@ export default class EventHandler {
 
     private _onKeyDown(e: KeyboardEvent) {
         if (!this._core.emit('keydown', e)) return
-        console.log('key down', e)
     }
 
     private _onKeyUp(e: KeyboardEvent) {
         if (!this._core.emit('keyup', e)) return
-        console.log('key up', e)
     }
 } 

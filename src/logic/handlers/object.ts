@@ -28,14 +28,32 @@ export class ObjectHandler {
     private _movableObjects: Map<uid, IMovable> = new Map()
     private _resizableObjects: Map<uid, IResizable> = new Map()
 
-    private _framing: boolean = false
     private _ctrlDown: boolean = false
+
+    private _oldFrameLogicRect: Rect = Rect.zero()
+    private _oldFramedObjectIds: Set<uid> = new Set()
+
+    // make sure the context of these functions is ObjectHandler
+    private _handleMouseDown = this._onMousePressedBackground.bind(this)
+    private _handleMouseMove = this._onMouseMove.bind(this)
+    private _handleMouseUp = this._onMouseUp.bind(this)
+
+    public get selectedObjects(): Set<ISelectable> {
+        return this._selectedObjects
+    }
+
+    public get recentSelectedObject(): ISelectable | null {
+        if (this._recentSelectedId) {
+            return this._selectableObjects.get(this._recentSelectedId) || null
+        }
+        return null
+    }
 
     constructor(core: LogicCore) {
         this._core = core
         // register mouse down event listener to the bottom of the event stack
         // if this callback is fired, it means that no object is selected
-        core.on('mousedown', false, this._onMouseDown.bind(this), -Infinity)
+        core.on('mousedown', false, this._handleMouseDown, -Infinity)
         // register level 0 arena callback event listener to the core
         this._arenas.set(0, this._logicArena)
         const level0cbk = ((e: MouseEvent) => {
@@ -71,6 +89,7 @@ export class ObjectHandler {
                         }
                     }
                     this._clearNonLogicSelectedObject()
+                    this._notifySelectLogicChange()
                     // if an selectable object is hit, return false to stop the event going down
                     return false
                 }
@@ -88,6 +107,54 @@ export class ObjectHandler {
                 this._ctrlDown = false
             }
         }).bind(this), 0)
+        // register frame begin event listener to the core
+        core.on('frame.begin', true, ((e: MouseEvent) => {
+            // clear all selected objects
+            this._clearSelectedObjects()
+            // reset the old frame logic rect
+            this._oldFrameLogicRect = Rect.zero()
+        }).bind(this))
+        // register logic frame change event listener to the core
+        core.on('frame.change', true, ((oldRect: Rect, newRect: Rect) => {
+            // when the logic frame changes, we need to update the selected objects
+            // we need to find the objects that are newly selected and deselected
+            // first we compare the old frame logic rect cached and provided by the core
+            if (!this._oldFrameLogicRect.equals(oldRect)) {
+                // if the old frame logic rect is not the same as the cached one
+                // recalculate the old framed object ids
+                this._oldFramedObjectIds = this._logicArena.rectOccupiedSet(oldRect, -1, true)
+            }
+            // then we calculate the new framed object ids
+            const newFramedObjectIds = this._logicArena.rectOccupiedSet(newRect, -1, true)
+            // find the newly selected objects
+            for (const id of newFramedObjectIds) {
+                if (!this._oldFramedObjectIds.has(id)) {
+                    const obj = this._selectableObjects.get(id)
+                    if (obj && obj.enabled) {
+                        this._selectedObjects.add(obj)
+                        obj.selected = true
+                        obj.onSelected()
+                    }
+                }
+            }
+            // find the newly deselected objects
+            for (const id of this._oldFramedObjectIds) {
+                if (!newFramedObjectIds.has(id)) {
+                    const obj = this._selectableObjects.get(id)
+                    if (obj && obj.enabled) {
+                        this._selectedObjects.delete(obj)
+                        obj.selected = false
+                        obj.onDeselected()
+                    }
+                }
+            }
+            // notify the change of selected objects
+            this._notifySelectLogicChange()
+        }).bind(this))
+    }
+
+    private _notifySelectLogicChange() {
+        this._core.fire('select.logic-changed', this._selectedObjects)
     }
 
     public get logicArena(): IObjectArena {
@@ -162,6 +229,7 @@ export class ObjectHandler {
             obj.onRegistered(this._core)
             return true
         }
+        console.warn('object registration failed.')
         return false
     }
 
@@ -179,11 +247,29 @@ export class ObjectHandler {
         return success
     }
 
-    public setSelectable(obj: ISelectable, selectable: boolean) { }
+    public setSelectable(obj: ISelectable, selectable: boolean) {
+        if (selectable) {
+            this._selectableObjects.set(obj.id, obj)
+        } else {
+            this._selectableObjects.delete(obj.id)
+        }
+    }
 
-    public setMovable(obj: IMovable, movable: boolean) { }
+    public setMovable(obj: IMovable, movable: boolean) {
+        if (movable) {
+            this._movableObjects.set(obj.id, obj)
+        } else {
+            this._movableObjects.delete(obj.id)
+        }
+    }
 
-    public setResizable(obj: IResizable, resizable: boolean) { }
+    public setResizable(obj: IResizable, resizable: boolean) {
+        if (resizable) {
+            this._resizableObjects.set(obj.id, obj)
+        } else {
+            this._resizableObjects.delete(obj.id)
+        }
+    }
 
     private _clearSelectedObjects(except: ISelectable | null = null) {
         for (const obj of this._selectedObjects) {
@@ -208,24 +294,18 @@ export class ObjectHandler {
         }
     }
 
-    private _onMouseDown(e: MouseEvent) {
-        if (this._framing) {
-            return
+    private _onMousePressedBackground(e: MouseEvent) {
+        if (e.button === 0) {
+            // clear all selected objects
+            this._clearSelectedObjects()
+            // clear non-logic selected object
+            this._clearNonLogicSelectedObject()
+            // notify the change of selected objects
+            this._notifySelectLogicChange()
         }
-        // clear all selected objects
-        this._clearSelectedObjects()
-        // clear non-logic selected object
-        this._clearNonLogicSelectedObject()
-        // this._core.on('mousemove', false, this._onMouseMove)
-        // this._core.on('mouseup', false, this._onMouseUp)
     }
 
     private _onMouseMove(e: MouseEvent) { }
 
-    private _onMouseUp(e: MouseEvent) {
-        if (this._framing) {
-            this._framing = false
-            return
-        }
-    }
+    private _onMouseUp(e: MouseEvent) { }
 }

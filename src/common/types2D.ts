@@ -18,8 +18,16 @@ export class Size implements Comparable, Hashable, Printable {
 		return new Size(0, 0)
 	}
 
+	public floor(): Size {
+		return new Size(Math.floor(this.width), Math.floor(this.height))
+	}
+
 	public times(factor: number): Size {
 		return new Size(this.width * factor, this.height * factor)
+	}
+
+	public divide(factor: number): Size {
+		return new Size(this.width / factor, this.height / factor)
 	}
 
 	public scale(factor: number): Size {
@@ -429,6 +437,13 @@ export class Rect implements Comparable, Hashable, Printable {
 	 */
 	static zero(): Rect {
 		return new Rect(Point.zero(), new Size())
+	}
+
+	public shrink(): Rect {
+		return Rect.fromVertices(
+			this.topLeft.ceil(),
+			this.bottomRight.floor()
+		)
 	}
 
 	/**

@@ -1,4 +1,4 @@
-import { Point, Vector } from "../../common/types2D"
+import { Point, Rect, Vector } from "../../common/types2D"
 import LogicCore from "../core"
 import { Animation, Curves } from "../utils/anime"
 
@@ -92,9 +92,19 @@ export default class LayoutHandler {
         return crd.plus(origin).times(length)
     }
 
+    public crd2posRect(rect: Rect): Rect {
+        const { originBias: origin, logicWidth: length } = this
+        return new Rect(this.crd2pos(rect.pos), rect.size.times(length))
+    }
+
     public pos2crd(pos: Point): Point {
         const { originBias: origin, logicWidth: length } = this
         return pos.divide(length).minus(origin)
+    }
+
+    public pos2crdRect(rect: Rect): Rect {
+        const { originBias: origin, logicWidth: length } = this
+        return new Rect(this.pos2crd(rect.pos), rect.size.divide(length))
     }
 
     private _panTo(delta: Vector) {

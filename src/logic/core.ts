@@ -10,6 +10,7 @@ import StackedEventNotifier from "./notifiers/stacked"
 import { ISelectable } from "./mixins/selectable"
 import { IMovable } from "./mixins/movable"
 import { IResizable } from "./mixins/resizable"
+import { Size } from "electron"
 
 export default class LogicCore {
     private _dpr: number = window.devicePixelRatio || 1
@@ -208,12 +209,19 @@ export default class LogicCore {
     }
 
     // register object to the logic core
-    public register() {
-        console.log('register')
+    public register(obj: IObject) {
+        this._objectHandler.addObject(obj)
     }
 
-    public unregister() {
-        console.log('unregister')
+    public unregister(obj: IObject) {
+        this._objectHandler.delObject(obj)
+    }
+
+    public createCache(size: Size | null = null): CanvasRenderingContext2D {
+        const cache = document.createElement('canvas')
+        cache.width = size?.width || this._stageWidth
+        cache.height = size?.height || this._stageHeight
+        return cache.getContext('2d') as CanvasRenderingContext2D
     }
 
     public reset() {
@@ -268,11 +276,21 @@ export default class LogicCore {
         return this._layoutHandler.gridWidth
     }
 
-    public crd2pos = this._layoutHandler.crd2pos
-    public pos2crd = this._layoutHandler.pos2crd
-    public addObject = this._objectHandler.addObject
-    public delObject = this._objectHandler.delObject
-    public setSelectable = this._objectHandler.setSelectable
-    public setMovable = this._objectHandler.setMovable
-    public setResizable = this._objectHandler.setResizable
+    public get selectedObjects(): Set<ISelectable> {
+        return this._objectHandler.selectedObjects
+    }
+
+    public get recentSelectedObject(): ISelectable | null {
+        return this._objectHandler.recentSelectedObject
+    }
+
+    public crd2pos = this._layoutHandler.crd2pos.bind(this._layoutHandler)
+    public pos2crdRect = this._layoutHandler.pos2crdRect.bind(this._layoutHandler)
+    public pos2crd = this._layoutHandler.pos2crd.bind(this._layoutHandler)
+    public crd2posRect = this._layoutHandler.crd2posRect.bind(this._layoutHandler)
+    public addObject = this._objectHandler.addObject.bind(this._objectHandler)
+    public delObject = this._objectHandler.delObject.bind(this._objectHandler)
+    public setSelectable = this._objectHandler.setSelectable.bind(this._objectHandler)
+    public setMovable = this._objectHandler.setMovable.bind(this._objectHandler)
+    public setResizable = this._objectHandler.setResizable.bind(this._objectHandler)
 }

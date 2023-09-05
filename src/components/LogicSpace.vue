@@ -6,10 +6,16 @@
 import { onMounted } from "vue"
 import LogicCore from "../logic/core"
 import LogicLayer from "../logic/layers/layer"
-import { Point, Rect } from "@/common/types2D"
-import { uid_rt, uid2hex, hex2uid, arr2uid } from "@/common/uid"
+import { Point, Rect, Size } from "@/common/types2D"
+import { uid_rt, uid2hex, hex2uid, arr2uid, uid } from "@/common/uid"
+import { Selectable } from "@/logic/mixins/selectable"
+import { IRenderable } from "@/logic/mixins/renderable"
 
 class FrameLayer extends LogicLayer {
+    public onMount(): void {
+        this.level = 3
+    }
+
     public onReloc(ctx: CanvasRenderingContext2D): boolean {
         ctx.strokeStyle = "#ff0000"
         ctx.lineWidth = 2
@@ -110,20 +116,89 @@ class ScalarLayer extends LogicLayer {
     }
 }
 
-class TestLayer extends LogicLayer {
-    public onReloc(ctx: CanvasRenderingContext2D): boolean {
-        const rect = Rect.fromLTWH(10, 10, 4, 4)
-        const rectPos = new Rect(this.core!.crd2pos(rect.pos), rect.size.times(this.core!.logicWidth)).float()
-        ctx.strokeStyle = "#ff0000"
+class SelectLayer extends LogicLayer {
+    private _cache: CanvasRenderingContext2D | null = null
+    public onMount(): void {
+        const core = this.core!
+        this.level = 2
+        this._cache = core.createCache()
+        this._cache.strokeStyle = "#364fc7"
+        this._cache.lineWidth = 1
+        const onChanged = (() => {
+            this._cache!.clearRect(0, 0, core.stageWidth, core.stageHeight)
+            this._cache!.strokeRect(0, 0, 20, 20)
+            const rects = [...core.selectedObjects].map(obj => core.crd2posRect(obj.rect).padding(6))
+            if (rects.length > 0) {
+                let boundRect = rects[0]
+                this._cache?.setLineDash([])
+                for (const r of rects) {
+                    boundRect = boundRect.union(r)
+                    this._cache?.strokeRect(...r.ltwh)
+                }
+                // draw four corners
+                const corners = boundRect.vertices
+                for (const corner of corners) {
+                    const cornerRect = new Rect(corner.minus(new Point(3, 3)), new Size(6, 6))
+                    this._cache?.strokeRect(...cornerRect.ltwh)
+                }
+                this._cache?.setLineDash([5, 5])
+                this._cache?.strokeRect(...boundRect.ltwh)
+            }
+            core.render()
+        }).bind(this)
+        core.on("select.logic-changed", true, onChanged)
+        core.on("reloc", true, onChanged)
+    }
+
+    public onPaint(ctx: CanvasRenderingContext2D): boolean {
+        const { stageWidth, stageHeight } = this.core!
+        ctx.drawImage(this._cache!.canvas, 0, 0, stageWidth, stageHeight)
+        return true
+    }
+}
+
+class Component extends Selectable implements IRenderable {
+    constructor(pos: Point = Point.zero()) {
+        super(uid_rt(), 0, new Rect(pos, new Size(4, 4)))
+    }
+
+    public render(ctx: CanvasRenderingContext2D): boolean {
+        const renderRect = this.core!.crd2posRect(this.rect).float()
+        const color = uid2hex(this.id)
+        ctx.strokeStyle = "#000000"
         ctx.lineWidth = 3
-        ctx.strokeRect(rectPos.left, rectPos.top, rectPos.width, rectPos.height)
-        const id = uid_rt()
-        const c = uid2hex(id)
-        ctx.fillStyle = c
-        // console.log(id, c, hex2uid(c))
-        ctx.fillRect(rectPos.left, rectPos.top, rectPos.width, rectPos.height)
-        const data = ctx.getImageData(rectPos.left + 1, rectPos.top + 1, 1, 1).data
-        // console.log(data, arr2uid(data))
+        ctx.strokeRect(...renderRect.ltwh)
+        ctx.fillStyle = color
+        ctx.fillRect(...renderRect.ltwh)
+        return true
+    }
+
+    public onSelected(): void {
+        console.log("selected", this.id)
+    }
+
+    public onDeselected(): void {
+        console.log("deselected", this.id)
+    }
+
+    public onRegistered(core: LogicCore): void {
+        super.onRegistered(core)
+        console.log("registered", this.id)
+    }
+}
+
+class TestLayer extends LogicLayer {
+    private _comps = new Map<uid, Component>()
+
+    public addComponent(comp: Component): TestLayer {
+        this._comps.set(comp.id, comp)
+        return this
+    }
+
+    public onReloc(ctx: CanvasRenderingContext2D): boolean {
+        for (const comp of this._comps.values()) {
+            comp.render(ctx)
+        }
         return true
     }
 }
@@ -131,15 +206,35 @@ class TestLayer extends LogicLayer {
 onMounted(() => {
     const scene = document.getElementById("scene") as HTMLCanvasElement
     const core = new LogicCore()
+
     const frameLayer = new FrameLayer('frame', 2)
     const scalarLayer = new ScalarLayer('scalar', 3)
     const meshLayer = new MeshLayer('mesh', -1)
+    const selectLayer = new SelectLayer('select', 0)
     const testLayer = new TestLayer('test', 1)
+
+    core.connect(scene)
+
     core.mount(frameLayer)
     core.mount(scalarLayer)
     core.mount(meshLayer)
+    core.mount(selectLayer)
     core.mount(testLayer)
-    core.connect(scene)
+
+    const c1 = new Component(new Point(10, 10))
+    const c2 = new Component(new Point(20, 10))
+    const c3 = new Component(new Point(10, 20))
+    const c4 = new Component(new Point(20, 20))
+    testLayer.addComponent(c1)
+    testLayer.addComponent(c2)
+    testLayer.addComponent(c3)
+    testLayer.addComponent(c4)
+
+    core.register(c1)
+    core.register(c2)
+    core.register(c3)
+    core.register(c4)
+
     console.log(core)
     // core.render()
 })
