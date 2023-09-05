@@ -36,6 +36,8 @@ export default class EventHandler {
 
     constructor(core: LogicCore) {
         this._core = core
+        // for any event, we should rerender part of the canvas
+        core.on('', true, () => { core.render() })
         // for any event related to relocating, we should rerender the whole canvas
         core.on('reloc', true, () => { core.renderAll() })
     }
@@ -186,11 +188,11 @@ export default class EventHandler {
 
     private _onKeyDown(e: KeyboardEvent) {
         if (!this._core.emit('keydown', e)) return
-        console.log('key down')
+        console.log('key down', e)
     }
 
     private _onKeyUp(e: KeyboardEvent) {
         if (!this._core.emit('keyup', e)) return
-        console.log('key up')
+        console.log('key up', e)
     }
 } 

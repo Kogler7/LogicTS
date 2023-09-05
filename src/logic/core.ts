@@ -1,11 +1,15 @@
+import { Point, Rect } from "../common/types2D"
 import LogicLayer from "./layers/layer"
 import XPSChecker from "./utils/xps"
 import EventHandler from "./handlers/event"
 import CursorHandler from "./handlers/cursor"
 import LayoutHandler from "./handlers/layout"
+import { IObject, ObjectHandler } from "./handlers/object"
 import ScopedEventNotifier from "./notifiers/scoped"
 import StackedEventNotifier from "./notifiers/stacked"
-import { Point, Rect } from "../common/types2D"
+import { ISelectable } from "./mixins/selectable"
+import { IMovable } from "./mixins/movable"
+import { IResizable } from "./mixins/resizable"
 
 export default class LogicCore {
     private _dpr: number = window.devicePixelRatio || 1
@@ -30,6 +34,7 @@ export default class LogicCore {
     private _eventHandler = new EventHandler(this)
     private _cursorHandler = new CursorHandler()
     private _layoutHandler = new LayoutHandler(this)
+    private _objectHandler = new ObjectHandler(this)
 
     constructor(stage?: HTMLCanvasElement) {
         this._cache = document.createElement('canvas')
@@ -106,11 +111,11 @@ export default class LogicCore {
         }
     }
 
-    public off(event: string, scoped: boolean, callback: Function) {
-        if (scoped) {
+    public off(event: string, scoped: boolean, callback: Function | null = null, level = 0) {
+        if (scoped && callback) {
             this._scopedNotifier.off(event, callback)
         } else {
-            this._stackedNotifier.off(event, callback)
+            this._stackedNotifier.off(event, callback, level)
         }
     }
 
@@ -157,6 +162,7 @@ export default class LogicCore {
         }
     }
 
+    // connect to a stage device, which is a canvas element
     public connect(stage: HTMLCanvasElement) {
         this._eventHandler.bind(stage)
         this._cursorHandler.bind(stage)
@@ -201,12 +207,13 @@ export default class LogicCore {
         console.log('detach')
     }
 
-    public bind() {
-        console.log('bind')
+    // register object to the logic core
+    public register() {
+        console.log('register')
     }
 
-    public unbind() {
-        console.log('unbind')
+    public unregister() {
+        console.log('unregister')
     }
 
     public reset() {
@@ -233,12 +240,12 @@ export default class LogicCore {
         return this._layoutHandler.logicWidth
     }
 
-    public get lastPos(): Point {
-        return this._eventHandler.lastPos
-    }
-
     public get anchorPos(): Point {
         return this._eventHandler.anchorPos
+    }
+
+    public get lastPos(): Point {
+        return this._eventHandler.lastPos
     }
 
     public get focusPos(): Point {
@@ -247,14 +254,6 @@ export default class LogicCore {
 
     public get focusRect(): Rect | null {
         return this._eventHandler.focusRect
-    }
-
-    public crd2pos(crd: Point): Point {
-        return this._layoutHandler.crd2pos(crd)
-    }
-
-    public pos2crd(pos: Point): Point {
-        return this._layoutHandler.pos2crd(pos)
     }
 
     public get zoomLevel(): number {
@@ -268,4 +267,12 @@ export default class LogicCore {
     public get gridWidth(): number {
         return this._layoutHandler.gridWidth
     }
+
+    public crd2pos = this._layoutHandler.crd2pos
+    public pos2crd = this._layoutHandler.pos2crd
+    public addObject = this._objectHandler.addObject
+    public delObject = this._objectHandler.delObject
+    public setSelectable = this._objectHandler.setSelectable
+    public setMovable = this._objectHandler.setMovable
+    public setResizable = this._objectHandler.setResizable
 }

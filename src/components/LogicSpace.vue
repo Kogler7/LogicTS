@@ -120,10 +120,10 @@ class TestLayer extends LogicLayer {
         const id = uid_rt()
         const c = uid2hex(id)
         ctx.fillStyle = c
-        console.log(id, c, hex2uid(c))
+        // console.log(id, c, hex2uid(c))
         ctx.fillRect(rectPos.left, rectPos.top, rectPos.width, rectPos.height)
         const data = ctx.getImageData(rectPos.left + 1, rectPos.top + 1, 1, 1).data
-        console.log(data, arr2uid(data))
+        // console.log(data, arr2uid(data))
         return true
     }
 }
@@ -144,4 +144,4 @@ onMounted(() => {
     // core.render()
 })
 
-</script>../common/types2D../common/uid
+</script>

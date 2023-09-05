@@ -2,6 +2,7 @@ import { Point, Line, Rect } from '@/common/types2D'
 import { uid } from '@/common/uid'
 
 export interface IObjectArena {
+    get empty(): boolean
     get boundRect(): Rect
     addObject(id: uid, rect: Rect): boolean
     getObject(id: uid): Rect | null
@@ -17,6 +18,10 @@ export interface IObjectArena {
 export class QueryObjectArena implements IObjectArena {
     private _objects: Map<uid, Rect> = new Map()
     private _boundRect: Rect = Rect.zero()
+
+    public get empty(): boolean {
+        return this._objects.size === 0
+    }
 
     public get boundRect(): Rect {
         return this._boundRect
