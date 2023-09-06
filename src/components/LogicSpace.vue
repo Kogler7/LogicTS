@@ -1,3 +1,20 @@
+/**
+* Copyright (c) 2022 Beijing Jiaotong University
+* PhotLab is licensed under [Open Source License].
+* You can use this software according to the terms and conditions of the [Open Source License].
+* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+* 
+* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+* 
+* See the [Open Source License] for more details.
+* 
+* Author: Zhenjie Wei
+* Created: Jul. 20, 2023
+* Supported by: National Key Research and Development Program of China
+*/
+
 <template>
     <canvas id="scene" width="1000" height="800"></canvas>
 </template>
@@ -6,8 +23,8 @@
 import { onMounted } from "vue"
 import LogicCore from "../logic/core"
 import LogicLayer from "../logic/layers/layer"
-import { Point, Rect, Size } from "@/common/types2D"
-import { uid_rt, uid2hex, hex2uid, arr2uid, uid } from "@/common/uid"
+import { Point, Rect, Size } from "@/logic/common/types2D"
+import { uid_rt, uid2hex, hex2uid, arr2uid, uid } from "@/logic/common/uid"
 import { Selectable } from "@/logic/mixins/selectable"
 import { IRenderable } from "@/logic/mixins/renderable"
 
@@ -121,24 +138,31 @@ class SelectLayer extends LogicLayer {
     public onMount(): void {
         const core = this.core!
         this.level = 2
+        const cornerSize = 6
+        const halfCorner = cornerSize / 2
         this._cache = core.createCache()
         this._cache.strokeStyle = "#364fc7"
         this._cache.lineWidth = 1
         const onChanged = (() => {
             this._cache!.clearRect(0, 0, core.stageWidth, core.stageHeight)
-            this._cache!.strokeRect(0, 0, 20, 20)
-            const rects = [...core.selectedObjects].map(obj => core.crd2posRect(obj.rect).padding(6))
+            const rects = [...core.selectedObjects]
+                .map(obj => core.crd2posRect(obj.rect).padding(cornerSize).float())
             if (rects.length > 0) {
                 let boundRect = rects[0]
                 this._cache?.setLineDash([])
                 for (const r of rects) {
                     boundRect = boundRect.union(r)
-                    this._cache?.strokeRect(...r.ltwh)
+                    if (core.zoomLevel < 2) {
+                        this._cache?.strokeRect(...r.ltwh)
+                    }
                 }
                 // draw four corners
-                const corners = boundRect.vertices
+                const corners = boundRect.padding(halfCorner).vertices
                 for (const corner of corners) {
-                    const cornerRect = new Rect(corner.minus(new Point(3, 3)), new Size(6, 6))
+                    const cornerRect = new Rect(
+                        corner.minus(new Point(halfCorner, halfCorner)),
+                        new Size(cornerSize, cornerSize)
+                    )
                     this._cache?.strokeRect(...cornerRect.ltwh)
                 }
                 this._cache?.setLineDash([5, 5])
@@ -221,10 +245,10 @@ onMounted(() => {
     core.mount(selectLayer)
     core.mount(testLayer)
 
-    const c1 = new Component(new Point(10, 10))
-    const c2 = new Component(new Point(20, 10))
-    const c3 = new Component(new Point(10, 20))
-    const c4 = new Component(new Point(20, 20))
+    const c1 = new Component(new Point(10, 5))
+    const c2 = new Component(new Point(25, 10))
+    const c3 = new Component(new Point(5, 20))
+    const c4 = new Component(new Point(20, 25))
     testLayer.addComponent(c1)
     testLayer.addComponent(c2)
     testLayer.addComponent(c3)
@@ -239,4 +263,4 @@ onMounted(() => {
     // core.render()
 })
 
-</script>
+</script>@/logic/common/types2D@/logic/common/uid
