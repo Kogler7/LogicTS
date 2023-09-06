@@ -36,8 +36,8 @@ export default class LogicCore {
     private _stage: HTMLCanvasElement
     private _stageCtx: CanvasRenderingContext2D
 
-    private _stageWidth: number = 100
-    private _stageHeight: number = 100
+    private _stageWidth: number = -1
+    private _stageHeight: number = -1
 
     private _layers: LogicLayer[] = []
 
@@ -68,7 +68,16 @@ export default class LogicCore {
         }
     }
 
+    private _checkStage() {
+        const { _stageWidth: width, _stageHeight: height } = this
+        if (width <= 0 || height <= 0) {
+            console.error('Core: invalid stage size, please connect to a stage device first.')
+            return
+        }
+    }
+
     private _render() {
+        this._checkStage()
         this._xps.start()
         const { _stageWidth: width, _stageHeight: height } = this
         if (this._dirty) {
@@ -235,6 +244,7 @@ export default class LogicCore {
     }
 
     public createCache(size: Size | null = null): CanvasRenderingContext2D {
+        this._checkStage()
         const cache = document.createElement('canvas')
         cache.width = size?.width || this._stageWidth
         cache.height = size?.height || this._stageHeight
@@ -293,12 +303,16 @@ export default class LogicCore {
         return this._layoutHandler.gridWidth
     }
 
-    public get selectedObjects(): Set<ISelectable> {
-        return this._objectHandler.selectedObjects
+    public get selectedLogicObjects(): Set<ISelectable> {
+        return this._objectHandler.selectedLogicObjects
     }
 
-    public get recentSelectedObject(): ISelectable | null {
-        return this._objectHandler.recentSelectedObject
+    public get selectedLogicBoundRect(): Rect {
+        return this._objectHandler.selectedLogicBoundRect
+    }
+
+    public get recentSelectedLogicObject(): ISelectable | null {
+        return this._objectHandler.recentSelectedLogicObject
     }
 
     public crd2pos = this._layoutHandler.crd2pos.bind(this._layoutHandler)

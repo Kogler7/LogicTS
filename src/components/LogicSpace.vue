@@ -27,6 +27,7 @@ import { Point, Rect, Size } from "@/logic/common/types2D"
 import { uid_rt, uid2hex, hex2uid, arr2uid, uid } from "@/logic/common/uid"
 import { Selectable } from "@/logic/mixins/selectable"
 import { IRenderable } from "@/logic/mixins/renderable"
+import { Movable } from "@/logic/mixins/movable"
 
 class FrameLayer extends LogicLayer {
     public onMount(): void {
@@ -145,18 +146,17 @@ class SelectLayer extends LogicLayer {
         this._cache.lineWidth = 1
         const onChanged = (() => {
             this._cache!.clearRect(0, 0, core.stageWidth, core.stageHeight)
-            const rects = [...core.selectedObjects]
+            const rects = [...core.selectedLogicObjects]
                 .map(obj => core.crd2posRect(obj.rect).padding(cornerSize).float())
             if (rects.length > 0) {
-                let boundRect = rects[0]
                 this._cache?.setLineDash([])
                 for (const r of rects) {
-                    boundRect = boundRect.union(r)
                     if (core.zoomLevel < 2) {
                         this._cache?.strokeRect(...r.ltwh)
                     }
                 }
                 // draw four corners
+                const boundRect = core.crd2posRect(core.selectedLogicBoundRect).padding(cornerSize).float()
                 const corners = boundRect.padding(halfCorner).vertices
                 for (const corner of corners) {
                     const cornerRect = new Rect(
@@ -181,7 +181,7 @@ class SelectLayer extends LogicLayer {
     }
 }
 
-class Component extends Selectable implements IRenderable {
+class Component extends Movable implements IRenderable {
     constructor(pos: Point = Point.zero()) {
         super(uid_rt(), 0, new Rect(pos, new Size(4, 4)))
     }
@@ -263,4 +263,4 @@ onMounted(() => {
     // core.render()
 })
 
-</script>@/logic/common/types2D@/logic/common/uid
+</script>

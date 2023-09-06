@@ -35,6 +35,10 @@ export class Size implements Comparable, Hashable, Printable {
 		return new Size(0, 0)
 	}
 
+	public isZero(): boolean {
+		return this.width === 0 && this.height === 0
+	}
+
 	public floor(): Size {
 		return new Size(Math.floor(this.width), Math.floor(this.height))
 	}
@@ -82,6 +86,10 @@ export class Point implements Comparable, Hashable, Printable {
 
 	static zero(): Point {
 		return new Point(0, 0)
+	}
+
+	public isZero(): boolean {
+		return this.x === 0 && this.y === 0
 	}
 
 	public scale(factor: number, center: Point): Point {
@@ -456,6 +464,10 @@ export class Rect implements Comparable, Hashable, Printable {
 		return new Rect(Point.zero(), new Size())
 	}
 
+	public isZero(): boolean {
+		return this.pos.isZero() && this.size.isZero()
+	}
+
 	public shrink(): Rect {
 		return Rect.fromVertices(
 			this.topLeft.ceil(),
@@ -654,6 +666,15 @@ export class Rect implements Comparable, Hashable, Printable {
 		const right = Math.max(this.right, rect.right)
 		const bottom = Math.max(this.bottom, rect.bottom)
 		return Rect.fromLTRB(left, top, right, bottom)
+	}
+
+	public static union(rects: Rect[]): Rect {
+		if (rects.length === 0) return Rect.zero()
+		let res = rects[0]
+		for (let i = 1; i < rects.length; i++) {
+			res = res.union(rects[i])
+		}
+		return res
 	}
 
 	/**
