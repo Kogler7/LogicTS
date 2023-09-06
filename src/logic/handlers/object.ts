@@ -113,6 +113,8 @@ export class ObjectHandler {
     private _isMovingLogicObjects: boolean = false
     private _isMovingNonLogicObjects: boolean = false
 
+    private _boundRectPressed: boolean = false
+
     public get selectedLogicObjects(): Set<ISelectable> {
         return this._selectedLogicObjects.set
     }
@@ -133,6 +135,8 @@ export class ObjectHandler {
         // register mouse down event listener to the bottom of the event stack
         // if this callback is fired, it means that no object is selected
         core.on('mousedown', false, this._onMousePressedBackground.bind(this), -Infinity)
+        // register mouse down event listener to the top of the event stack
+        core.on('mousedown', false, this._onMousePressedBoundRect.bind(this), Infinity)
         // listen to mouse up event to stop moving objects
         core.on('mouseup', false, this._onMouseUp.bind(this), Infinity)
         // listen to mouse move event to move objects
@@ -165,11 +169,11 @@ export class ObjectHandler {
                         if (!alreadySelected) {
                             this._recentSelectedLogicId = hitId
                             this._selectedLogicObjects.add(obj)
-                            // ready to move the selected logic objects
-                            this._isMovingLogicObjects = true
-                            this._isMovingNonLogicObjects = false
-                            this._startMovingObjectPos = obj.rect.pos.copy()
                         }
+                        // ready to move the selected logic objects
+                        this._isMovingLogicObjects = true
+                        this._isMovingNonLogicObjects = false
+                        this._startMovingObjectPos = obj.rect.pos.copy()
                     }
                     this._clearSelectedNonLogicObject()
                     // if an selectable object is hit, return false to stop the event going down
@@ -360,6 +364,8 @@ export class ObjectHandler {
             this._selectedLogicObjects.add(except)
         }
         this._recentSelectedLogicId = null
+        // reset the selected logic bound rect
+        this._selectedLogicBoundRect = Rect.zero()
         this._core.fire('select.logic-changed')
     }
 
@@ -384,10 +390,40 @@ export class ObjectHandler {
         }
     }
 
+    private _onMousePressedBoundRect(e: MouseEvent) {
+        // if the left button is pressed on the bound rect, start moving the selected objects
+        if (e.button === 0) {
+            const hitPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
+            if (this.selectedLogicBoundRect.containsPoint(hitPos)) {
+                this._isMovingLogicObjects = true
+                this._isMovingNonLogicObjects = false
+                this._startMovingObjectPos = hitPos.copy()
+                this._boundRectPressed = true
+                // stop the event going down
+                return false
+            }
+        }
+    }
+
     private _onMouseUp(e: MouseEvent) {
         // if the left button is up, stop moving the selected objects
-        this._isMovingLogicObjects = false
-        this._isMovingNonLogicObjects = false
+        if (this._isMovingLogicObjects) {
+            this._isMovingLogicObjects = false
+            this._movingLogicObjects.clear()
+            this._movingLogicObjectStates.clear()
+            if (this._boundRectPressed) {
+                this._boundRectPressed = false
+                if (this._startMovingObjectPos.equals(
+                    this._core.pos2crd(new Point(e.offsetX, e.offsetY))
+                )) {
+                    this._onMousePressedBackground(e)
+                }
+            }
+        } else if (this._isMovingNonLogicObjects) {
+            this._isMovingNonLogicObjects = false
+            this._movingNonLogicObject = null
+            this._movingNonLogicObjectState = false
+        }
     }
 
     private _onMouseMove(e: MouseEvent) {
