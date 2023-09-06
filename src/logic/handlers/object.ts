@@ -22,6 +22,7 @@ import { ISelectable } from "../mixins/selectable"
 import { IMovable } from "../mixins/movable"
 import { IResizable } from "../mixins/resizable"
 import { uid } from "@/logic/common/uid"
+import { TrapSet } from "../common/types"
 
 export interface IObject {
     id: uid
@@ -39,11 +40,30 @@ export class ObjectHandler {
     private _logicArena: IObjectArena = new QueryObjectArena()
     private _recentSelectedId: uid | null = null
     private _recentSelectedNonLogicId: uid | null = null
-    private _selectedObjects: Set<ISelectable> = new Set()
 
     private _selectableObjects: Map<uid, ISelectable> = new Map()
+    private _selectedObjects: TrapSet<ISelectable> = new TrapSet(
+        ((obj: ISelectable) => {
+            // if the object is newly selected and enabled, notify it
+            if (obj.enabled) {
+                obj.selected = true
+                obj.onSelected()
+                this._core.fire('select.logic-changed')
+            }
+        }).bind(this),
+        ((obj: ISelectable) => {
+            // if the object is newly deselected, notify it
+            obj.selected = false
+            obj.onDeselected()
+            this._core.fire('select.logic-changed')
+        }).bind(this)
+    )
+
     private _movableObjects: Map<uid, IMovable> = new Map()
+    private _movingObjects: Set<IMovable> = new Set()
+
     private _resizableObjects: Map<uid, IResizable> = new Map()
+    private _resizingObjects: Set<IResizable> = new Set()
 
     private _ctrlDown: boolean = false
 
@@ -56,7 +76,7 @@ export class ObjectHandler {
     private _handleMouseUp = this._onMouseUp.bind(this)
 
     public get selectedObjects(): Set<ISelectable> {
-        return this._selectedObjects
+        return this._selectedObjects.set
     }
 
     public get recentSelectedObject(): ISelectable | null {
@@ -90,8 +110,6 @@ export class ObjectHandler {
                         // if ctrl is pressed and the object is already selected, deselect it
                         this._recentSelectedId = null
                         this._selectedObjects.delete(obj)
-                        obj.selected = false
-                        obj.onDeselected()
                     } else {
                         if (!this._ctrlDown) {
                             // if ctrl is not pressed, clear the selected objects first
@@ -101,12 +119,22 @@ export class ObjectHandler {
                         if (!alreadySelected) {
                             this._recentSelectedId = hitId
                             this._selectedObjects.add(obj)
-                            obj.selected = true
-                            obj.onSelected()
+                        }
+                    }
+                    if (obj.selected) {
+                        // if the selected object is movable and enabled,
+                        // we add it to the selected movable objects
+                        if (this._movableObjects.has(hitId)) {
+                            this._movingObjects.add(obj as IMovable)
+                        }
+                        // if the selected object is resizable and enabled,
+                        // and it's the only one selected object,
+                        // we add it to the selected resizable objects
+                        if (this._resizableObjects.has(hitId) && this._selectedObjects.size === 1) {
+                            this._resizingObjects.add(obj as IResizable)
                         }
                     }
                     this._clearNonLogicSelectedObject()
-                    this._notifySelectLogicChange()
                     // if an selectable object is hit, return false to stop the event going down
                     return false
                 }
@@ -147,10 +175,8 @@ export class ObjectHandler {
             for (const id of newFramedObjectIds) {
                 if (!this._oldFramedObjectIds.has(id)) {
                     const obj = this._selectableObjects.get(id)
-                    if (obj && obj.enabled) {
+                    if (obj) {
                         this._selectedObjects.add(obj)
-                        obj.selected = true
-                        obj.onSelected()
                     }
                 }
             }
@@ -158,20 +184,12 @@ export class ObjectHandler {
             for (const id of this._oldFramedObjectIds) {
                 if (!newFramedObjectIds.has(id)) {
                     const obj = this._selectableObjects.get(id)
-                    if (obj && obj.enabled) {
+                    if (obj) {
                         this._selectedObjects.delete(obj)
-                        obj.selected = false
-                        obj.onDeselected()
                     }
                 }
             }
-            // notify the change of selected objects
-            this._notifySelectLogicChange()
         }).bind(this))
-    }
-
-    private _notifySelectLogicChange() {
-        this._core.fire('select.logic-changed', this._selectedObjects)
     }
 
     public get logicArena(): IObjectArena {
@@ -289,7 +307,7 @@ export class ObjectHandler {
     }
 
     private _clearSelectedObjects(except: ISelectable | null = null) {
-        for (const obj of this._selectedObjects) {
+        for (const obj of this._selectedObjects.set) {
             if (obj === except) {
                 continue
             }
@@ -301,6 +319,7 @@ export class ObjectHandler {
             this._selectedObjects.add(except)
         }
         this._recentSelectedId = null
+        this._core.fire('select.logic-changed')
     }
 
     private _clearNonLogicSelectedObject() {
@@ -320,8 +339,6 @@ export class ObjectHandler {
             this._clearSelectedObjects()
             // clear non-logic selected object
             this._clearNonLogicSelectedObject()
-            // notify the change of selected objects
-            this._notifySelectLogicChange()
         }
     }
 

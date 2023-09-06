@@ -382,3 +382,51 @@ export class PriorityQueue<T extends Orderable> extends BinaryHeap<T>{
         return this.pop()
     }
 }
+
+export class TrapSet<T> {
+    private _set: Set<T>
+    private _onAdded: (obj: T) => void
+    private _onDelete: (obj: T) => void
+
+    constructor(onAdded: (obj: T) => void, onDelete: (obj: T) => void, init: Array<T> = []) {
+        this._set = new Set(init)
+        this._onAdded = onAdded
+        this._onDelete = onDelete
+    }
+
+    add(obj: T): TrapSet<T> {
+        if (!this.has(obj)) {
+            this._set.add(obj)
+            this._onAdded(obj)
+        }
+        return this
+    }
+
+    has(obj: T): boolean {
+        return this._set.has(obj)
+    }
+
+    delete(obj: T): boolean {
+        if (this._set.delete(obj)) {
+            this._onDelete(obj)
+            return true
+        }
+        return false
+    }
+
+    clear() {
+        this._set.clear()
+    }
+
+    forEach(callback: (obj: T) => void) {
+        this._set.forEach(callback)
+    }
+
+    get size() {
+        return this._set.size
+    }
+
+    get set() {
+        return this._set
+    }
+}
