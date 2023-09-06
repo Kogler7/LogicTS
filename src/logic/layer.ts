@@ -15,7 +15,7 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import LogicCore from '../core';
+import LogicCore from './core';
 
 export default class LogicLayer {
     protected core?: LogicCore

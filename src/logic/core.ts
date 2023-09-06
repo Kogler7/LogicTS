@@ -16,7 +16,7 @@
 */
 
 import { Point, Rect } from "./common/types2D"
-import LogicLayer from "./layers/layer"
+import LogicLayer from "./layer"
 import XPSChecker from "./utils/xps"
 import EventHandler from "./handlers/event"
 import CursorHandler from "./handlers/cursor"
