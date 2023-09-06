@@ -18,14 +18,23 @@
 export type uid = number
 
 let _uid_cnt = 0
+const _uid_set = new Set<uid>()
 const _buffer = new ArrayBuffer(4)
 const _dataView = new DataView(_buffer)
 
 export function uid_rt(): uid {
+    // Generate an unique identifier (UID) that is guaranteed to be unique within a single runtime
     const now = new Date()
     const startOfHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours())
     const time = now.getTime() - startOfHour.getTime()
-    return time * 0xF9 + _uid_cnt++ % 0xF9 + 1e8
+    const id = time * 0xF9 + _uid_cnt++ + 1e8
+    if (_uid_set.has(id)) {
+        // in case of collision, try again
+        return uid_rt()
+    } else {
+        _uid_set.add(id)
+        return id
+    }
 }
 
 export function uid_cnt(): uid {
