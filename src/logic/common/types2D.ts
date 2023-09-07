@@ -35,6 +35,13 @@ export class Size implements Comparable, Hashable, Printable {
 		return new Size(0, 0)
 	}
 
+	public lerp(s: Size, factor: number): Size {
+		return new Size(
+			this.width + (s.width - this.width) * factor,
+			this.height + (s.height - this.height) * factor
+		)
+	}
+
 	public isZero(): boolean {
 		return this.width === 0 && this.height === 0
 	}
@@ -86,6 +93,13 @@ export class Point implements Comparable, Hashable, Printable {
 
 	static zero(): Point {
 		return new Point(0, 0)
+	}
+
+	public lerp(p: Point, factor: number): Point {
+		return new Point(
+			this.x + (p.x - this.x) * factor,
+			this.y + (p.y - this.y) * factor
+		)
 	}
 
 	public moveTo(p: Point) {
@@ -469,6 +483,19 @@ export class Rect implements Comparable, Hashable, Printable {
 		return new Rect(Point.zero(), new Size())
 	}
 
+	/**
+	 * Linear interpolation between two rects.
+	 * @param r The rect to interpolate to.
+	 * @param factor The interpolation factor.
+	 * @returns the interpolated rect.
+	 */
+	public lerp(r: Rect, factor: number): Rect {
+		return new Rect(
+			this.pos.lerp(r.pos, factor),
+			this.size.lerp(r.size, factor)
+		)
+	}
+
 	public home(): Rect {
 		return new Rect(Point.zero(), this.size)
 	}
@@ -507,8 +534,10 @@ export class Rect implements Comparable, Hashable, Printable {
 		)
 	}
 
-	public moveTo(p: Point) {
+	public moveTo(p: Point): boolean {
+		if (this.pos.equals(p)) return false
 		this.pos = p
+		return true
 	}
 
 	public moveBy(v: Vector) {

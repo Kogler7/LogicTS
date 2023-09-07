@@ -345,33 +345,42 @@ export class ObjectHandler {
     }
 
     private _onMouseMove(e: MouseEvent) {
+        const oldPos = this._startMovingObjectPos
         if (this._readyToMoveLogicObjects) {
             const newPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
             if (!this._isMovingLogicObjects) {
                 this._isMovingLogicObjects = true
                 for (const obj of this._movingLogicObjects) {
+                    obj.target = obj.rect.copy()
                     obj.onMoveBegin()
                 }
                 this._core.fire('movobj.logic.begin', newPos, e)
             }
             for (const obj of this._movingLogicObjects) {
-                const accept = obj.onMoving(this._startMovingObjectPos, newPos)
-                this._movingLogicObjectStates.set(obj.id, accept)
+                const moved = obj.target.moveTo(obj.rect.pos.plus(newPos.minus(oldPos)).round())
+                if (moved) {
+                    const accept = obj.onMoving(oldPos, newPos)
+                    this._movingLogicObjectStates.set(obj.id, accept)
+                    this._core.fire('movobj.logic.step', obj, oldPos, newPos, e)
+                }
             }
-            this._core.fire('movobj.logic.ing', this._startMovingObjectPos, newPos, e)
+            this._core.fire('movobj.logic.ing', oldPos, newPos, e)
         } else if (this._readyToMoveNonLogicObjects) {
             const newPos = new Point(e.offsetX, e.offsetY)
             if (!this._isMovingNonLogicObjects) {
+                const obj = this._movingNonLogicObject!
                 this._isMovingNonLogicObjects = true
-                this._movingNonLogicObject!.onMoveBegin()
+                obj.target = obj.rect.copy()
+                obj.onMoveBegin()
                 this._core.fire('movobj.non-logic.begin', newPos, e)
             }
             const obj = this._movableObjects.get(this._recentSelectedNonLogicId!)
             if (obj) {
-                const accept = obj.onMoving(this._startMovingObjectPos, newPos)
+                obj.target.moveTo(obj.rect.pos.plus(newPos.minus(oldPos)))
+                const accept = obj.onMoving(oldPos, newPos)
                 this._movingNonLogicObjectState = accept
             }
-            this._core.fire('movobj.non-logic.ing', this._startMovingObjectPos, newPos, e)
+            this._core.fire('movobj.non-logic.ing', oldPos, newPos, e)
         }
     }
 

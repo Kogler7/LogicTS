@@ -17,21 +17,25 @@
 
 import LogicLayer from "../logic/layer"
 import { Point, Rect, Vector } from "@/logic/common/types2D"
-import { IObject } from "@/logic/handlers/object"
 import { uid } from "@/logic/common/uid"
 import LogicCore from "@/logic/core"
-import { stat } from "original-fs"
 import { IRenderable } from "@/logic/mixins/renderable"
+import { IMovable } from "@/logic/mixins/movable"
+import { Animation, Curves } from "@/logic/utils/anime"
 
 export default class MoveObjectLayer extends LogicLayer {
     private _moving: boolean = false
     private _movingFrameElapsed: number = 0
-    private _movingObjects: Set<IObject> = new Set()
+    private _movingObjects: Set<IMovable> = new Set()
     private _movingObjectStates: Map<uid, boolean> = new Map()
     private _movingScaledObjectsBias: Map<uid, Vector> = new Map()
     private _movingScaledObjectsRect: Map<uid, Rect> = new Map()
-    private _movingObjectInitialPos: Map<uid, Point> = new Map()
-    private _movingObjectCurrentRect: Map<uid, Rect> = new Map()
+
+    // for animation
+    private _currentScaledObjectsRect: Map<uid, Rect> = new Map()
+    private _currentTargetObjectsRect: Map<uid, Rect> = new Map()
+
+    private _scaleAnimating: boolean = false
 
     private _okColor: string = "#8BC34A"
     private _noColor: string = "#FF5722"
@@ -39,19 +43,20 @@ export default class MoveObjectLayer extends LogicLayer {
     public onMount(core: LogicCore) {
         this._movingObjects = core.movingLogicObjects
         this._movingObjectStates = core.movingLogicObjectStates
-        core.on("movobj.logic.begin", true, this.onMoveObjectBegin.bind(this))
-        core.on("movobj.logic.end", true, this.onMoveObjectEnd.bind(this))
-        core.on("movobj.logic.ing", true, this.onMovingObject.bind(this))
+        core.on("movobj.logic.begin", true, this._onMoveObjectBegin.bind(this))
+        core.on("movobj.logic.end", true, this._onMoveObjectEnd.bind(this))
+        core.on("movobj.logic.ing", true, this._onMovingObject.bind(this))
+        core.on("movobj.logic.step", true, this._onMovingObjectStep.bind(this))
     }
 
-    private _onMovingAnimeFrame() {
+    private _updateAnimeFrame() {
         if (!this._moving) return
         this._movingFrameElapsed++
         this.core?.render()
-        requestAnimationFrame(this._onMovingAnimeFrame.bind(this))
+        requestAnimationFrame(this._updateAnimeFrame.bind(this))
     }
 
-    public onMoveObjectBegin(pos: Point) {
+    private _onMoveObjectBegin(pos: Point) {
         console.log("start moving")
         this._moving = true
         // init moving objects bias
@@ -66,33 +71,98 @@ export default class MoveObjectLayer extends LogicLayer {
             }
             this._movingScaledObjectsBias.set(obj.id, Vector.fromPoints(pos, scaled.pos))
             this._movingScaledObjectsRect.set(obj.id, scaled)
-            this._movingObjectInitialPos.set(obj.id, obj.rect.pos.copy())
-            this._movingObjectCurrentRect.set(obj.id, obj.rect.copy())
+            this._currentScaledObjectsRect.set(obj.id, obj.rect.copy())
+            this._currentTargetObjectsRect.set(obj.id, obj.target.copy())
         }
-        this._onMovingAnimeFrame()
+        // start scale animation
+        for (const obj of this._movingObjects) {
+            const target = this._movingScaledObjectsRect.get(obj.id)!
+            const scaleAnime = new Animation(
+                ((progress: number) => {
+                    this._currentScaledObjectsRect.set(obj.id, obj.rect.lerp(target, progress))
+                    this.core!.render()
+                }).bind(this),
+                300,
+                Curves.easeInOut,
+                (() => {
+                    this._scaleAnimating = true
+                }).bind(this),
+                (() => {
+                    this._scaleAnimating = false
+                }).bind(this)
+            )
+            scaleAnime.start()
+        }
+        this._updateAnimeFrame()
         this.core!.renderAll()
     }
 
-    public onMoveObjectEnd(pos: Point) {
+    private _onMoveObjectEnd(pos: Point) {
         console.log("end moving")
-        this._moving = false
         this._movingFrameElapsed = 0
-        this._movingScaledObjectsBias.clear()
-        this._movingScaledObjectsRect.clear()
-        this._movingObjectInitialPos.clear()
-        this._movingObjectCurrentRect.clear()
+        // start scale animation
+        for (const obj of this._movingObjects) {
+            const curr = this._currentScaledObjectsRect.get(obj.id)!.copy()
+            const scaleAnime = new Animation(
+                ((progress: number) => {
+                    this._currentScaledObjectsRect.set(obj.id, curr.lerp(obj.rect, progress))
+                    this.core!.render()
+                }).bind(this),
+                200,
+                Curves.easeInOut,
+                (() => {
+                    this._scaleAnimating = true
+                }).bind(this),
+                (() => {
+                    this._scaleAnimating = false
+                    this._moving = false
+                    this._movingScaledObjectsBias.clear()
+                    this._movingScaledObjectsRect.clear()
+                }).bind(this)
+            )
+            const curTarget = this._currentTargetObjectsRect.get(obj.id)!
+            const oldTarget = curTarget.copy()
+            const moveTargetAnime = new Animation(
+                ((progress: number) => {
+                    const targetPos = oldTarget.pos.lerp(obj.target.pos, progress)
+                    curTarget.pos = targetPos
+                    this.core!.render()
+                }).bind(this),
+                150,
+                Curves.easeInOut
+            )
+            scaleAnime.start()
+            moveTargetAnime.start()
+        }
         this.core!.renderAll()
     }
 
-    public onMovingObject(oldPos: Point, newPos: Point): boolean {
+    private _onMovingObject(oldPos: Point, newPos: Point) {
         for (const [id, rect] of this._movingScaledObjectsRect) {
             const bias = this._movingScaledObjectsBias.get(id)!
+            if (!bias) {
+                console.error("no bias found")
+                return
+            }
             rect.moveTo(newPos.shift(bias))
-            const initPos = this._movingObjectInitialPos.get(id)!
-            const curRect = this._movingObjectCurrentRect.get(id)!
-            curRect.moveTo(initPos.plus(newPos.minus(oldPos)).round())
         }
-        return false
+    }
+
+    private _onMovingObjectStep() {
+        for (const obj of this._movingObjects) {
+            const curTarget = this._currentTargetObjectsRect.get(obj.id)!
+            const oldTarget = curTarget.copy()
+            const moveTargetAnime = new Animation(
+                ((progress: number) => {
+                    const targetPos = oldTarget.pos.lerp(obj.target.pos, progress)
+                    curTarget.pos = targetPos
+                    this.core!.render()
+                }).bind(this),
+                150,
+                Curves.easeInOut
+            )
+            moveTargetAnime.start()
+        }
     }
 
     public onPaint(ctx: CanvasRenderingContext2D): boolean {
@@ -101,8 +171,8 @@ export default class MoveObjectLayer extends LogicLayer {
         ctx.lineDashOffset = -this._movingFrameElapsed / 2
         ctx.beginPath()
         for (const obj of this._movingObjects) {
-            const curRect = this._movingObjectCurrentRect.get(obj.id)!
-            const renderRect = this.core!.crd2posRect(curRect).float()
+            const target = this._currentTargetObjectsRect.get(obj.id)!
+            const renderRect = this.core!.crd2posRect(target).float()
             const state = this._movingObjectStates.get(obj.id)
             ctx.strokeStyle = state ? this._okColor : this._noColor
             ctx.lineWidth = 2
@@ -110,7 +180,12 @@ export default class MoveObjectLayer extends LogicLayer {
         }
         // render scaled mini objects
         for (const obj of this._movingObjects) {
-            const rect = this._movingScaledObjectsRect.get(obj.id)!
+            let rect: Rect
+            if (this._scaleAnimating) {
+                rect = this._currentScaledObjectsRect.get(obj.id)!
+            } else {
+                rect = this._movingScaledObjectsRect.get(obj.id)!
+            }
             const renderRect = this.core!.crd2posRect(rect).float();
             (obj as unknown as IRenderable).renderAt(ctx, renderRect)
         }

@@ -20,7 +20,7 @@ import { Curve, Curves } from "./curve"
 export { Curves }
 
 export class Animation {
-    private _callback: Function
+    private _callback: (progress: number) => void
     private _duration: number
     private _curve: Curve
     private _onStart: Function | null = null
@@ -30,7 +30,7 @@ export class Animation {
     private _endTime: number = 0
 
     constructor(
-        callback: Function,
+        callback: (progress: number) => void,
         duration: number = 1000,
         curve: Curve = Curves.linear,
         onStart: Function | null = null,

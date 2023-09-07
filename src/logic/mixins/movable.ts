@@ -21,6 +21,7 @@ import { ISelectable } from "./selectable"
 
 export interface IMovable extends ISelectable {
     rect: Rect
+    target: Rect
     onMoving(oldPos: Point, newPos: Point): boolean
     onMoveBegin(): void
     onMoveEnd(): void
@@ -31,6 +32,7 @@ export class Movable implements IMovable {
     public core: LogicCore | null = null
     public rect: Rect
     public level: number
+    public target: Rect = Rect.zero()
     public enabled: boolean = true
     public selected: boolean = false
 
