@@ -387,17 +387,25 @@ export class TrapSet<T> {
     private _set: Set<T>
     private _onAdded: (obj: T) => void
     private _onDelete: (obj: T) => void
+    private _onChanged: (delta: number) => void
 
-    constructor(onAdded: (obj: T) => void, onDelete: (obj: T) => void, init: Array<T> = []) {
+    constructor(
+        onAdded: (obj: T) => void,
+        onDelete: (obj: T) => void,
+        onChanged: (delta: number) => void = () => { },
+        init: Array<T> = []
+    ) {
         this._set = new Set(init)
         this._onAdded = onAdded
         this._onDelete = onDelete
+        this._onChanged = onChanged
     }
 
     add(obj: T): TrapSet<T> {
         if (!this.has(obj)) {
             this._set.add(obj)
             this._onAdded(obj)
+            this._onChanged(1)
         }
         return this
     }
@@ -409,13 +417,24 @@ export class TrapSet<T> {
     delete(obj: T): boolean {
         if (this._set.delete(obj)) {
             this._onDelete(obj)
+            this._onChanged(-1)
             return true
         }
         return false
     }
 
-    clear() {
-        this._set.clear()
+    clear(except: T | null = null) {
+        const oldSize = this._set.size
+        for (const obj of this._set) {
+            if (obj !== except) {
+                this._set.delete(obj)
+                this._onDelete(obj)
+            }
+        }
+        const newSize = this._set.size
+        if (newSize !== oldSize) {
+            this._onChanged(newSize - oldSize)
+        }
     }
 
     forEach(callback: (obj: T) => void) {

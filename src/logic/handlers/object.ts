@@ -44,52 +44,14 @@ export class ObjectHandler {
     private _selectedLogicBoundRect: Rect = Rect.zero()
     private _selectableObjects: Map<uid, ISelectable> = new Map()
     private _selectedLogicObjects: TrapSet<ISelectable> = new TrapSet(
-        ((obj: ISelectable) => {
-            // if the object is newly selected and enabled, notify it
-            if (obj.enabled) {
-                // if the selected object is movable and enabled,
-                // we add it to the selected movable objects
-                if (this._movableObjects.has(obj.id)) {
-                    this._movingLogicObjects.add(obj as IMovable)
-                }
-                // if the selected object is resizable and enabled,
-                // and it's the only one selected object,
-                // we set it as the resizing object
-                if (this._resizableObjects.has(obj.id) && this._selectedLogicObjects.size === 1) {
-                    this._resizingLogicObject = obj as IResizable
-                }
-                // recalculate the select bound rect
-                if (this._selectedLogicBoundRect.isZero()) {
-                    // zero rect represents no object selected
-                    // so we set the bound rect to the object's rect
-                    this._selectedLogicBoundRect = obj.rect
-                } else {
-                    this._selectedLogicBoundRect = this._selectedLogicBoundRect.union(obj.rect)
-                }
-                // notify the object and the core
-                obj.selected = true
-                obj.onSelected()
-                this._core.fire('select.logic-changed')
+        this._onLogicObjectSelected.bind(this),
+        this._onLogicObjectDeselected.bind(this),
+        ((delta: number) => {
+            if (delta <= 0) {
+                // if there are objects deselected, we need to recalculate the select bound rect
+                const rects = [...this._selectedLogicObjects.set].map((obj) => obj.rect)
+                this._selectedLogicBoundRect = Rect.union(rects)
             }
-        }).bind(this),
-        ((obj: ISelectable) => {
-            // if the object is newly deselected, notify it
-            // if the selected object is movable,
-            // remove it from the selected movable objects
-            if (this._movableObjects.has(obj.id)) {
-                this._movingLogicObjects.delete(obj as IMovable)
-            }
-            // if the selected object is resizing,
-            // set the resizing object to null
-            if (this._resizingLogicObject === obj) {
-                this._resizingLogicObject = null
-            }
-            // recalculate the select bound rect
-            const rects = [...this._selectedLogicObjects.set].map((obj) => obj.rect)
-            this._selectedLogicBoundRect = Rect.union(rects)
-            // notify the object and the core
-            obj.selected = false
-            obj.onDeselected()
             this._core.fire('select.logic-changed')
         }).bind(this)
     )
@@ -115,6 +77,10 @@ export class ObjectHandler {
 
     private _boundRectPressed: boolean = false
 
+    public get logicArena(): IObjectArena {
+        return this._logicArena
+    }
+
     public get selectedLogicObjects(): Set<ISelectable> {
         return this._selectedLogicObjects.set
     }
@@ -132,112 +98,148 @@ export class ObjectHandler {
 
     constructor(core: LogicCore) {
         this._core = core
+        this._arenas.set(0, this._logicArena)
         // register mouse down event listener to the bottom of the event stack
         // if this callback is fired, it means that no object is selected
         core.on('mousedown', false, this._onMousePressedBackground.bind(this), -Infinity)
         // register mouse down event listener to the top of the event stack
-        core.on('mousedown', false, this._onMousePressedBoundRect.bind(this), Infinity)
+        core.on('mousedown', false, this._checkIfMousePressedBoundRect.bind(this), Infinity)
         // listen to mouse up event to stop moving objects
         core.on('mouseup', false, this._onMouseUp.bind(this), Infinity)
         // listen to mouse move event to move objects
         core.on('mousemove', false, this._onMouseMove.bind(this), Infinity)
         // register level 0 arena callback event listener to the core
-        this._arenas.set(0, this._logicArena)
-        const level0cbk = ((e: MouseEvent) => {
-            // the logic arena stores objects with logic coordinates
-            // so we need to convert the mouse position to logic coordinates first
-            const hitPos = core.pos2crd(new Point(e.offsetX, e.offsetY))
-            // check if the mouse position is occupied by an object
-            const hitId = this._logicArena.posOccupied(hitPos)
-            if (hitId) {
-                // check if the object is selectable
-                // and if it is, check if it is enabled
-                const obj = this._selectableObjects.get(hitId)
-                if (obj && obj.enabled) {
-                    const alreadySelected = this._selectedLogicObjects.has(obj)
-                    // if the object is selectable and enabled, try select it
-                    if (this._ctrlDown && alreadySelected) {
-                        // if ctrl is pressed and the object is already selected, deselect it
-                        this._recentSelectedLogicId = null
-                        this._selectedLogicObjects.delete(obj)
-                    } else {
-                        if (!this._ctrlDown) {
-                            // if ctrl is not pressed, clear the selected objects first
-                            this._clearSelectedLogicObjects(obj)
-                        }
-                        // if the object is not selected, select it
-                        if (!alreadySelected) {
-                            this._recentSelectedLogicId = hitId
-                            this._selectedLogicObjects.add(obj)
-                        }
-                        // ready to move the selected logic objects
-                        this._isMovingLogicObjects = true
-                        this._isMovingNonLogicObjects = false
-                        this._startMovingObjectPos = obj.rect.pos.copy()
-                    }
-                    this._clearSelectedNonLogicObject()
-                    // if an selectable object is hit, return false to stop the event going down
-                    return false
-                }
-            }
-        }).bind(this)
-        core.on('mousedown', false, level0cbk, 0)
+        core.on('mousedown', false, this._onMousePressedLogicLevel.bind(this), 0)
         // register ctrl key event listener to the core(level 0)
-        core.on('keydown', false, ((e: KeyboardEvent) => {
-            if (e.key === 'Control') {
-                this._ctrlDown = true
-            }
-        }).bind(this), 0)
-        core.on('keyup', false, ((e: KeyboardEvent) => {
-            if (e.key === 'Control') {
-                this._ctrlDown = false
-            }
-        }).bind(this), 0)
+        core.on('keydown.Control', true, (() => { this._ctrlDown = true }).bind(this), 0)
+        core.on('keyup.Control', true, (() => { this._ctrlDown = false }).bind(this), 0)
         // register frame begin event listener to the core
         core.on('frame.begin', true, ((e: MouseEvent) => {
             // clear all selected objects
-            this._clearSelectedLogicObjects()
+            this._selectedLogicObjects.clear()
             // reset the old frame logic rect
             this._oldFramedLogicRect = Rect.zero()
         }).bind(this))
         // register logic frame change event listener to the core
-        core.on('frame.change', true, ((oldRect: Rect, newRect: Rect) => {
-            // when the logic frame changes, we need to update the selected objects
-            // we need to find the objects that are newly selected and deselected
-            // first we compare the old frame logic rect cached and provided by the core
-            if (!this._oldFramedLogicRect.equals(oldRect)) {
-                // if the old frame logic rect is not the same as the cached one
-                // recalculate the old framed object ids
-                this._oldFramedLogicObjectIds = this._logicArena.rectOccupiedSet(oldRect, -1, true)
-            }
-            // then we calculate the new framed object ids
-            const newFramedObjectIds = this._logicArena.rectOccupiedSet(newRect, -1, true)
-            // find the newly selected objects
-            for (const id of newFramedObjectIds) {
-                if (!this._oldFramedLogicObjectIds.has(id)) {
-                    const obj = this._selectableObjects.get(id)
-                    if (obj) {
-                        this._selectedLogicObjects.add(obj)
-                    }
-                }
-            }
-            // find the newly deselected objects
-            for (const id of this._oldFramedLogicObjectIds) {
-                if (!newFramedObjectIds.has(id)) {
-                    const obj = this._selectableObjects.get(id)
-                    if (obj) {
-                        this._selectedLogicObjects.delete(obj)
-                    }
-                }
-            }
-        }).bind(this))
+        core.on('frame.change', true, this._onLogicFrameRectChanged.bind(this))
     }
 
-    public get logicArena(): IObjectArena {
-        return this._logicArena
+    private _onLogicFrameRectChanged(oldRect: Rect, newRect: Rect) {
+        // when the logic frame changes, we need to update the selected objects
+        // we need to find the objects that are newly selected and deselected
+        // first we compare the old frame logic rect cached and provided by the core
+        if (!this._oldFramedLogicRect.equals(oldRect)) {
+            // if the old frame logic rect is not the same as the cached one
+            // recalculate the old framed object ids
+            this._oldFramedLogicObjectIds = this._logicArena.rectOccupiedSet(oldRect, -1, true)
+        }
+        // then we calculate the new framed object ids
+        const newFramedObjectIds = this._logicArena.rectOccupiedSet(newRect, -1, true)
+        // find the newly selected objects
+        for (const id of newFramedObjectIds) {
+            if (!this._oldFramedLogicObjectIds.has(id)) {
+                const obj = this._selectableObjects.get(id)
+                if (obj) {
+                    this._selectedLogicObjects.add(obj)
+                }
+            }
+        }
+        // find the newly deselected objects
+        for (const id of this._oldFramedLogicObjectIds) {
+            if (!newFramedObjectIds.has(id)) {
+                const obj = this._selectableObjects.get(id)
+                if (obj) {
+                    this._selectedLogicObjects.delete(obj)
+                }
+            }
+        }
     }
 
-    private _addSelectSupportForLevel(level: number) {
+    private _onLogicObjectSelected(obj: ISelectable) {
+        // if the object is newly selected and enabled, notify it
+        if (obj.enabled) {
+            // if the selected object is movable and enabled,
+            // we add it to the selected movable objects
+            if (this._movableObjects.has(obj.id)) {
+                this._movingLogicObjects.add(obj as IMovable)
+            }
+            // if the selected object is resizable and enabled,
+            // and it's the only one selected object,
+            // we set it as the resizing object
+            if (this._resizableObjects.has(obj.id) && this._selectedLogicObjects.size === 1) {
+                this._resizingLogicObject = obj as IResizable
+            }
+            // recalculate the select bound rect
+            if (this._selectedLogicBoundRect.isZero()) {
+                // zero rect represents no object selected
+                // so we set the bound rect to the object's rect
+                this._selectedLogicBoundRect = obj.rect
+            } else {
+                this._selectedLogicBoundRect = this._selectedLogicBoundRect.union(obj.rect)
+            }
+            // notify the object and the core
+            this._recentSelectedLogicId = obj.id
+            obj.selected = true
+            obj.onSelected()
+        }
+    }
+
+    private _onLogicObjectDeselected(obj: ISelectable) {
+        // if the object is newly deselected, notify it
+        // if the selected object is movable,
+        // remove it from the selected movable objects
+        if (this._movableObjects.has(obj.id)) {
+            this._movingLogicObjects.delete(obj as IMovable)
+        }
+        // if the selected object is resizing,
+        // set the resizing object to null
+        if (this._resizingLogicObject === obj) {
+            this._resizingLogicObject = null
+        }
+        // notify the object and the core
+        if (this._recentSelectedLogicId === obj.id) {
+            this._recentSelectedLogicId = null
+        }
+        obj.selected = false
+        obj.onDeselected()
+    }
+
+    private _onMousePressedLogicLevel(e: MouseEvent) {
+        const core = this._core
+        // the logic arena stores objects with logic coordinates
+        // so we need to convert the mouse position to logic coordinates first
+        const hitPos = core.pos2crd(new Point(e.offsetX, e.offsetY))
+        // check if the mouse position is occupied by an object
+        const hitId = this._logicArena.posOccupied(hitPos)
+        if (hitId) {
+            // check if the object is selectable
+            // and if it is, check if it is enabled
+            const obj = this._selectableObjects.get(hitId)
+            if (obj && obj.enabled) {
+                const alreadySelected = this._selectedLogicObjects.has(obj)
+                // if the object is selectable and enabled, try select it
+                if (this._ctrlDown && alreadySelected) {
+                    // if ctrl is pressed and the object is already selected, deselect it
+                    this._selectedLogicObjects.delete(obj)
+                } else {
+                    if (!this._ctrlDown) {
+                        // if ctrl is not pressed, clear the selected objects first
+                        this._selectedLogicObjects.clear()
+                    }
+                    this._selectedLogicObjects.add(obj)
+                    // ready to move the selected logic objects
+                    this._isMovingLogicObjects = true
+                    this._isMovingNonLogicObjects = false
+                    this._startMovingObjectPos = obj.rect.pos.copy()
+                }
+                this._clearSelectedNonLogicObject()
+                // if an selectable object is hit, return false to stop the event going down
+                return false
+            }
+        }
+    }
+
+    private _addSelectSupportForNonLogicLevel(level: number) {
         if (level === 0) {
             console.error('level 0 arena already exists.')
         }
@@ -262,6 +264,7 @@ export class ObjectHandler {
                         // ready to move the selected non-logic object
                         this._isMovingLogicObjects = false
                         this._isMovingNonLogicObjects = true
+                        this._movingNonLogicObject = obj as IMovable
                         this._startMovingObjectPos = obj.rect.pos.copy()
                     }
                     // if an object is hit, return false to stop the event going down
@@ -274,7 +277,7 @@ export class ObjectHandler {
         }
     }
 
-    private _delSelectSupportForLevel(level: number) {
+    private _delSelectSupportForNonLogicLevel(level: number) {
         if (level === 0) {
             console.error('cannot delete level 0 arena.')
             return
@@ -289,9 +292,87 @@ export class ObjectHandler {
         }
     }
 
+    private _clearSelectedNonLogicObject() {
+        if (this._recentSelectedNonLogicId) {
+            const obj = this._selectableObjects.get(this._recentSelectedNonLogicId)
+            if (obj) {
+                obj.selected = false
+                obj.onDeselected()
+            }
+            this._recentSelectedNonLogicId = null
+        }
+    }
+
+    private _onMousePressedBackground(e: MouseEvent) {
+        // if the left button is pressed on background, clear all selected objects
+        if (e.button === 0) {
+            // clear all selected objects
+            this._selectedLogicObjects.clear()
+            // clear non-logic selected object
+            this._clearSelectedNonLogicObject()
+        }
+    }
+
+    private _checkIfMousePressedBoundRect(e: MouseEvent) {
+        // if the left button is pressed on the bound rect, start moving the selected objects
+        if (e.button === 0) {
+            const hitPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
+            if (this.selectedLogicBoundRect.containsPoint(hitPos)) {
+                this._isMovingLogicObjects = true
+                this._isMovingNonLogicObjects = false
+                this._startMovingObjectPos = hitPos.copy()
+                this._boundRectPressed = true
+                // stop the event going down
+                return false
+            }
+        }
+    }
+
+    private _onMouseUp(e: MouseEvent) {
+        // if the left button is up, stop moving the selected objects
+        if (this._isMovingLogicObjects) {
+            if (this._boundRectPressed) {
+                this._boundRectPressed = false
+                const hitPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
+                if (this._startMovingObjectPos.equals(hitPos)) {
+                    // if the mouse didn't move before up,
+                    // we pass the mouse down event to the logic level manually
+                    if (this._logicArena.posOccupied(hitPos)) {
+                        // if the mouse is up on a logic object, clear all selected objects
+                        this._onMousePressedLogicLevel(e)
+                    } else {
+                        this._onMousePressedBackground(e)
+                    }
+                }
+            }
+            this._isMovingLogicObjects = false
+        } else if (this._isMovingNonLogicObjects) {
+            this._isMovingNonLogicObjects = false
+            this._movingNonLogicObject = null
+            this._movingNonLogicObjectState = false
+        }
+    }
+
+    private _onMouseMove(e: MouseEvent) {
+        if (this._isMovingLogicObjects) {
+            const newPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
+            for (const obj of this._movingLogicObjects) {
+                const accept = obj.onMove(this._startMovingObjectPos, newPos)
+                this._movingLogicObjectStates.set(obj.id, accept)
+            }
+        } else if (this._isMovingNonLogicObjects) {
+            const newPos = new Point(e.offsetX, e.offsetY)
+            const obj = this._movableObjects.get(this._recentSelectedNonLogicId!)
+            if (obj) {
+                const accept = obj.onMove(this._startMovingObjectPos, newPos)
+                this._movingNonLogicObjectState = accept
+            }
+        }
+    }
+
     public getArena(level: number): IObjectArena {
         if (!this._arenas.has(level)) {
-            this._addSelectSupportForLevel(level)
+            this._addSelectSupportForNonLogicLevel(level)
         }
         return this._arenas.get(level) as IObjectArena
     }
@@ -299,7 +380,7 @@ export class ObjectHandler {
     public addObject(obj: IObject): boolean {
         const level = obj.level
         if (!this._arenas.has(level)) {
-            this._addSelectSupportForLevel(level)
+            this._addSelectSupportForNonLogicLevel(level)
         }
         // if the object is already registered, return false
         const success = this._arenas.get(level)!.addObject(obj.id, obj.rect)
@@ -322,7 +403,7 @@ export class ObjectHandler {
         const success = arena.delObject(obj.id)
         if (arena.empty) {
             // if the last object in the arena is deleted, delete the arena
-            this._delSelectSupportForLevel(level)
+            this._delSelectSupportForNonLogicLevel(level)
         }
         return success
     }
@@ -348,98 +429,6 @@ export class ObjectHandler {
             this._resizableObjects.set(obj.id, obj)
         } else {
             this._resizableObjects.delete(obj.id)
-        }
-    }
-
-    private _clearSelectedLogicObjects(except: ISelectable | null = null) {
-        for (const obj of this._selectedLogicObjects.set) {
-            if (obj === except) {
-                continue
-            }
-            obj.selected = false
-            obj.onDeselected()
-        }
-        this._selectedLogicObjects.clear()
-        if (except) {
-            this._selectedLogicObjects.add(except)
-        }
-        this._recentSelectedLogicId = null
-        // reset the selected logic bound rect
-        this._selectedLogicBoundRect = Rect.zero()
-        this._core.fire('select.logic-changed')
-    }
-
-    private _clearSelectedNonLogicObject() {
-        if (this._recentSelectedNonLogicId) {
-            const obj = this._selectableObjects.get(this._recentSelectedNonLogicId)
-            if (obj) {
-                obj.selected = false
-                obj.onDeselected()
-            }
-            this._recentSelectedNonLogicId = null
-        }
-    }
-
-    private _onMousePressedBackground(e: MouseEvent) {
-        // if the left button is pressed on background, clear all selected objects
-        if (e.button === 0) {
-            // clear all selected objects
-            this._clearSelectedLogicObjects()
-            // clear non-logic selected object
-            this._clearSelectedNonLogicObject()
-        }
-    }
-
-    private _onMousePressedBoundRect(e: MouseEvent) {
-        // if the left button is pressed on the bound rect, start moving the selected objects
-        if (e.button === 0) {
-            const hitPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
-            if (this.selectedLogicBoundRect.containsPoint(hitPos)) {
-                this._isMovingLogicObjects = true
-                this._isMovingNonLogicObjects = false
-                this._startMovingObjectPos = hitPos.copy()
-                this._boundRectPressed = true
-                // stop the event going down
-                return false
-            }
-        }
-    }
-
-    private _onMouseUp(e: MouseEvent) {
-        // if the left button is up, stop moving the selected objects
-        if (this._isMovingLogicObjects) {
-            this._isMovingLogicObjects = false
-            this._movingLogicObjects.clear()
-            this._movingLogicObjectStates.clear()
-            if (this._boundRectPressed) {
-                this._boundRectPressed = false
-                if (this._startMovingObjectPos.equals(
-                    this._core.pos2crd(new Point(e.offsetX, e.offsetY))
-                )) {
-                    this._onMousePressedBackground(e)
-                }
-            }
-        } else if (this._isMovingNonLogicObjects) {
-            this._isMovingNonLogicObjects = false
-            this._movingNonLogicObject = null
-            this._movingNonLogicObjectState = false
-        }
-    }
-
-    private _onMouseMove(e: MouseEvent) {
-        if (this._isMovingLogicObjects) {
-            const newPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
-            for (const obj of this._movingLogicObjects) {
-                const accept = obj.onMove(this._startMovingObjectPos, newPos)
-                this._movingLogicObjectStates.set(obj.id, accept)
-            }
-        } else if (this._isMovingNonLogicObjects) {
-            const newPos = new Point(e.offsetX, e.offsetY)
-            const obj = this._movableObjects.get(this._recentSelectedNonLogicId!)
-            if (obj) {
-                const accept = obj.onMove(this._startMovingObjectPos, newPos)
-                this._movingNonLogicObjectState = accept
-            }
         }
     }
 }

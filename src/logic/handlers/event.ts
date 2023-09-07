@@ -212,9 +212,29 @@ export default class EventHandler {
 
     private _onKeyDown(e: KeyboardEvent) {
         if (!this._core.emit('keydown', e)) return
+        if (e.key === 'Alt') {
+            this._altKey = true
+        }
+        else if (e.key === 'Control') {
+            this._ctrlKey = true
+        }
+        else if (e.key === 'Shift') {
+            this._shiftKey = true
+        }
+        this._core.fire('keydown.' + e.key, e)
     }
 
     private _onKeyUp(e: KeyboardEvent) {
         if (!this._core.emit('keyup', e)) return
+        if (e.key === 'Alt') {
+            this._altKey = false
+        }
+        else if (e.key === 'Control') {
+            this._ctrlKey = false
+        }
+        else if (e.key === 'Shift') {
+            this._shiftKey = false
+        }
+        this._core.fire('keyup.' + e.key, e)
     }
 } 
