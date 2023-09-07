@@ -18,10 +18,6 @@
 import LogicLayer from "../logic/layer"
 
 export default class FrameLayer extends LogicLayer {
-    public onMount(): void {
-        this.level = 3
-    }
-
     public onReloc(ctx: CanvasRenderingContext2D): boolean {
         ctx.strokeStyle = "#ff0000"
         ctx.lineWidth = 2

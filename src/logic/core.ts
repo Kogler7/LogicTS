@@ -28,6 +28,8 @@ import { ISelectable } from "./mixins/selectable"
 import { IMovable } from "./mixins/movable"
 import { IResizable } from "./mixins/resizable"
 import { Size } from "electron"
+import { IObjectArena } from "./arena/arena"
+import { uid } from "./common/uid"
 
 export default class LogicCore {
     private _dpr: number = window.devicePixelRatio || 1
@@ -301,6 +303,18 @@ export default class LogicCore {
 
     public get gridWidth(): number {
         return this._layoutHandler.gridWidth
+    }
+
+    public get logicArena(): IObjectArena {
+        return this._objectHandler.logicArena
+    }
+
+    public get movingLogicObjects(): Set<IMovable> {
+        return this._objectHandler.movingLogicObjects
+    }
+
+    public get movingLogicObjectStates(): Map<uid, boolean> {
+        return this._objectHandler.movingLogicObjectStates
     }
 
     public get selectedLogicObjects(): Set<ISelectable> {

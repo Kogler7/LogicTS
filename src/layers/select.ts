@@ -22,7 +22,6 @@ export default class SelectLayer extends LogicLayer {
     private _cache: CanvasRenderingContext2D | null = null
     public onMount(): void {
         const core = this.core!
-        this.level = 2
         const cornerSize = 6
         const halfCorner = cornerSize / 2
         this._cache = core.createCache()

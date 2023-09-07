@@ -23,44 +23,15 @@
 import { onMounted } from "vue"
 import LogicCore from "./logic/core"
 import LogicLayer from "./logic/layer"
-import { Point, Rect, Size } from "@/logic/common/types2D"
-import { uid_rt, uid2hex, uid } from "@/logic/common/uid"
-import { IRenderable } from "@/logic/mixins/renderable"
-import { Movable } from "@/logic/mixins/movable"
+import { Point } from "@/logic/common/types2D"
+import { uid } from "@/logic/common/uid"
 import FrameLayer from "@/layers/frame"
 import ScalarLayer from "@/layers/scalar"
 import MeshLayer from "@/layers/mesh"
 import SelectLayer from "@/layers/select"
+import MoveObjectLayer from "@/layers/move"
+import Component from "@/objects/comp"
 
-class Component extends Movable implements IRenderable {
-    constructor(pos: Point = Point.zero()) {
-        super(uid_rt(), 0, new Rect(pos, new Size(4, 4)))
-    }
-
-    public render(ctx: CanvasRenderingContext2D): boolean {
-        const renderRect = this.core!.crd2posRect(this.rect).float()
-        const color = uid2hex(this.id)
-        ctx.strokeStyle = "#000000"
-        ctx.lineWidth = 3
-        ctx.strokeRect(...renderRect.ltwh)
-        ctx.fillStyle = color
-        ctx.fillRect(...renderRect.ltwh)
-        return true
-    }
-
-    public onSelected(): void {
-        console.log("selected", this.id)
-    }
-
-    public onDeselected(): void {
-        console.log("deselected", this.id)
-    }
-
-    public onRegistered(core: LogicCore): void {
-        super.onRegistered(core)
-        console.log("registered", this.id)
-    }
-}
 
 class TestLayer extends LogicLayer {
     private _comps = new Map<uid, Component>()
@@ -83,9 +54,10 @@ onMounted(() => {
     const core = new LogicCore()
 
     const frameLayer = new FrameLayer('frame', 2)
-    const scalarLayer = new ScalarLayer('scalar', 3)
+    const scalarLayer = new ScalarLayer('scalar', 4)
     const meshLayer = new MeshLayer('mesh', -1)
-    const selectLayer = new SelectLayer('select', 0)
+    const selectLayer = new SelectLayer('select', 1)
+    const moveLayer = new MoveObjectLayer('move', 3)
     const testLayer = new TestLayer('test', 1)
 
     core.connect(scene)
@@ -94,6 +66,7 @@ onMounted(() => {
     core.mount(scalarLayer)
     core.mount(meshLayer)
     core.mount(selectLayer)
+    core.mount(moveLayer)
     core.mount(testLayer)
 
     const c1 = new Component(new Point(10, 5))

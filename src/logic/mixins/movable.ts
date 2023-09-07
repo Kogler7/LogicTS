@@ -21,7 +21,9 @@ import { ISelectable } from "./selectable"
 
 export interface IMovable extends ISelectable {
     rect: Rect
-    onMove(oldPos: Point, newPos: Point): boolean
+    onMoving(oldPos: Point, newPos: Point): boolean
+    onMoveBegin(): void
+    onMoveEnd(): void
 }
 
 export class Movable implements IMovable {
@@ -51,10 +53,18 @@ export class Movable implements IMovable {
         // TODO
     }
 
-    public onMove(oldPos: Point, newPos: Point): boolean {
+    public onMoveBegin(): void {
+        // TODO
+    }
+
+    public onMoveEnd(): void {
+        // TODO
+    }
+
+    public onMoving(oldPos: Point, newPos: Point): boolean {
         // this.rect.x += newPos.x - oldPos.x
         // this.rect.y += newPos.y - oldPos.y
-        console.log("moving", this.id, oldPos.desc, newPos.desc)
+        // console.log("moving", this.id, oldPos.desc, newPos.desc)
         return false
     }
 }
