@@ -162,8 +162,12 @@ export default class LogicCore {
         this._cursorHandler.push(cursor)
     }
 
-    public popCursor(cursor: string) {
-        this._cursorHandler.recall(cursor)
+    public popCursor(cursor: string = '') {
+        if (cursor) {
+            this._cursorHandler.recall(cursor)
+        } else {
+            this._cursorHandler.pop()
+        }
     }
 
     public mount(layer: LogicLayer) {

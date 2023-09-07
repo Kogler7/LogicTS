@@ -72,7 +72,7 @@ export class Size implements Comparable, Hashable, Printable {
 	}
 
 	public get desc(): string {
-		return `Size[${this.width}, ${this.height}]`
+		return `Size[${this.width.toFixed(2)}, ${this.height.toFixed(2)}]`
 	}
 }
 
@@ -86,6 +86,11 @@ export class Point implements Comparable, Hashable, Printable {
 
 	static zero(): Point {
 		return new Point(0, 0)
+	}
+
+	public moveTo(p: Point) {
+		this.x = p.x
+		this.y = p.y
 	}
 
 	public isZero(): boolean {
@@ -180,7 +185,7 @@ export class Point implements Comparable, Hashable, Printable {
 	}
 
 	public get desc(): string {
-		return `Point(${this.x}, ${this.y})`
+		return `Point(${this.x.toFixed(2)}, ${this.y.toFixed(2)})`
 	}
 }
 
@@ -414,7 +419,7 @@ export class Vector implements Comparable, Hashable, Printable {
 	}
 
 	public get desc(): string {
-		return `Vector(${this.vx}, ${this.vy})`
+		return `Vector(${this.vx.toFixed(2)}, ${this.vy.toFixed(2)})`
 	}
 }
 
@@ -464,6 +469,10 @@ export class Rect implements Comparable, Hashable, Printable {
 		return new Rect(Point.zero(), new Size())
 	}
 
+	public home(): Rect {
+		return new Rect(Point.zero(), this.size)
+	}
+
 	public isZero(): boolean {
 		return this.pos.isZero() && this.size.isZero()
 	}
@@ -491,11 +500,19 @@ export class Rect implements Comparable, Hashable, Printable {
 		return res
 	}
 
-	public scale(factor: number, center: Point): Rect {
+	public scale(factor: number, center: Point = Point.zero()): Rect {
 		return new Rect(
 			this.pos.scale(factor, center),
 			this.size.scale(factor)
 		)
+	}
+
+	public moveTo(p: Point) {
+		this.pos = p
+	}
+
+	public moveBy(v: Vector) {
+		this.pos = this.pos.shift(v)
 	}
 
 	/**
@@ -782,7 +799,11 @@ export class Rect implements Comparable, Hashable, Printable {
 	}
 
 	public get desc(): string {
-		return `Rect{(${this.pos.x}, ${this.pos.y}), [${this.size.width}, ${this.size.height}]}`
+		return `Rect{(${this.pos.x.toFixed(2)
+			}, ${this.pos.y.toFixed(2)
+			}), [${this.size.width.toFixed(2)
+			}, ${this.size.height.toFixed(2)
+			}]}`
 	}
 }
 
@@ -871,7 +892,7 @@ export class Bound implements Comparable, Hashable, Printable {
 	}
 
 	public get desc(): string {
-		return `Bound{${this.lftLmt}, ${this.rgtLmt}}`
+		return `Bound{${this.lftLmt?.toFixed(2)}, ${this.rgtLmt?.toFixed(2)}}`
 	}
 }
 

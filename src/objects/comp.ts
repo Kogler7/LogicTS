@@ -28,20 +28,26 @@ export default class Component extends Movable implements IRenderable {
         super(uid_rt(), 0, new Rect(pos, new Size(4, 4)))
     }
 
-    public render(ctx: CanvasRenderingContext2D): boolean {
-        const renderRect = this.core!.crd2posRect(this.rect).float()
+    public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {
         const color = uid2hex(this.id)
-        ctx.strokeStyle = "#000000"
-        ctx.lineWidth = 3
-        ctx.strokeRect(...renderRect.ltwh)
+        if (!this._moving) {
+            ctx.strokeStyle = "#000000"
+            ctx.lineWidth = 1
+            ctx.strokeRect(...rect.ltwh)
+        }
         ctx.fillStyle = color
-        ctx.fillRect(...renderRect.ltwh)
+        ctx.fillRect(...rect.ltwh)
+        return rect
+    }
+
+    public renderOn(ctx: CanvasRenderingContext2D) {
+        const renderRect = this.core!.crd2posRect(this.rect).float()
+        const rect = this.renderAt(ctx, renderRect)
         // if this component is moving, render a mask
         if (this._moving) {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.5)"
-            ctx.fillRect(...renderRect.ltwh)
+            ctx.fillStyle = "rgba(255, 255, 255, 0.5)"
+            ctx.fillRect(...rect.ltwh)
         }
-        return true
     }
 
     public onSelected(): void {
@@ -69,6 +75,6 @@ export default class Component extends Movable implements IRenderable {
         // this.rect.x += newPos.x - oldPos.x
         // this.rect.y += newPos.y - oldPos.y
         // console.log("moving", this.id, oldPos.desc, newPos.desc)
-        return false
+        return true
     }
 }

@@ -238,15 +238,25 @@ export class ObjectHandler {
                     }
                     this._selectedLogicObjects.add(obj)
                     // ready to move the selected logic objects
-                    this._readyToMoveLogicObjects = true
-                    this._readyToMoveNonLogicObjects = false
-                    this._startMovingObjectPos = obj.rect.pos.copy()
+                    this._setReadyToMoveObjects(hitPos, true)
                 }
                 this._clearSelectedNonLogicObject()
                 // if an selectable object is hit, return false to stop the event going down
                 return false
             }
         }
+    }
+
+    private _setReadyToMoveObjects(start: Point, logic: boolean) {
+        if (logic) {
+            this._readyToMoveLogicObjects = true
+            this._readyToMoveNonLogicObjects = false
+        } else {
+            this._readyToMoveLogicObjects = false
+            this._readyToMoveNonLogicObjects = true
+        }
+        this._startMovingObjectPos = start
+        this._core.setCursor('move')
     }
 
     private _addSelectSupportForNonLogicLevel(level: number) {
@@ -272,10 +282,8 @@ export class ObjectHandler {
                         obj.selected = true
                         obj.onSelected()
                         // ready to move the selected non-logic object
-                        this._readyToMoveLogicObjects = false
-                        this._readyToMoveNonLogicObjects = true
+                        this._setReadyToMoveObjects(hitPos, false)
                         this._movingNonLogicObject = obj as IMovable
-                        this._startMovingObjectPos = obj.rect.pos.copy()
                     }
                     // if an object is hit, return false to stop the event going down
                     return false
@@ -328,9 +336,7 @@ export class ObjectHandler {
         if (e.button === 0) {
             const hitPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
             if (this.selectedLogicBoundRect.containsPoint(hitPos)) {
-                this._readyToMoveLogicObjects = true
-                this._readyToMoveNonLogicObjects = false
-                this._startMovingObjectPos = hitPos.copy()
+                this._setReadyToMoveObjects(hitPos, true)
                 this._boundRectPressed = true
                 // stop the event going down
                 return false
@@ -338,20 +344,50 @@ export class ObjectHandler {
         }
     }
 
+    private _onMouseMove(e: MouseEvent) {
+        if (this._readyToMoveLogicObjects) {
+            const newPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
+            if (!this._isMovingLogicObjects) {
+                this._isMovingLogicObjects = true
+                for (const obj of this._movingLogicObjects) {
+                    obj.onMoveBegin()
+                }
+                this._core.fire('movobj.logic.begin', newPos, e)
+            }
+            for (const obj of this._movingLogicObjects) {
+                const accept = obj.onMoving(this._startMovingObjectPos, newPos)
+                this._movingLogicObjectStates.set(obj.id, accept)
+            }
+            this._core.fire('movobj.logic.ing', this._startMovingObjectPos, newPos, e)
+        } else if (this._readyToMoveNonLogicObjects) {
+            const newPos = new Point(e.offsetX, e.offsetY)
+            if (!this._isMovingNonLogicObjects) {
+                this._isMovingNonLogicObjects = true
+                this._movingNonLogicObject!.onMoveBegin()
+                this._core.fire('movobj.non-logic.begin', newPos, e)
+            }
+            const obj = this._movableObjects.get(this._recentSelectedNonLogicId!)
+            if (obj) {
+                const accept = obj.onMoving(this._startMovingObjectPos, newPos)
+                this._movingNonLogicObjectState = accept
+            }
+            this._core.fire('movobj.non-logic.ing', this._startMovingObjectPos, newPos, e)
+        }
+    }
+
     private _onMouseUp(e: MouseEvent) {
         // if the left button is up, stop moving the selected objects
         if (this._readyToMoveLogicObjects) {
+            const hitPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
             if (this._isMovingLogicObjects) {
                 this._isMovingLogicObjects = false
                 for (const obj of this._movingLogicObjects) {
                     obj.onMoveEnd()
                 }
-                this._core.popCursor('move')
-                this._core.fire('movobj.logic.end', e)
+                this._core.fire('movobj.logic.end', hitPos, e)
             }
             if (this._boundRectPressed) {
                 this._boundRectPressed = false
-                const hitPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
                 if (this._startMovingObjectPos.equals(hitPos)) {
                     // if the mouse didn't move before up,
                     // we pass the mouse down event to the logic level manually
@@ -365,49 +401,17 @@ export class ObjectHandler {
             }
             this._readyToMoveLogicObjects = false
         } else if (this._readyToMoveNonLogicObjects) {
+            const pos = new Point(e.offsetX, e.offsetY)
             if (this._isMovingNonLogicObjects) {
                 this._isMovingNonLogicObjects = false
                 this._movingNonLogicObject!.onMoveEnd()
-                this._core.popCursor('move')
-                this._core.fire('movobj.non-logic.end', e)
+                this._core.fire('movobj.non-logic.end', pos, e)
             }
             this._readyToMoveNonLogicObjects = false
             this._movingNonLogicObject = null
             this._movingNonLogicObjectState = false
         }
-    }
-
-    private _onMouseMove(e: MouseEvent) {
-        if (this._readyToMoveLogicObjects) {
-            if (!this._isMovingLogicObjects) {
-                this._isMovingLogicObjects = true
-                for (const obj of this._movingLogicObjects) {
-                    obj.onMoveBegin()
-                }
-                this._core.setCursor('move')
-                this._core.fire('movobj.logic.begin', e)
-            }
-            const newPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
-            for (const obj of this._movingLogicObjects) {
-                const accept = obj.onMoving(this._startMovingObjectPos, newPos)
-                this._movingLogicObjectStates.set(obj.id, accept)
-            }
-            this._core.fire('movobj.logic.ing', this._startMovingObjectPos, newPos, e)
-        } else if (this._readyToMoveNonLogicObjects) {
-            if (!this._isMovingNonLogicObjects) {
-                this._isMovingNonLogicObjects = true
-                this._movingNonLogicObject!.onMoveBegin()
-                this._core.setCursor('move')
-                this._core.fire('movobj.non-logic.begin', e)
-            }
-            const newPos = new Point(e.offsetX, e.offsetY)
-            const obj = this._movableObjects.get(this._recentSelectedNonLogicId!)
-            if (obj) {
-                const accept = obj.onMoving(this._startMovingObjectPos, newPos)
-                this._movingNonLogicObjectState = accept
-            }
-            this._core.fire('movobj.non-logic.ing', this._startMovingObjectPos, newPos, e)
-        }
+        this._core.popCursor('move')
     }
 
     public getArena(level: number): IObjectArena {

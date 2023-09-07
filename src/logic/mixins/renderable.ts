@@ -19,5 +19,6 @@ import { Rect } from "@/logic/common/types2D"
 
 export interface IRenderable {
     rect: Rect
-    render(ctx: CanvasRenderingContext2D): void
+    renderOn(ctx: CanvasRenderingContext2D): void
+    renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect
 }

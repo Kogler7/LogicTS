@@ -31,10 +31,10 @@ export default class LogicLayer {
 
     public _onMount(core: LogicCore) {
         this.core = core
-        this.onMount()
+        this.onMount(core)
     }
 
-    public onMount() { }
+    public onMount(core: LogicCore) { }
 
     public onUnmount() { }
 

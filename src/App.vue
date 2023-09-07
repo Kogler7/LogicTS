@@ -43,7 +43,7 @@ class TestLayer extends LogicLayer {
 
     public onReloc(ctx: CanvasRenderingContext2D): boolean {
         for (const comp of this._comps.values()) {
-            comp.render(ctx)
+            comp.renderOn(ctx)
         }
         return true
     }
@@ -58,7 +58,7 @@ onMounted(() => {
     const meshLayer = new MeshLayer('mesh', -1)
     const selectLayer = new SelectLayer('select', 1)
     const moveLayer = new MoveObjectLayer('move', 3)
-    const testLayer = new TestLayer('test', 1)
+    const testLayer = new TestLayer('test', 0)
 
     core.connect(scene)
 
@@ -73,15 +73,18 @@ onMounted(() => {
     const c2 = new Component(new Point(25, 10))
     const c3 = new Component(new Point(5, 20))
     const c4 = new Component(new Point(20, 25))
+    const c5 = new Component(new Point(15, 15))
     testLayer.addComponent(c1)
     testLayer.addComponent(c2)
     testLayer.addComponent(c3)
     testLayer.addComponent(c4)
+    testLayer.addComponent(c5)
 
     core.register(c1)
     core.register(c2)
     core.register(c3)
     core.register(c4)
+    core.register(c5)
 
     console.log(core)
     // core.render()
