@@ -36,6 +36,7 @@ export default class MoveObjectLayer extends LogicLayer {
     private _currentTargetObjectsRect: Map<uid, Rect> = new Map()
 
     private _scaleAnimating: boolean = false
+    private _targetAnimating: boolean = false
 
     private _okColor: string = "#8BC34A"
     private _noColor: string = "#FF5722"
@@ -102,7 +103,7 @@ export default class MoveObjectLayer extends LogicLayer {
         this._movingFrameElapsed = 0
         // start scale animation
         for (const obj of this._movingObjects) {
-            const curr = this._currentScaledObjectsRect.get(obj.id)!.copy()
+            const curr = this._movingScaledObjectsRect.get(obj.id)!.copy()
             const scaleAnime = new Animation(
                 ((progress: number) => {
                     this._currentScaledObjectsRect.set(obj.id, curr.lerp(obj.rect, progress))
@@ -122,9 +123,9 @@ export default class MoveObjectLayer extends LogicLayer {
             )
             const curTarget = this._currentTargetObjectsRect.get(obj.id)!
             const oldTarget = curTarget.copy()
-            const moveTargetAnime = new Animation(
+            const targetAnime = new Animation(
                 ((progress: number) => {
-                    const targetPos = oldTarget.pos.lerp(obj.target.pos, progress)
+                    const targetPos = oldTarget.pos.lerp(obj.rect.pos, progress)
                     curTarget.pos = targetPos
                     this.core!.render()
                 }).bind(this),
@@ -132,7 +133,7 @@ export default class MoveObjectLayer extends LogicLayer {
                 Curves.easeInOut
             )
             scaleAnime.start()
-            moveTargetAnime.start()
+            targetAnime.start()
         }
         this.core!.renderAll()
     }
@@ -149,6 +150,7 @@ export default class MoveObjectLayer extends LogicLayer {
     }
 
     private _onMovingObjectStep() {
+        if (this._targetAnimating) return
         for (const obj of this._movingObjects) {
             const curTarget = this._currentTargetObjectsRect.get(obj.id)!
             const oldTarget = curTarget.copy()
@@ -159,7 +161,13 @@ export default class MoveObjectLayer extends LogicLayer {
                     this.core!.render()
                 }).bind(this),
                 150,
-                Curves.easeInOut
+                Curves.easeInOut,
+                (() => {
+                    this._targetAnimating = true
+                }).bind(this),
+                (() => {
+                    this._targetAnimating = false
+                }).bind(this)
             )
             moveTargetAnime.start()
         }

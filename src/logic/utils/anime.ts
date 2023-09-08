@@ -29,6 +29,8 @@ export class Animation {
     private _startTime: number = 0
     private _endTime: number = 0
 
+    private cancelled: boolean = false
+
     constructor(
         callback: (progress: number) => void,
         duration: number = 1000,
@@ -50,10 +52,21 @@ export class Animation {
             this._onStart()
         }
         this._callback(0)
-        requestAnimationFrame(() => { this._update() })
+        requestAnimationFrame((() => { this._update() }).bind(this))
+    }
+
+    public cancel(terminate: boolean = false) {
+        this.cancelled = true
+        if (terminate) {
+            this._callback(1)
+            if (this._onEnd) {
+                this._onEnd()
+            }
+        }
     }
 
     private _update() {
+        if (this.cancelled) return
         const time = Date.now()
         if (time >= this._endTime) {
             this._callback(1)
