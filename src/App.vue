@@ -30,6 +30,7 @@ import ScalarLayer from "@/layers/scalar"
 import MeshLayer from "@/layers/mesh"
 import SelectLayer from "@/layers/select"
 import MoveObjectLayer from "@/layers/move"
+import ResizeObjectLayer from "@/layers/resize"
 import Component from "@/objects/comp"
 
 
@@ -58,6 +59,7 @@ onMounted(() => {
     const meshLayer = new MeshLayer('mesh', -1)
     const selectLayer = new SelectLayer('select', 1)
     const moveLayer = new MoveObjectLayer('move', 3)
+    const resizeLayer = new ResizeObjectLayer('resize', 3)
     const testLayer = new TestLayer('test', 0)
 
     core.connect(scene)
@@ -67,6 +69,7 @@ onMounted(() => {
     core.mount(meshLayer)
     core.mount(selectLayer)
     core.mount(moveLayer)
+    core.mount(resizeLayer)
     core.mount(testLayer)
 
     const c1 = new Component(new Point(10, 5))

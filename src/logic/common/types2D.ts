@@ -527,6 +527,13 @@ export class Rect implements Comparable, Hashable, Printable {
 		return res
 	}
 
+	public round(): Rect {
+		const res = new Rect(this.pos.round(), this.size.copy())
+		res.right = Math.round(res.right)
+		res.bottom = Math.round(res.bottom)
+		return res
+	}
+
 	public scale(factor: number, center: Point = Point.zero()): Rect {
 		return new Rect(
 			this.pos.scale(factor, center),
@@ -538,6 +545,36 @@ export class Rect implements Comparable, Hashable, Printable {
 		if (this.pos.equals(p)) return false
 		this.pos = p
 		return true
+	}
+
+	public resizeBy(p1: Point, p2: Point): Rect {
+		let r: Rect
+		if (p1.x <= this.left) {
+			if (p1.y <= this.top) {
+				r = Rect.fromVertices(p2, this.bottomRight)
+			} else if (p1.y >= this.bottom) {
+				r = Rect.fromVertices(p2, this.topRight)
+			} else {
+				r = Rect.fromVertices(this.bottomRight, this.topRight).expandToInclude(p2)
+			}
+		} else if (p1.x >= this.right) {
+			if (p1.y <= this.top) {
+				r = Rect.fromVertices(p2, this.bottomLeft)
+			} else if (p1.y >= this.bottom) {
+				r = Rect.fromVertices(p2, this.topLeft)
+			} else {
+				r = Rect.fromVertices(this.bottomLeft, this.topLeft).expandToInclude(p2)
+			}
+		} else {
+			if (p1.y <= this.top) {
+				r = Rect.fromVertices(this.bottomLeft, this.bottomRight).expandToInclude(p2)
+			} else if (p1.y >= this.bottom) {
+				r = Rect.fromVertices(this.topLeft, this.topRight).expandToInclude(p2)
+			} else {
+				r = this.copy()
+			}
+		}
+		return r
 	}
 
 	public moveBy(v: Vector) {
@@ -600,7 +637,7 @@ export class Rect implements Comparable, Hashable, Printable {
 	public get bottomLeft(): Point { return new Point(this.left, this.bottom) }
 	public get bottomRight(): Point { return new Point(this.right, this.bottom) }
 
-	public get vertices(): Point[] {
+	public get corners(): Point[] {
 		return [this.topLeft, this.topRight, this.bottomRight, this.bottomLeft]
 	}
 
@@ -610,6 +647,15 @@ export class Rect implements Comparable, Hashable, Printable {
 			new Line(this.topRight, this.bottomRight),
 			new Line(this.bottomRight, this.bottomLeft),
 			new Line(this.bottomLeft, this.topLeft)
+		]
+	}
+
+	public get edgeCenters(): Point[] {
+		return [
+			new Point(this.centerX, this.top),
+			new Point(this.right, this.centerY),
+			new Point(this.centerX, this.bottom),
+			new Point(this.left, this.centerY)
 		]
 	}
 
@@ -747,6 +793,21 @@ export class Rect implements Comparable, Hashable, Printable {
 			res += this.bottom < rect.top ? 't' : ''
 		}
 		return res
+	}
+
+	// ew ns nesw nwse to represent the relative direction
+	public posRelativeResizeDirection(pos: Point): string {
+		if (pos.x <= this.left) {
+			if (pos.y <= this.top) return 'nwse'
+			if (pos.y >= this.bottom) return 'nesw'
+			return 'ew'
+		} else if (pos.x >= this.right) {
+			if (pos.y <= this.top) return 'nesw'
+			if (pos.y >= this.bottom) return 'nwse'
+			return 'ew'
+		} else {
+			return 'ns'
+		}
 	}
 
 	public equals(rect: Rect): boolean {

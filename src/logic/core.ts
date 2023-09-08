@@ -27,6 +27,7 @@ import { ISelectable } from "./mixins/selectable"
 import { IMovable } from "./mixins/movable"
 import { IObjectArena } from "./arena/arena"
 import { uid } from "./common/uid"
+import { IResizable } from "./mixins/resizable"
 
 export default class LogicCore {
     private _scopedNotifier = new ScopedEventNotifier()
@@ -42,6 +43,10 @@ export default class LogicCore {
         if (stage) {
             this.connect(stage)
         }
+    }
+
+    public get cursorStack() {
+        return this._cursorHandler.cursorStack
     }
 
     public get stageWidth(): number {
@@ -96,14 +101,6 @@ export default class LogicCore {
         return this._objectHandler.logicArena
     }
 
-    public get movingLogicObjects(): Set<IMovable> {
-        return this._objectHandler.movingLogicObjects
-    }
-
-    public get movingLogicObjectStates(): Map<uid, boolean> {
-        return this._objectHandler.movingLogicObjectStates
-    }
-
     public get selectedLogicObjects(): Set<ISelectable> {
         return this._objectHandler.selectedLogicObjects
     }
@@ -114,6 +111,22 @@ export default class LogicCore {
 
     public get recentSelectedLogicObject(): ISelectable | null {
         return this._objectHandler.recentSelectedLogicObject
+    }
+
+    public get movingLogicObjects(): Set<IMovable> {
+        return this._objectHandler.movingLogicObjects
+    }
+
+    public get movingLogicObjectStates(): Map<uid, boolean> {
+        return this._objectHandler.movingLogicObjectStates
+    }
+
+    public get resizingLogicObject(): IResizable[] {
+        return this._objectHandler.resizingLogicObject
+    }
+
+    public get resizingLogicObjectState(): boolean[] {
+        return this._objectHandler.resizingLogicObjectState
     }
 
     public on(event: string, scoped: boolean, callback: Function, level: number = 0) {
@@ -188,4 +201,7 @@ export default class LogicCore {
     public setSelectable = this._objectHandler.setSelectable.bind(this._objectHandler)
     public setMovable = this._objectHandler.setMovable.bind(this._objectHandler)
     public setResizable = this._objectHandler.setResizable.bind(this._objectHandler)
+    public isSelectable = this._objectHandler.isSelectable.bind(this._objectHandler)
+    public isMovable = this._objectHandler.isMovable.bind(this._objectHandler)
+    public isResizable = this._objectHandler.isResizable.bind(this._objectHandler)
 }

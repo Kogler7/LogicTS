@@ -19,21 +19,12 @@ import { Rect } from "@/logic/common/types2D"
 import LogicCore from "../core"
 import { ISelectable } from "./selectable"
 
-export enum AnchorLocation {
-    None,
-    Left,
-    Top,
-    Right,
-    Bottom,
-    LeftTop,
-    RightTop,
-    LeftBottom,
-    RightBottom,
-}
-
 export interface IResizable extends ISelectable {
     rect: Rect
-    onResize(): void
+    target: Rect
+    onResizing(oldRect: Rect, newRect: Rect): boolean
+    onResizeBegin(): void
+    onResizeEnd(): void
 }
 
 export class Resizable implements IResizable {
@@ -41,6 +32,7 @@ export class Resizable implements IResizable {
     public core: LogicCore | null = null
     public rect: Rect
     public level: number
+    public target: Rect = Rect.zero()
     public enabled: boolean = true
     public selected: boolean = false
 
@@ -55,15 +47,15 @@ export class Resizable implements IResizable {
         core.setResizable(this, true)
     }
 
-    public onSelected(): void {
-        // TODO
-    }
+    public onSelected(): void { }
 
-    public onDeselected(): void {
-        // TODO
-    }
+    public onDeselected(): void { }
 
-    public onResize(): void {
-        // TODO
+    public onResizeBegin(): void { }
+
+    public onResizeEnd(): void { }
+
+    public onResizing(oldRect: Rect, newRect: Rect): boolean {
+        return false
     }
 }

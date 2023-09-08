@@ -69,8 +69,18 @@ export class ObjectHandler {
     private _isMovingNonLogicObjects: boolean = false
 
     private _resizableObjects: Map<uid, IResizable> = new Map()
-    private _resizingLogicObject: IResizable | null = null
-    private _resizingNonLogicObject: IResizable | null = null
+    private _resizingLogicObject: IResizable[] = []
+    private _resizingLogicObjectState: boolean[] = [false]
+    private _resizingNonLogicObject: IResizable[] = []
+    private _resizingNonLogicObjectState: boolean[] = [false]
+
+    private _startResizingObjectPos: Point = Point.zero()
+    private _readyToResizeLogicObject: boolean = false
+    private _isResizingLogicObject: boolean = false
+    private _readyToResizeNonLogicObject: boolean = false
+    private _isResizingNonLogicObject: boolean = false
+
+    private _resizingCursorStyle: string = 'nwse-resize'
 
     private _ctrlDown: boolean = false
 
@@ -81,14 +91,6 @@ export class ObjectHandler {
 
     public get logicArena(): IObjectArena {
         return this._logicArena
-    }
-
-    public get movingLogicObjects(): Set<IMovable> {
-        return this._movingLogicObjects
-    }
-
-    public get movingLogicObjectStates(): Map<uid, boolean> {
-        return this._movingLogicObjectStates
     }
 
     public get selectedLogicObjects(): Set<ISelectable> {
@@ -104,6 +106,22 @@ export class ObjectHandler {
             return this._selectableObjects.get(this._recentSelectedLogicId) || null
         }
         return null
+    }
+
+    public get movingLogicObjects(): Set<IMovable> {
+        return this._movingLogicObjects
+    }
+
+    public get movingLogicObjectStates(): Map<uid, boolean> {
+        return this._movingLogicObjectStates
+    }
+
+    public get resizingLogicObject(): IResizable[] {
+        return this._resizingLogicObject
+    }
+
+    public get resizingLogicObjectState(): boolean[] {
+        return this._resizingLogicObjectState
     }
 
     constructor(core: LogicCore) {
@@ -173,31 +191,30 @@ export class ObjectHandler {
 
     private _onLogicObjectSelected(obj: ISelectable) {
         // if the object is newly selected and enabled, notify it
-        if (obj.enabled) {
-            // if the selected object is movable and enabled,
-            // we add it to the selected movable objects
-            if (this._movableObjects.has(obj.id)) {
-                this._movingLogicObjects.add(obj as IMovable)
-            }
-            // if the selected object is resizable and enabled,
-            // and it's the only one selected object,
-            // we set it as the resizing object
-            if (this._resizableObjects.has(obj.id) && this._selectedLogicObjects.size === 1) {
-                this._resizingLogicObject = obj as IResizable
-            }
-            // recalculate the select bound rect
-            if (this._selectedLogicBoundRect.isZero()) {
-                // zero rect represents no object selected
-                // so we set the bound rect to the object's rect
-                this._selectedLogicBoundRect = obj.rect
-            } else {
-                this._selectedLogicBoundRect = this._selectedLogicBoundRect.union(obj.rect)
-            }
-            // notify the object and the core
-            this._recentSelectedLogicId = obj.id
-            obj.selected = true
-            obj.onSelected()
+        if (!obj.enabled) return
+        // if the selected object is movable and enabled,
+        // we add it to the selected movable objects
+        if (this._movableObjects.has(obj.id)) {
+            this._movingLogicObjects.add(obj as IMovable)
         }
+        // if the selected object is resizable and enabled,
+        // and it's the only one selected object,
+        // we set it as the resizing object
+        if (this._resizableObjects.has(obj.id) && this._selectedLogicObjects.size === 1) {
+            this._resizingLogicObject[0] = obj as IResizable
+        }
+        // recalculate the select bound rect
+        if (this._selectedLogicBoundRect.isZero()) {
+            // zero rect represents no object selected
+            // so we set the bound rect to the object's rect
+            this._selectedLogicBoundRect = obj.rect
+        } else {
+            this._selectedLogicBoundRect = this._selectedLogicBoundRect.union(obj.rect)
+        }
+        // notify the object and the core
+        this._recentSelectedLogicId = obj.id
+        obj.selected = true
+        obj.onSelected()
     }
 
     private _onLogicObjectDeselected(obj: ISelectable) {
@@ -209,8 +226,8 @@ export class ObjectHandler {
         }
         // if the selected object is resizing,
         // set the resizing object to null
-        if (this._resizingLogicObject === obj) {
-            this._resizingLogicObject = null
+        if (this._resizingLogicObject.length > 0 && this._resizingLogicObject[0] === obj) {
+            this._resizingLogicObject.pop()
         }
         // notify the object and the core
         if (this._recentSelectedLogicId === obj.id) {
@@ -267,6 +284,29 @@ export class ObjectHandler {
         }
         this._startMovingObjectPos = start
         this._core.setCursor('move')
+    }
+
+    private _setReadyToResizeObjects(start: Point, logic: boolean) {
+        if (logic) {
+            this._readyToResizeLogicObject = true
+            this._readyToResizeNonLogicObject = false
+            this._core.popCursor(this._resizingCursorStyle)
+            this._resizingCursorStyle = this._resizingLogicObject[0]
+                .rect.posRelativeResizeDirection(start) + '-resize'
+        } else {
+            this._readyToResizeLogicObject = false
+            this._readyToResizeNonLogicObject = true
+            this._core.popCursor(this._resizingCursorStyle)
+            this._resizingCursorStyle = this._resizingNonLogicObject[0]
+                .rect.posRelativeResizeDirection(start) + '-resize'
+        }
+        this._core.setCursor(this._resizingCursorStyle)
+    }
+
+    private _cancelReadyToResizeObjects() {
+        this._readyToResizeLogicObject = false
+        this._readyToResizeNonLogicObject = false
+        this._core.popCursor(this._resizingCursorStyle)
     }
 
     private _addSelectSupportForNonLogicLevel(level: number) {
@@ -346,20 +386,48 @@ export class ObjectHandler {
     }
 
     private _checkIfMousePressedBoundRect(e: MouseEvent) {
-        // if the left button is pressed on the bound rect, start moving the selected objects
+        // if the left button is pressed on the bound rect,
+        // start moving the selected objects or resizing the selected object
         if (e.button === 0) {
-            const hitPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
-            if (this.selectedLogicBoundRect.containsPoint(hitPos)) {
-                this._setReadyToMoveObjects(hitPos, true)
+            const hitPos = new Point(e.offsetX, e.offsetY)
+            const hitCrd = this._core.pos2crd(hitPos)
+            if (this.selectedLogicBoundRect.containsPoint(hitCrd)) {
+                this._setReadyToMoveObjects(hitCrd, true)
                 this._boundRectPressed = true
                 // stop the event going down
                 return false
+            } else {
+                // if the mouse is not pressed on the bound rect,
+                // and we are ready to resize the selected object,
+                // we start resizing the selected object
+                if (this._readyToResizeLogicObject) {
+                    this._isResizingLogicObject = true
+                    this._isResizingNonLogicObject = false
+                    this._startResizingObjectPos = hitCrd
+                    this._resizingLogicObjectState[0] = true
+                    const obj = this._resizingLogicObject[0]
+                    obj.target = obj.rect.copy()
+                    obj.onResizeBegin()
+                    this._core.fire('resizobj.logic.begin', obj.target, e)
+                    return false
+                } else if (this._readyToResizeNonLogicObject) {
+                    this._isResizingLogicObject = false
+                    this._isResizingNonLogicObject = true
+                    this._startResizingObjectPos = hitPos
+                    this._resizingNonLogicObjectState[0] = true
+                    const obj = this._resizingNonLogicObject[0]
+                    obj.target = obj.rect.copy()
+                    obj.onResizeBegin()
+                    this._core.fire('resizobj.non-logic.begin', obj.target, e)
+                    return false
+                }
             }
         }
     }
 
     private _onMouseMove(e: MouseEvent) {
         const oldPos = this._startMovingObjectPos
+        // if it's ready to move the selected logic or non-logic objects
         if (this._readyToMoveLogicObjects) {
             const newPos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
             if (!this._isMovingLogicObjects) {
@@ -396,6 +464,52 @@ export class ObjectHandler {
                 this._movingNonLogicObjectState = accept as boolean
             }
             this._core.fire('movobj.non-logic.ing', oldPos, newPos, e)
+        }
+        // else we try to resize the selected object
+        else if (this._isResizingLogicObject) {
+            const pos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
+            const obj = this._resizingLogicObject[0]
+            const newRect = obj.rect.resizeBy(this._startResizingObjectPos, pos).round()
+            if (!newRect.equals(obj.target)) {
+                obj.target = newRect
+                const accept = obj.onResizing(obj.rect, obj.target)
+                this._resizingLogicObjectState[0] = accept as boolean
+                this._core.fire('resizobj.logic.step', obj.rect, obj.target, e)
+            }
+            this._core.fire('resizobj.logic.ing', obj.rect, obj.target, e)
+        }
+        else if (this._isResizingNonLogicObject) {
+            const pos = new Point(e.offsetX, e.offsetY)
+            const obj = this._resizingNonLogicObject![0]
+            const newRect = obj.rect.resizeBy(this._startResizingObjectPos, pos).round()
+            if (!newRect.equals(obj.rect)) {
+                obj.target = newRect
+                const accept = obj.onResizing(obj.rect, obj.target)
+                this._resizingNonLogicObjectState[0] = accept as boolean
+                this._core.fire('resizobj.non-logic.step', obj.rect, obj.target, e)
+            }
+            this._core.fire('resizobj.logic.ing', obj.rect, obj.target, e)
+        }
+        // else we check if the mouse pos is in the bound rect while out of the object's rect
+        // if it is, we start resizing the selected object
+        else if (this._resizingLogicObject || this._resizingNonLogicObject) {
+            const mousePos = new Point(e.offsetX, e.offsetY)
+            const mouseCrd = this._core.pos2crd(mousePos)
+            if (
+                this._resizingLogicObject.length > 0 &&
+                !this._resizingLogicObject[0].rect.containsPoint(mouseCrd) &&
+                this._core.crd2posRect(this._resizingLogicObject[0].rect).padding(16).containsPoint(mousePos)
+            ) {
+                this._setReadyToResizeObjects(mouseCrd, true)
+            } else if (
+                this._resizingNonLogicObject.length > 0 &&
+                !this._resizingNonLogicObject[0].rect.containsPoint(mousePos) &&
+                this._resizingNonLogicObject[0].rect.padding(16).containsPoint(mousePos)
+            ) {
+                this._setReadyToResizeObjects(mousePos, false)
+            } else {
+                this._cancelReadyToResizeObjects()
+            }
         }
     }
 
@@ -434,6 +548,16 @@ export class ObjectHandler {
             this._readyToMoveNonLogicObjects = false
             this._movingNonLogicObject = null
             this._movingNonLogicObjectState = false
+        } else if (this._isResizingLogicObject) {
+            const pos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
+            this._isResizingLogicObject = false
+            this._resizingLogicObject[0].onResizeEnd()
+            this._core.fire('resizobj.logic.end', pos, e)
+        } else if (this._isResizingNonLogicObject) {
+            const pos = new Point(e.offsetX, e.offsetY)
+            this._isResizingNonLogicObject = false
+            this._resizingNonLogicObject[0].onResizeEnd()
+            this._core.fire('resizobj.non-logic.end', pos, e)
         }
         this._core.popCursor('move')
     }
@@ -498,5 +622,17 @@ export class ObjectHandler {
         } else {
             this._resizableObjects.delete(obj.id)
         }
+    }
+
+    public isSelectable(id: uid): boolean {
+        return this._selectableObjects.has(id)
+    }
+
+    public isMovable(id: uid): boolean {
+        return this._movableObjects.has(id)
+    }
+
+    public isResizable(id: uid): boolean {
+        return this._resizableObjects.has(id)
     }
 }

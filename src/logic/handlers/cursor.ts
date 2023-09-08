@@ -23,6 +23,10 @@ export default class CursorHandler {
         this._targetEl = el
     }
 
+    public get cursorStack() {
+        return this._cursorStack
+    }
+
     private get _top() {
         if (this._cursorStack.length > 0) {
             return this._cursorStack[this._cursorStack.length - 1]

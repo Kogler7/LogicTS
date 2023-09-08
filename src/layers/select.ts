@@ -17,6 +17,7 @@
 
 import LogicLayer from "../logic/layer"
 import { Point, Rect, Size } from "@/logic/common/types2D"
+import { ISelectable } from "@/logic/mixins/selectable"
 
 export default class SelectLayer extends LogicLayer {
     private _cache: CanvasRenderingContext2D | null = null
@@ -28,29 +29,70 @@ export default class SelectLayer extends LogicLayer {
         this._cache.strokeStyle = "#364fc7"
         this._cache.lineWidth = 1
         const onChanged = () => {
-            this._cache!.clearRect(0, 0, core.stageWidth, core.stageHeight)
-            const rects = [...core.selectedLogicObjects]
-                .map(obj => core.crd2posRect(obj.rect).padding(cornerSize).float())
-            if (rects.length > 0) {
-                this._cache?.setLineDash([])
-                for (const r of rects) {
-                    if (core.zoomLevel < 2) {
-                        this._cache?.strokeRect(...r.ltwh)
-                    }
-                }
-                // draw four corners
-                const boundRect = core.crd2posRect(core.selectedLogicBoundRect).padding(cornerSize).float()
-                const corners = boundRect.padding(halfCorner).vertices
-                for (const corner of corners) {
-                    const cornerRect = new Rect(
-                        corner.minus(new Point(halfCorner, halfCorner)),
-                        new Size(cornerSize, cornerSize)
-                    )
-                    this._cache?.strokeRect(...cornerRect.ltwh)
-                }
-                this._cache?.setLineDash([5, 5])
-                this._cache?.strokeRect(...boundRect.ltwh)
+            const cacheCtx = this._cache!
+            cacheCtx.clearRect(0, 0, core.stageWidth, core.stageHeight)
+            cacheCtx.setLineDash([])
+            const selectedObjects = core.selectedLogicObjects
+            // if no object is selected, just return
+            if (selectedObjects.size === 0) {
+                core.render()
+                return
             }
+            // if only one object is selected, it may be a resizable object
+            if (selectedObjects.size === 1) {
+                const obj = selectedObjects.values().next().value as ISelectable
+                if (core.isResizable(obj.id)) {
+                    // for resizable object, draw four corners and extra four small rectangles
+                    // at left center, right center, top center and bottom center
+                    const boundRect = core.crd2posRect(obj.rect).padding(cornerSize).float()
+                    cacheCtx.strokeRect(...boundRect.ltwh)
+                    cacheCtx.beginPath()
+                    for (const corner of boundRect.corners) {
+                        const cornerRect = new Rect(
+                            corner.minus(new Point(halfCorner, halfCorner)),
+                            new Size(cornerSize, cornerSize)
+                        )
+                        cacheCtx.clearRect(...cornerRect.ltwh)
+                        cacheCtx.rect(...cornerRect.ltwh)
+                    }
+                    for (const edgeCenter of boundRect.edgeCenters) {
+                        const edgeCenterRect = new Rect(
+                            edgeCenter.minus(new Point(halfCorner, halfCorner)),
+                            new Size(cornerSize, cornerSize)
+                        )
+                        cacheCtx.clearRect(...edgeCenterRect.ltwh)
+                        cacheCtx.rect(...edgeCenterRect.ltwh)
+                    }
+                    cacheCtx.stroke()
+                    core.render()
+                    return
+                }
+            }
+            // if more than one object is selected, draw a rectangle for each object
+            cacheCtx.beginPath()
+            const rects = [...selectedObjects].map(
+                obj => core.crd2posRect(obj.rect).padding(cornerSize).float()
+            )
+            // draw a close bounding rectangle for all selected objects
+            for (const r of rects) {
+                if (core.zoomLevel < 2) {
+                    cacheCtx.rect(...r.ltwh)
+                }
+            }
+            // draw four corners for the bounding rectangle
+            const boundRect = core.crd2posRect(core.selectedLogicBoundRect).padding(cornerSize).float()
+            const corners = boundRect.padding(halfCorner).corners
+            for (const corner of corners) {
+                const cornerRect = new Rect(
+                    corner.minus(new Point(halfCorner, halfCorner)),
+                    new Size(cornerSize, cornerSize)
+                )
+                cacheCtx.rect(...cornerRect.ltwh)
+            }
+            cacheCtx.stroke()
+            cacheCtx.setLineDash([5, 5])
+            cacheCtx.strokeRect(...boundRect.ltwh)
+            cacheCtx.setLineDash([])
             core.render()
         }
         core.on("select.logic-changed", true, onChanged)

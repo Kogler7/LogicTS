@@ -21,8 +21,9 @@ import { IRenderable } from "@/logic/mixins/renderable"
 import { Movable } from "@/logic/mixins/movable"
 import LogicCore from "@/logic/core"
 import { IObjectArena } from "@/logic/arena/arena"
+import { IResizable } from "@/logic/mixins/resizable"
 
-export default class Component extends Movable implements IRenderable {
+export default class Component extends Movable implements IRenderable, IResizable {
     private _moving: boolean = false
     private _arena: IObjectArena | null = null
 
@@ -32,6 +33,7 @@ export default class Component extends Movable implements IRenderable {
 
     public onRegistered(core: LogicCore): void {
         super.onRegistered(core)
+        core.setResizable(this, true)
         this._arena = core.logicArena
     }
 
@@ -71,6 +73,22 @@ export default class Component extends Movable implements IRenderable {
 
     public onMoving(oldPos: Point, newPos: Point): boolean {
         const occupied = this._arena!.rectOccupied(this.target, this.id, true)
+        return occupied === null
+    }
+
+    public onResizeBegin(): void {
+        // console.log("resize begin", this.id)
+    }
+
+    public onResizeEnd(): void {
+        const success = this._arena!.setObject(this.id, this.target)
+        if (success) {
+            this.rect = this.target
+        }
+    }
+
+    public onResizing(oldRect: Rect, newRect: Rect): boolean {
+        const occupied = this._arena!.rectOccupied(newRect, this.id, true)
         return occupied === null
     }
 }

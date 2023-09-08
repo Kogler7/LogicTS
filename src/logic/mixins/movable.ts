@@ -47,21 +47,13 @@ export class Movable implements IMovable {
         core.setMovable(this, true)
     }
 
-    public onSelected(): void {
-        // TODO
-    }
+    public onSelected(): void { }
 
-    public onDeselected(): void {
-        // TODO
-    }
+    public onDeselected(): void { }
 
-    public onMoveBegin(): void {
-        // TODO
-    }
+    public onMoveBegin(): void { }
 
-    public onMoveEnd(): void {
-        // TODO
-    }
+    public onMoveEnd(): void { }
 
     public onMoving(oldPos: Point, newPos: Point): boolean {
         return false
