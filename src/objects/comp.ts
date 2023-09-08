@@ -20,12 +20,20 @@ import { uid_rt, uid2hex } from "@/logic/common/uid"
 import { IRenderable } from "@/logic/mixins/renderable"
 import { Movable } from "@/logic/mixins/movable"
 import LogicCore from "@/logic/core"
+import { IObjectArena } from "@/logic/arena/arena"
 
 export default class Component extends Movable implements IRenderable {
     private _moving: boolean = false
+    private _arena: IObjectArena | null = null
 
     constructor(pos: Point = Point.zero()) {
         super(uid_rt(), 0, new Rect(pos, new Size(4, 4)))
+    }
+
+    public onRegistered(core: LogicCore): void {
+        super.onRegistered(core)
+        this._arena = core.logicArena
+        console.log("registered", this.id)
     }
 
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {
@@ -58,23 +66,20 @@ export default class Component extends Movable implements IRenderable {
         console.log("deselected", this.id)
     }
 
-    public onRegistered(core: LogicCore): void {
-        super.onRegistered(core)
-        console.log("registered", this.id)
-    }
-
     public onMoveBegin(): void {
         this._moving = true
     }
 
     public onMoveEnd(): void {
         this._moving = false
+        const success = this._arena!.setObject(this.id, this.target)
+        if (success) {
+            this.rect = this.target
+        }
     }
 
     public onMoving(oldPos: Point, newPos: Point): boolean {
-        // this.rect.x += newPos.x - oldPos.x
-        // this.rect.y += newPos.y - oldPos.y
-        console.log("moving", this.id, oldPos.desc, newPos.desc)
-        return true
+        const occupied = this._arena!.rectOccupied(this.target, this.id, true)
+        return occupied === null
     }
 }

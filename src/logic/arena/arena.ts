@@ -72,7 +72,7 @@ export class QueryObjectArena implements IObjectArena {
         for (let [k, v] of this._objects) {
             if (k === id) continue
             if (v.intersectsRect(rect)) {
-                console.error(`object ${id} intersects with ${k}`)
+                console.warn(`object ${id} intersects with ${k}`)
                 return false
             }
         }

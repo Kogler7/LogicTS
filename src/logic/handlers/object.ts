@@ -132,6 +132,12 @@ export class ObjectHandler {
         })
         // register logic frame change event listener to the core
         core.on('frame.change', true, this._onLogicFrameRectChanged.bind(this))
+        // recalculate the select bound rect after the objects are moved
+        core.on('update-bound', true, () => {
+            this._selectedLogicBoundRect = Rect.union(
+                [...this._selectedLogicObjects.set].map((obj) => obj.rect)
+            )
+        })
     }
 
     private _onLogicFrameRectChanged(oldRect: Rect, newRect: Rect) {
@@ -351,6 +357,7 @@ export class ObjectHandler {
             if (!this._isMovingLogicObjects) {
                 this._isMovingLogicObjects = true
                 for (const obj of this._movingLogicObjects) {
+                    this.movingLogicObjectStates.set(obj.id, true)
                     obj.target = obj.rect.copy()
                     obj.onMoveBegin()
                 }
@@ -360,7 +367,7 @@ export class ObjectHandler {
                 const moved = obj.target.moveTo(obj.rect.pos.plus(newPos.minus(oldPos)).round())
                 if (moved) {
                     const accept = obj.onMoving(oldPos, newPos)
-                    this._movingLogicObjectStates.set(obj.id, accept)
+                    this._movingLogicObjectStates.set(obj.id, accept as boolean)
                     this._core.fire('movobj.logic.step', obj, oldPos, newPos, e)
                 }
             }
@@ -378,7 +385,7 @@ export class ObjectHandler {
             if (obj) {
                 obj.target.moveTo(obj.rect.pos.plus(newPos.minus(oldPos)))
                 const accept = obj.onMoving(oldPos, newPos)
-                this._movingNonLogicObjectState = accept
+                this._movingNonLogicObjectState = accept as boolean
             }
             this._core.fire('movobj.non-logic.ing', oldPos, newPos, e)
         }

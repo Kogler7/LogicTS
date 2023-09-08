@@ -135,6 +135,8 @@ export default class MoveObjectLayer extends LogicLayer {
             scaleAnime.start()
             targetAnime.start()
         }
+        this.core!.fire("update-bound")
+        this.core!.fire("select.logic-changed")
         this.core!.renderAll()
     }
 
@@ -177,15 +179,16 @@ export default class MoveObjectLayer extends LogicLayer {
         if (!this._moving) return false
         ctx.setLineDash([5, 5])
         ctx.lineDashOffset = -this._movingFrameElapsed / 2
-        ctx.beginPath()
+        ctx.lineWidth = 2
         for (const obj of this._movingObjects) {
             const target = this._currentTargetObjectsRect.get(obj.id)!
             const renderRect = this.core!.crd2posRect(target).float()
             const state = this._movingObjectStates.get(obj.id)
+            console.log(obj.id, state)
             ctx.strokeStyle = state ? this._okColor : this._noColor
-            ctx.lineWidth = 2
-            ctx.rect(...renderRect.ltwh)
+            ctx.strokeRect(...renderRect.ltwh)
         }
+        ctx.setLineDash([])
         // render scaled mini objects
         for (const obj of this._movingObjects) {
             let rect: Rect
@@ -197,8 +200,6 @@ export default class MoveObjectLayer extends LogicLayer {
             const renderRect = this.core!.crd2posRect(rect).float();
             (obj as unknown as IRenderable).renderAt(ctx, renderRect)
         }
-        ctx.stroke()
-        ctx.setLineDash([])
         return true
     }
 }
