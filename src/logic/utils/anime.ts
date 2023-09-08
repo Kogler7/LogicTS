@@ -52,7 +52,7 @@ export class Animation {
             this._onStart()
         }
         this._callback(0)
-        requestAnimationFrame((() => { this._update() }).bind(this))
+        requestAnimationFrame(() => { this._update() })
     }
 
     public cancel(terminate: boolean = false) {

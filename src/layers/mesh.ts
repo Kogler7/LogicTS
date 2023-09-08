@@ -20,6 +20,7 @@ import { Point } from "@/logic/common/types2D"
 
 export default class MeshLayer extends LogicLayer {
     private _showBaseLines: boolean = true
+    private _baseLineOpacity: number = 0
 
     public onMount() {
         this.core?.on("reloc.begin", true, () => {
@@ -27,6 +28,7 @@ export default class MeshLayer extends LogicLayer {
         })
         this.core?.on("reloc.end", true, () => {
             this._showBaseLines = true
+            this._baseLineOpacity = 0
         })
     }
 

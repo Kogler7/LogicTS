@@ -79,18 +79,18 @@ export default class MoveObjectLayer extends LogicLayer {
         for (const obj of this._movingObjects) {
             const target = this._movingScaledObjectsRect.get(obj.id)!
             const scaleAnime = new Animation(
-                ((progress: number) => {
+                (progress: number) => {
                     this._currentScaledObjectsRect.set(obj.id, obj.rect.lerp(target, progress))
                     this.core!.render()
-                }).bind(this),
+                },
                 300,
                 Curves.easeInOut,
-                (() => {
+                () => {
                     this._scaleAnimating = true
-                }).bind(this),
-                (() => {
+                },
+                () => {
                     this._scaleAnimating = false
-                }).bind(this)
+                }
             )
             scaleAnime.start()
         }
@@ -105,30 +105,30 @@ export default class MoveObjectLayer extends LogicLayer {
         for (const obj of this._movingObjects) {
             const curr = this._movingScaledObjectsRect.get(obj.id)!.copy()
             const scaleAnime = new Animation(
-                ((progress: number) => {
+                (progress: number) => {
                     this._currentScaledObjectsRect.set(obj.id, curr.lerp(obj.rect, progress))
                     this.core!.render()
-                }).bind(this),
+                },
                 200,
                 Curves.easeInOut,
-                (() => {
+                () => {
                     this._scaleAnimating = true
-                }).bind(this),
-                (() => {
+                },
+                () => {
                     this._scaleAnimating = false
                     this._moving = false
                     this._movingScaledObjectsBias.clear()
                     this._movingScaledObjectsRect.clear()
-                }).bind(this)
+                }
             )
             const curTarget = this._currentTargetObjectsRect.get(obj.id)!
             const oldTarget = curTarget.copy()
             const targetAnime = new Animation(
-                ((progress: number) => {
+                (progress: number) => {
                     const targetPos = oldTarget.pos.lerp(obj.rect.pos, progress)
                     curTarget.pos = targetPos
                     this.core!.render()
-                }).bind(this),
+                },
                 150,
                 Curves.easeInOut
             )
@@ -155,19 +155,19 @@ export default class MoveObjectLayer extends LogicLayer {
             const curTarget = this._currentTargetObjectsRect.get(obj.id)!
             const oldTarget = curTarget.copy()
             const moveTargetAnime = new Animation(
-                ((progress: number) => {
+                (progress: number) => {
                     const targetPos = oldTarget.pos.lerp(obj.target.pos, progress)
                     curTarget.pos = targetPos
                     this.core!.render()
-                }).bind(this),
+                },
                 150,
                 Curves.easeInOut,
-                (() => {
+                () => {
                     this._targetAnimating = true
-                }).bind(this),
-                (() => {
+                },
+                () => {
                     this._targetAnimating = false
-                }).bind(this)
+                }
             )
             moveTargetAnime.start()
         }

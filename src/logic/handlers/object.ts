@@ -46,14 +46,14 @@ export class ObjectHandler {
     private _selectedLogicObjects: TrapSet<ISelectable> = new TrapSet(
         this._onLogicObjectSelected.bind(this),
         this._onLogicObjectDeselected.bind(this),
-        ((delta: number) => {
+        (delta: number) => {
             if (delta <= 0) {
                 // if there are objects deselected, we need to recalculate the select bound rect
                 const rects = [...this._selectedLogicObjects.set].map((obj) => obj.rect)
                 this._selectedLogicBoundRect = Rect.union(rects)
             }
             this._core.fire('select.logic-changed')
-        }).bind(this)
+        }
     )
 
     private _movableObjects: Map<uid, IMovable> = new Map()
@@ -121,15 +121,15 @@ export class ObjectHandler {
         // register level 0 arena callback event listener to the core
         core.on('mousedown', false, this._onMousePressedLogicLevel.bind(this), 0)
         // register ctrl key event listener to the core(level 0)
-        core.on('keydown.Control', true, (() => { this._ctrlDown = true }).bind(this), 0)
-        core.on('keyup.Control', true, (() => { this._ctrlDown = false }).bind(this), 0)
+        core.on('keydown.Control', true, () => { this._ctrlDown = true }, 0)
+        core.on('keyup.Control', true, () => { this._ctrlDown = false }, 0)
         // register frame begin event listener to the core
-        core.on('frame.begin', true, ((e: MouseEvent) => {
+        core.on('frame.begin', true, (e: MouseEvent) => {
             // clear all selected objects
             this._selectedLogicObjects.clear()
             // reset the old frame logic rect
             this._oldFramedLogicRect = Rect.zero()
-        }).bind(this))
+        })
         // register logic frame change event listener to the core
         core.on('frame.change', true, this._onLogicFrameRectChanged.bind(this))
     }
@@ -269,7 +269,7 @@ export class ObjectHandler {
             const arena = new QueryObjectArena()
             this._arenas.set(level, arena)
             // register callback event listener to the core
-            const cbk = ((e: MouseEvent) => {
+            const cbk = (e: MouseEvent) => {
                 // we assume that all objects use device coordinates except objects in level 0
                 const hitPos = new Point(e.offsetX, e.offsetY)
                 const hitId = arena.posOccupied(hitPos)
@@ -289,7 +289,7 @@ export class ObjectHandler {
                     return false
                 }
                 return true
-            }).bind(this)
+            }
             this._callbacks.set(level, cbk)
             this._core.on('mousedown', false, cbk, level)
         }

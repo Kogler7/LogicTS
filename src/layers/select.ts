@@ -27,7 +27,7 @@ export default class SelectLayer extends LogicLayer {
         this._cache = core.createCache()
         this._cache.strokeStyle = "#364fc7"
         this._cache.lineWidth = 1
-        const onChanged = (() => {
+        const onChanged = () => {
             this._cache!.clearRect(0, 0, core.stageWidth, core.stageHeight)
             const rects = [...core.selectedLogicObjects]
                 .map(obj => core.crd2posRect(obj.rect).padding(cornerSize).float())
@@ -52,7 +52,7 @@ export default class SelectLayer extends LogicLayer {
                 this._cache?.strokeRect(...boundRect.ltwh)
             }
             core.render()
-        }).bind(this)
+        }
         core.on("select.logic-changed", true, onChanged)
         core.on("reloc", true, onChanged)
     }
