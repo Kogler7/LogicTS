@@ -25,6 +25,7 @@ import { IResizable } from "@/logic/mixins/resizable"
 
 export default class Component extends Movable implements IRenderable, IResizable {
     private _moving: boolean = false
+    private _resizing: boolean = false
     private _arena: IObjectArena | null = null
 
     constructor(pos: Point = Point.zero()) {
@@ -35,6 +36,8 @@ export default class Component extends Movable implements IRenderable, IResizabl
         super.onRegistered(core)
         core.setResizable(this, true)
         this._arena = core.logicArena
+        core.on("movobj.logic.finish", true, this.onMoveFinished.bind(this))
+        core.on("resizobj.logic.finish", true, this.onResizeFinished.bind(this))
     }
 
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {
@@ -52,8 +55,8 @@ export default class Component extends Movable implements IRenderable, IResizabl
     public renderOn(ctx: CanvasRenderingContext2D) {
         const renderRect = this.core!.crd2posRect(this.rect).float()
         const rect = this.renderAt(ctx, renderRect)
-        // if this component is moving, render a mask
-        if (this._moving) {
+        // if this component is moving or resizing, render a mask
+        if (this._moving || this._resizing) {
             ctx.fillStyle = "rgba(255, 255, 255, 0.5)"
             ctx.fillRect(...rect.ltwh)
         }
@@ -64,11 +67,15 @@ export default class Component extends Movable implements IRenderable, IResizabl
     }
 
     public onMoveEnd(): void {
-        this._moving = false
         const success = this._arena!.setObject(this.id, this.target)
         if (success) {
             this.rect = this.target
         }
+    }
+
+    public onMoveFinished(): void {
+        this._moving = false
+        this.core!.renderAll()
     }
 
     public onMoving(oldPos: Point, newPos: Point): boolean {
@@ -77,7 +84,7 @@ export default class Component extends Movable implements IRenderable, IResizabl
     }
 
     public onResizeBegin(): void {
-        // console.log("resize begin", this.id)
+        this._resizing = true
     }
 
     public onResizeEnd(): void {
@@ -85,6 +92,11 @@ export default class Component extends Movable implements IRenderable, IResizabl
         if (success) {
             this.rect = this.target
         }
+    }
+
+    public onResizeFinished(): void {
+        this._resizing = false
+        this.core!.renderAll()
     }
 
     public onResizing(oldRect: Rect, newRect: Rect): boolean {

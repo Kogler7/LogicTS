@@ -115,6 +115,7 @@ export default class MoveObjectLayer extends LogicLayer {
                 () => {
                     this._scaleAnimating = false
                     this._moving = false
+                    this.core!.fire("movobj.logic.finish")
                 }
             )
             const curTarget = this._currentTargetObjectsRect.get(obj.id)!

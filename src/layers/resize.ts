@@ -20,15 +20,18 @@ import { Rect } from "@/logic/common/types2D"
 import LogicCore from "@/logic/core"
 import { Animation, Curves } from "@/logic/utils/anime"
 import { IResizable } from "@/logic/mixins/resizable"
+import { IRenderable } from "@/logic/mixins/renderable"
 
 export default class ResizeObjectLayer extends LogicLayer {
     private _resizing: boolean = false
     private _resizingFrameElapsed: number = 0
     private _resizingLogicObject: IResizable[] = []
     private _resizingLogicObjectState: boolean[] = []
+    private _currentScaledObjectRect: Rect = Rect.zero()
     private _currentTargetObjectRect: Rect = Rect.zero()
 
     private _targetAnimating: boolean = false
+    private _scaleAnimating: boolean = false
 
     private _okColor: string = "#8BC34A"
     private _noColor: string = "#FF5722"
@@ -51,6 +54,7 @@ export default class ResizeObjectLayer extends LogicLayer {
     private _onResizeObjectBegin(rect: Rect) {
         this._resizing = true
         this._currentTargetObjectRect = rect
+        this._currentScaledObjectRect = rect.copy()
         this._updateAnimeFrame()
         this.core!.renderAll()
     }
@@ -59,6 +63,21 @@ export default class ResizeObjectLayer extends LogicLayer {
         this._resizingFrameElapsed = 0
         // start scale animation
         const obj = this._resizingLogicObject[0]
+        const oldRect = this._currentScaledObjectRect.copy()
+        const scaleAnime = new Animation(
+            (progress: number) => {
+                this._currentScaledObjectRect = oldRect.lerp(obj.rect, progress)
+                this.core!.render()
+            },
+            200,
+            Curves.easeInOut,
+            () => {
+                this._scaleAnimating = true
+            },
+            () => {
+                this._scaleAnimating = false
+            }
+        )
         const oldTarget = this._currentTargetObjectRect.copy()
         const targetAnime = new Animation(
             (progress: number) => {
@@ -73,8 +92,10 @@ export default class ResizeObjectLayer extends LogicLayer {
             () => {
                 this._targetAnimating = false
                 this._resizing = false
+                this.core!.fire("resizobj.logic.finish")
             }
         )
+        scaleAnime.start()
         targetAnime.start()
         this.core!.fire("update-bound")
         this.core!.fire("select.logic-changed")
@@ -108,11 +129,21 @@ export default class ResizeObjectLayer extends LogicLayer {
         ctx.lineDashOffset = -this._resizingFrameElapsed / 2
         ctx.lineWidth = 2
         const target = this._currentTargetObjectRect
-        const renderRect = this.core!.crd2posRect(target).float()
+        const targetRect = this.core!.crd2posRect(target).float()
         const state = this._resizingLogicObjectState[0]
         ctx.strokeStyle = state ? this._okColor : this._noColor
-        ctx.strokeRect(...renderRect.ltwh)
+        ctx.strokeRect(...targetRect.ltwh)
         ctx.setLineDash([])
+        // render scaled object
+        const obj = this._resizingLogicObject[0]
+        let rect: Rect
+        if (this._scaleAnimating) {
+            rect = this._currentScaledObjectRect
+        } else {
+            rect = obj.rect
+        }
+        const renderRect = this.core!.crd2posRect(rect).float();
+        (obj as unknown as IRenderable).renderAt(ctx, renderRect)
         return true
     }
 }
