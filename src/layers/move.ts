@@ -58,7 +58,6 @@ export default class MoveObjectLayer extends LogicLayer {
     }
 
     private _onMoveObjectBegin(pos: Point) {
-        console.log("start moving")
         this._moving = true
         // init moving objects bias
         for (const obj of this._movingObjects) {
@@ -99,7 +98,6 @@ export default class MoveObjectLayer extends LogicLayer {
     }
 
     private _onMoveObjectEnd(pos: Point) {
-        console.log("end moving")
         this._movingFrameElapsed = 0
         // start scale animation
         for (const obj of this._movingObjects) {
@@ -117,8 +115,6 @@ export default class MoveObjectLayer extends LogicLayer {
                 () => {
                     this._scaleAnimating = false
                     this._moving = false
-                    this._movingScaledObjectsBias.clear()
-                    this._movingScaledObjectsRect.clear()
                 }
             )
             const curTarget = this._currentTargetObjectsRect.get(obj.id)!
@@ -143,10 +139,6 @@ export default class MoveObjectLayer extends LogicLayer {
     private _onMovingObject(oldPos: Point, newPos: Point) {
         for (const [id, rect] of this._movingScaledObjectsRect) {
             const bias = this._movingScaledObjectsBias.get(id)!
-            if (!bias) {
-                console.error("no bias found")
-                return
-            }
             rect.moveTo(newPos.shift(bias))
         }
     }
@@ -184,7 +176,6 @@ export default class MoveObjectLayer extends LogicLayer {
             const target = this._currentTargetObjectsRect.get(obj.id)!
             const renderRect = this.core!.crd2posRect(target).float()
             const state = this._movingObjectStates.get(obj.id)
-            console.log(obj.id, state)
             ctx.strokeStyle = state ? this._okColor : this._noColor
             ctx.strokeRect(...renderRect.ltwh)
         }

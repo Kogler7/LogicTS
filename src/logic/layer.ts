@@ -38,7 +38,7 @@ export default class LogicLayer {
 
     public onUnmount() { }
 
-    public onReloc(ctx: CanvasRenderingContext2D): boolean {
+    public onCache(ctx: CanvasRenderingContext2D): boolean {
         return false
     }
 

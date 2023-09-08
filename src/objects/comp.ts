@@ -33,7 +33,6 @@ export default class Component extends Movable implements IRenderable {
     public onRegistered(core: LogicCore): void {
         super.onRegistered(core)
         this._arena = core.logicArena
-        console.log("registered", this.id)
     }
 
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {
@@ -56,14 +55,6 @@ export default class Component extends Movable implements IRenderable {
             ctx.fillStyle = "rgba(255, 255, 255, 0.5)"
             ctx.fillRect(...rect.ltwh)
         }
-    }
-
-    public onSelected(): void {
-        console.log("selected", this.id)
-    }
-
-    public onDeselected(): void {
-        console.log("deselected", this.id)
     }
 
     public onMoveBegin(): void {

@@ -41,7 +41,7 @@ class TestLayer extends LogicLayer {
         return this
     }
 
-    public onReloc(ctx: CanvasRenderingContext2D): boolean {
+    public onCache(ctx: CanvasRenderingContext2D): boolean {
         for (const comp of this._comps.values()) {
             comp.renderOn(ctx)
         }

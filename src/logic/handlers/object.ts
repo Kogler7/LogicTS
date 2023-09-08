@@ -221,6 +221,10 @@ export class ObjectHandler {
     }
 
     private _onMousePressedLogicLevel(e: MouseEvent) {
+        if (e.button !== 0) {
+            // if the left button is not pressed, return true to let the event go down
+            return true
+        }
         const core = this._core
         // the logic arena stores objects with logic coordinates
         // so we need to convert the mouse position to logic coordinates first
@@ -276,6 +280,10 @@ export class ObjectHandler {
             this._arenas.set(level, arena)
             // register callback event listener to the core
             const cbk = (e: MouseEvent) => {
+                if (e.button !== 0) {
+                    // if the left button is not pressed, return true to let the event go down
+                    return true
+                }
                 // we assume that all objects use device coordinates except objects in level 0
                 const hitPos = new Point(e.offsetX, e.offsetY)
                 const hitId = arena.posOccupied(hitPos)
