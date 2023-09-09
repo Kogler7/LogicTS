@@ -169,7 +169,7 @@ export default class LayoutHandler {
             return
         }
         this.originBias = this.originBias.shift(this._slideVector)
-        this._core.renderAll() // force render
+        this._core.fire('reloc.ing')
         requestAnimationFrame(this._trySlide.bind(this))
     }
 }
