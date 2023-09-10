@@ -26,10 +26,10 @@ export default class SelectLayer extends LogicLayer {
         const cornerSize = 6
         const halfCorner = cornerSize / 2
         this._cache = core.createCache()
-        this._cache.strokeStyle = "#364fc7"
-        this._cache.lineWidth = 1
         const onChanged = () => {
             const cacheCtx = this._cache!
+            cacheCtx.strokeStyle = "#364fc7"
+            cacheCtx.lineWidth = 1
             cacheCtx.clearRect(0, 0, core.stageWidth, core.stageHeight)
             cacheCtx.setLineDash([])
             const selectedObjects = core.selectedLogicObjects

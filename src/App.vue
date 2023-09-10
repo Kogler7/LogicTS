@@ -16,7 +16,7 @@
 -->
 
 <template>
-	<canvas id="scene" width="1000" height="800"></canvas>
+    <canvas id="scene"></canvas>
 </template>
 
 <script setup lang="ts">
@@ -52,6 +52,10 @@ class TestLayer extends LogicLayer {
 
 onMounted(() => {
     const scene = document.getElementById("scene") as HTMLCanvasElement
+
+    scene.style.width = window.innerWidth - 20 + 'px'
+    scene.style.height = window.innerHeight - 20 + 'px'
+
     const core = new LogicCore()
 
     const frameLayer = new FrameLayer('frame', 2)
@@ -91,6 +95,21 @@ onMounted(() => {
 
     console.log(core)
     // core.render()
+
+    window.addEventListener('resize', () => {
+        scene.style.width = window.innerWidth - 20 + 'px'
+        scene.style.height = window.innerHeight - 20 + 'px'
+    })
 })
 
 </script>
+
+<style scoped>
+#scene {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 100%;
+    height: 100%;
+}
+</style>

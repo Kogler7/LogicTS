@@ -20,8 +20,8 @@ import LogicLayer from "../logic/layer"
 export default class FrameLayer extends LogicLayer {
     public onCache(ctx: CanvasRenderingContext2D): boolean {
         ctx.strokeStyle = "#ff0000"
-        ctx.lineWidth = 2
-        ctx.strokeRect(0, 0, 1000, 800)
+        ctx.lineWidth = 1
+        ctx.strokeRect(0, 0, this.core!.stageWidth - 2, this.core!.stageHeight - 2)
         return true
     }
 

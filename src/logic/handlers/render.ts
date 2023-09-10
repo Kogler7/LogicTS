@@ -15,7 +15,6 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import { Size } from "../common/types2D"
 import LogicCore from "../core"
 import LogicLayer from "../layer"
 import XPSChecker from "../utils/xps"
@@ -41,6 +40,10 @@ export default class RenderHandler {
     private _fps: string = ''
 
     private _dpr: number = window.devicePixelRatio || 1
+
+    private _resizeObserver: ResizeObserver | null = null
+
+    private _cacheCanvas: HTMLCanvasElement[] = []
 
     public get stageWidth(): number {
         return this._stageWidth
@@ -69,9 +72,39 @@ export default class RenderHandler {
     private _checkStage() {
         const { _stageWidth: width, _stageHeight: height } = this
         if (width <= 0 || height <= 0) {
-            console.error('Core: invalid stage size, please connect to a stage device first.')
+            console.error(
+                `Invalid stage size [${width}, ${height}].`
+            )
             return
         }
+    }
+
+    private _updateSize() {
+        this._dpr = 1 // window.devicePixelRatio || 1
+        const stage = this._stage
+        // configure stage size, with dpr considered
+        const { width: cssWidth, height: cssHeight } = stage.getBoundingClientRect()
+        // resize stage element size
+        stage.style.width = `${cssWidth}px`
+        stage.style.height = `${cssHeight}px`
+        // recalculate stage context size (with dpr considered)
+        this._stageWidth = cssWidth * this._dpr
+        this._stageHeight = cssHeight * this._dpr
+        // resize stage canvas context
+        stage.width = this._stageWidth
+        stage.height = this._stageHeight
+        this._cache.width = this._stageWidth
+        this._cache.height = this._stageHeight
+        // resize cache canvas contexts
+        for (const cache of this._cacheCanvas) {
+            cache.width = this._stageWidth
+            cache.height = this._stageHeight
+        }
+        // this._stageCtx.scale(this._dpr, this._dpr)
+        // this._cacheCtx.scale(this._dpr, this._dpr)
+        this._cacheCtx.clearRect(0, 0, this._stageWidth, this._stageHeight)
+        this._core.fire('stage.resize')
+        this.renderAll()
     }
 
     private _render() {
@@ -149,19 +182,11 @@ export default class RenderHandler {
             throw new Error('stage context is null')
         }
         this._stageCtx = stageCtx
-        // configure stage size, with dpr considered
-        const { width: cssWidth, height: cssHeight } = stage.getBoundingClientRect()
-        stage.style.width = `${cssWidth}px`
-        stage.style.height = `${cssHeight}px`
-        this._stageWidth = cssWidth * this._dpr
-        this._stageHeight = cssHeight * this._dpr
-        this._cache.width = this._stageWidth
-        this._cache.height = this._stageHeight
-        // this._stageCtx.scale(this._dpr, this._dpr)
-        // this._cacheCtx.scale(this._dpr, this._dpr)
-        this._cacheCtx.clearRect(0, 0, this._stageWidth, this._stageHeight)
-        this._dirty = true
-        this.render()
+        this._resizeObserver = new ResizeObserver(() => {
+            this._updateSize()
+        })
+        this._resizeObserver.observe(stage)
+        this._updateSize()
     }
 
     public unbind() {
@@ -170,6 +195,7 @@ export default class RenderHandler {
         this._stageWidth = this._cache.width
         this._stageHeight = this._cache.height
         this._dirty = true
+        this._resizeObserver?.disconnect()
     }
 
     public mountLayer(layer: LogicLayer) {
@@ -214,11 +240,15 @@ export default class RenderHandler {
         }
     }
 
-    public createCache(size: Size | null = null): CanvasRenderingContext2D {
+    public createCache(): CanvasRenderingContext2D {
         this._checkStage()
         const cache = document.createElement('canvas')
-        cache.width = size?.width || this._stageWidth
-        cache.height = size?.height || this._stageHeight
+        if (!cache) {
+            throw new Error('Failed to create cache canvas')
+        }
+        this._cacheCanvas.push(cache) // for auto resize
+        cache.width = this._stageWidth
+        cache.height = this._stageHeight
         return cache.getContext('2d') as CanvasRenderingContext2D
     }
 }
