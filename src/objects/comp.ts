@@ -18,12 +18,11 @@
 import { Point, Rect, Size } from "@/logic/common/types2D"
 import { uid_rt, uid2hex } from "@/logic/common/uid"
 import { IRenderable } from "@/logic/mixins/renderable"
-import { Movable } from "@/logic/mixins/movable"
 import LogicCore from "@/logic/core"
 import { IObjectArena } from "@/logic/arena/arena"
-import { IResizable } from "@/logic/mixins/resizable"
+import { Flexible } from "@/logic/mixins/flexible"
 
-export default class Component extends Movable implements IRenderable, IResizable {
+export default class Component extends Flexible implements IRenderable {
     private _moving: boolean = false
     private _resizing: boolean = false
     private _arena: IObjectArena | null = null
@@ -34,7 +33,6 @@ export default class Component extends Movable implements IRenderable, IResizabl
 
     public onRegistered(core: LogicCore): void {
         super.onRegistered(core)
-        core.setResizable(this, true)
         this._arena = core.logicArena
         core.on("movobj.logic.finish", true, this.onMoveFinished.bind(this))
         core.on("resizobj.logic.finish", true, this.onResizeFinished.bind(this))
