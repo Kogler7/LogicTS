@@ -35,9 +35,9 @@ export default class LogicCore {
 
     private _cursorHandler = new CursorHandler()
     private _eventHandler = new EventHandler(this)
+    private _renderHandler = new RenderHandler(this)
     private _layoutHandler = new LayoutHandler(this)
     private _objectHandler = new ObjectHandler(this)
-    private _renderHandler = new RenderHandler(this)
 
     constructor(stage?: HTMLCanvasElement) {
         if (stage) {
@@ -55,6 +55,10 @@ export default class LogicCore {
 
     public get stageHeight(): number {
         return this._renderHandler.stageHeight
+    }
+
+    public get dpr(): number {
+        return this._renderHandler.dpr
     }
 
     public get fps(): string {

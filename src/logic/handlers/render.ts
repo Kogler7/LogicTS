@@ -39,7 +39,7 @@ export default class RenderHandler {
     private _xps = new XPSChecker()
     private _fps: string = ''
 
-    private _dpr: number = window.devicePixelRatio || 1
+    private _dpr: number = 1
 
     private _resizeObserver: ResizeObserver | null = null
 
@@ -51,6 +51,10 @@ export default class RenderHandler {
 
     public get stageHeight(): number {
         return this._stageHeight
+    }
+
+    public get dpr(): number {
+        return this._dpr
     }
 
     public get fps(): string {
@@ -69,6 +73,15 @@ export default class RenderHandler {
         this._stageCtx = this._cacheCtx
     }
 
+    private _calcDPR() {
+        if (window.devicePixelRatio > 1.5) {
+            this._dpr = 2
+        }
+        else {
+            this._dpr = 1
+        }
+    }
+
     private _checkStage() {
         const { _stageWidth: width, _stageHeight: height } = this
         if (width <= 0 || height <= 0) {
@@ -80,7 +93,7 @@ export default class RenderHandler {
     }
 
     private _updateSize() {
-        this._dpr = 1 // window.devicePixelRatio || 1
+        this._calcDPR()
         const stage = this._stage
         // configure stage size, with dpr considered
         const { width: cssWidth, height: cssHeight } = stage.getBoundingClientRect()
@@ -99,9 +112,14 @@ export default class RenderHandler {
         for (const cache of this._cacheCanvas) {
             cache.width = this._stageWidth
             cache.height = this._stageHeight
+            const cacheCtx = cache.getContext('2d')
+            if (!cacheCtx) {
+                throw new Error('cache context is null')
+            }
+            cacheCtx.scale(this._dpr, this._dpr)
         }
-        // this._stageCtx.scale(this._dpr, this._dpr)
-        // this._cacheCtx.scale(this._dpr, this._dpr)
+        this._stageCtx.scale(this._dpr, this._dpr)
+        this._cacheCtx.scale(this._dpr, this._dpr)
         this._cacheCtx.clearRect(0, 0, this._stageWidth, this._stageHeight)
         this._core.fire('stage.resize')
         this.renderAll()
