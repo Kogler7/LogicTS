@@ -15,8 +15,8 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import { Point, Line, Rect } from '@/logic/common/types2D'
-import { uid } from '@/logic/common/uid'
+import { Point, Line, Rect } from '../common/types2D'
+import { uid } from '../common/uid'
 
 export interface IObjectArena {
     get empty(): boolean

@@ -18,23 +18,26 @@
 import { Point, Rect, Vector } from "../common/types2D"
 import LogicCore from "../core"
 import { Animation, Curves } from "../utils/anime"
+import LogicConfig from "../config"
 
 export default class LayoutHandler {
     private _core: LogicCore
     private _targetEl: HTMLElement | null = null
 
     private _cache: Map<HTMLElement, any> = new Map()
+    private _config = LogicConfig.core.layout
 
     public originBias: Point = new Point()
-    public logicWidth: number = 25 // 25 pixels per logic unit by default
-    public logicWidthMin: number = 1 // 1 pixel per logic unit at least
-    public logicWidthMax: number = 100 // 100 pixels per logic unit at most
+    public logicWidth: number = this._config.logicWidth // 25 pixels per logic unit by default
+    public logicWidthMin: number = this._config.logicWidthMin // 1 pixel per logic unit at least
+    public logicWidthMax: number = this._config.logicWidthMax // 100 pixels per logic unit at most
 
-    public zoomSpeed: number = 0.5 // logic unit per wheel event (deltaY)
-    public zoomLevel: number = 0 // current zoom level, 0 by default
-    public levelMax: number = 2 // 2 levels at most
-    public levelUpFactor: number = 4 // four times bigger each level
-    public gridWidthMin: number = 16 // pixels per grid at least
+    public zoomSpeed: number = this._config.zoomSpeed // logic unit per wheel event (deltaY)
+    public zoomLevel: number = this._config.zoomLevel // current zoom level, 0 by default
+    public zoomLevelMin: number = this._config.zoomLevelMin // 0 levels at least
+    public zoomLevelMax: number = this._config.zoomLevelMax // 2 levels at most
+    public levelUpFactor: number = this._config.levelUpFactor // four times bigger each level
+    public gridWidthMin: number = this._config.gridWidthMin // pixels per grid at least
     public gridWidthMax: number = this.gridWidthMin * this.levelUpFactor // pixels per grid at most
     public gridWidthFactor: number = this.levelUpFactor ** this.zoomLevel // 1, 4, 16...
     public gridWidth: number = this.logicWidth * this.gridWidthFactor // pixels per grid (logic unit)
@@ -151,12 +154,12 @@ export default class LayoutHandler {
         this.originBias = origin.shift(crdBias)
         // update grid related properties
         if (this.gridWidth < this.gridWidthMin) {
-            if (this.zoomLevel < this.levelMax) {
+            if (this.zoomLevel < this.zoomLevelMax) {
                 this.zoomLevel++
             }
         }
         else if (this.gridWidth > this.gridWidthMax) {
-            if (this.zoomLevel > 0) {
+            if (this.zoomLevel > this.zoomLevelMin) {
                 this.zoomLevel--
             }
         }

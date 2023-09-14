@@ -15,7 +15,7 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import { Point, Rect } from "@/logic/common/types2D"
+import { Point, Rect } from "../common/types2D"
 import LogicCore from "../core"
 import { ISelectable } from "./selectable"
 

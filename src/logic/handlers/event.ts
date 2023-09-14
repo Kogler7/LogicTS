@@ -63,7 +63,6 @@ export default class EventHandler {
     public bind(el: HTMLElement) {
         // bind event listeners to the target element, and set it focusable
         // so that we can receive keyboard and mouse events
-        console.log("bind", this._core)
         el.addEventListener('mousedown', this._handleMouseDown)
         el.addEventListener('mousemove', this._handleMouseMove)
         el.addEventListener('mouseup', this._handleMouseUp)

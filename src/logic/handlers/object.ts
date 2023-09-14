@@ -16,12 +16,12 @@
 */
 
 import LogicCore from "../core"
-import { IObjectArena, QueryObjectArena } from "@/logic/arena/arena"
-import { Point, Rect } from "@/logic/common/types2D"
+import { IObjectArena, QueryObjectArena } from "../arena/arena"
+import { Point, Rect } from "../common/types2D"
 import { ISelectable } from "../mixins/selectable"
 import { IMovable } from "../mixins/movable"
 import { IResizable } from "../mixins/resizable"
-import { uid } from "@/logic/common/uid"
+import { uid } from "../common/uid"
 import { TrapSet } from "../common/types"
 
 export interface IObject {
