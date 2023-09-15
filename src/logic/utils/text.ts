@@ -36,12 +36,13 @@ export type FontStyle = {
     style?: string
     color?: string
     align?: CanvasTextAlign
+    padding?: number
     baseline?: CanvasTextBaseline
     lineSpacing?: number
 }
 
 export function getFontString(style: FontStyle): string {
-    const size = style.size || 12
+    const size = style.size || 16
     const family = style.family || "sans-serif"
     const weight = style.weight || "normal"
     const styleStr = style.style || "normal"
@@ -57,6 +58,10 @@ export class Text implements IRenderable {
         this.rect = rect
         this.text = text
         this.style = style
+        if (style.padding && style.padding < 0) {
+            // if padding is negative, we set it to 0
+            style.padding = 0
+        }
     }
 
     protected _configCtx(ctx: CanvasRenderingContext2D): void {
@@ -73,11 +78,20 @@ export class Text implements IRenderable {
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {
         ctx.save()
         this._configCtx(ctx)
-        const textLines = fitTextIntoRect(this.text, rect, this.style.lineSpacing, ctx)
+        const textRect = rect.padding(
+            -ctx.measureText('M').width * (this.style.padding || 0)
+        ).float()
+        const textLines = fitTextIntoRect(
+            this.text,
+            textRect,
+            this.style.padding,
+            this.style.lineSpacing,
+            ctx
+        )
         let curHeight = 0
         for (const textLine of textLines) {
-            ctx.fillText(textLine.text, rect.left, rect.top + curHeight)
-            curHeight += textLine.metrics.height
+            ctx.fillText(textLine.text, textRect.left, textRect.top + curHeight)
+            curHeight += textLine.metrics.height * (this.style.lineSpacing || 1)
         }
         ctx.restore()
         return rect
@@ -98,11 +112,7 @@ export class LogicText extends Text {
     }
 
     protected _configCtx(ctx: CanvasRenderingContext2D): void {
-        let realSize = this.fontSize * (this._core?.logicWidth ?? 1) / 30
-        if (realSize < 7) {
-            // if the size is too small, we hide the text
-            realSize = 0
-        }
+        let realSize = this.fontSize * (this._core?.logicWidth ?? 1) / 6
         this.style.size = realSize
         super._configCtx(ctx)
     }
@@ -116,7 +126,12 @@ function measureText(text: string, ctx: CanvasRenderingContext2D): TextLineMetri
     }
 }
 
-function splitTextByWidth(text: string, maxWidth: number, ctx: CanvasRenderingContext2D): TextLine[] {
+function splitTextByWidth(
+    text: string,
+    maxWidth: number,
+    padding: number = 0,
+    ctx: CanvasRenderingContext2D
+): TextLine[] {
     const rawWords = text.split(' ')
     const words: string[] = []
     for (const rawWord of rawWords) {
@@ -146,7 +161,7 @@ function splitTextByWidth(text: string, maxWidth: number, ctx: CanvasRenderingCo
     let line = ''
     for (const word of words) {
         const metrics = measureText(line + word, ctx)
-        if (metrics.width > maxWidth) {
+        if (metrics.width > maxWidth - padding * 2) {
             lines.push({
                 text: line,
                 metrics: metrics
@@ -165,18 +180,25 @@ function splitTextByWidth(text: string, maxWidth: number, ctx: CanvasRenderingCo
     return lines
 }
 
-function fitTextIntoRect(text: string, rect: Rect, lineSpacing: number = 4, ctx: CanvasRenderingContext2D): TextLine[] {
+function fitTextIntoRect(
+    text: string,
+    rect: Rect,
+    padding: number = 0,
+    lineSpacing: number = 1,
+    ctx: CanvasRenderingContext2D
+): TextLine[] {
     const textLines: TextLine[] = []
     const lines = text.split(/\r?\n/)
-    let curHeight = 0
+    const heightPadding = ctx.measureText('M').width * padding
+    let curHeight = heightPadding
     for (const line of lines) {
-        const splitLines = splitTextByWidth(line, rect.width, ctx)
+        const splitLines = splitTextByWidth(line, rect.width, padding, ctx)
         for (const splitLine of splitLines) {
-            if (curHeight + splitLine.metrics.height > rect.height) {
+            if (curHeight + splitLine.metrics.height > rect.height - heightPadding) {
                 return textLines
             }
             textLines.push(splitLine)
-            curHeight += splitLine.metrics.height + lineSpacing
+            curHeight += splitLine.metrics.height * lineSpacing
         }
     }
     return textLines

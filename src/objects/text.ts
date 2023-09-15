@@ -15,38 +15,56 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import { Point, Rect, Size } from "@/logic/common/types2D"
-import { uid_rt, uid2hex } from "@/logic/common/uid"
+import { Point, Rect } from "@/logic/common/types2D"
+import { uid_rt } from "@/logic/common/uid"
 import IRenderable from "@/logic/mixins/renderable"
 import LogicCore from "@/logic/core"
 import { IObjectArena } from "@/logic/arena/arena"
 import { Flexible } from "@/logic/mixins/flexible"
 import { FontStyle, LogicText } from "@/logic/utils/text"
+import { IDisposable } from "@/logic/common/types"
 
-export default class TextArea extends Flexible implements IRenderable {
+export default class TextArea extends Flexible implements IRenderable, IDisposable {
     private _moving: boolean = false
     private _resizing: boolean = false
     private _arena: IObjectArena | null = null
     private _text: LogicText
     private _cacheCtx: CanvasRenderingContext2D | null = null
 
-    constructor(pos: Point = Point.zero(), text: string = "", style: FontStyle = {}) {
-        super(uid_rt(), 0, new Rect(pos, new Size(4, 4)))
+    constructor(rect: Rect, text: string = "", style: FontStyle = {}) {
+        super(uid_rt(), 0, rect)
         this._text = new LogicText(this.rect, text, style)
+    }
+
+    dispose(): void {
+        this.core!.destroyCache(this._cacheCtx!)
+    }
+
+    private _updateCache() {
+        console.log("update cache")
+        const realRect = this.core!.crd2posRect(this.rect).float().scale(4)
+        realRect.moveTo(Point.zero())
+        if (this._cacheCtx) {
+            this.core!.resizeCache(this._cacheCtx, realRect.size)
+        } else {
+            this._cacheCtx = this.core!.createCache(realRect.size)
+        }
+        this._text.renderAt(this._cacheCtx, realRect)
     }
 
     public onRegistered(core: LogicCore): void {
         super.onRegistered(core)
         this._text.setCore(core)
         this._arena = core.logicArena
+        this._updateCache()
         core.on("movobj.logic.finish", true, this.onMoveFinished.bind(this))
         core.on("resizobj.logic.finish", true, this.onResizeFinished.bind(this))
+        core.on("zoom.end", true, this._updateCache.bind(this))
     }
 
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {
-        const textRect = rect.padding(-6)
-        this._text.renderAt(ctx, textRect)
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"
+        ctx.drawImage(this._cacheCtx!.canvas, ...rect.ltwh)
+        ctx.strokeStyle = "red"
         ctx.strokeRect(...rect.ltwh)
         return rect
     }
@@ -95,6 +113,7 @@ export default class TextArea extends Flexible implements IRenderable {
 
     public onResizeFinished(): void {
         this._resizing = false
+        this._updateCache()
         this.core!.renderAll()
     }
 

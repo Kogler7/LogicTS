@@ -15,7 +15,7 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import { Comparable, Hashable, hash, Printable } from "./types"
+import { IComparable, IHashable, hash, IPrintable } from "./types"
 
 export type Element = null | Line | Point | Rect
 export type PairTuple = readonly [number, number]
@@ -28,7 +28,7 @@ const HASH_UNIT = 1e4
  * @param width the width of the size.
  * @param height the height of the size.
  */
-export class Size implements Comparable, Hashable, Printable {
+export class Size implements IComparable, IHashable, IPrintable {
 	constructor(public width: number = 0, public height: number = 0) { }
 
 	static zero(): Size {
@@ -88,7 +88,7 @@ export class Size implements Comparable, Hashable, Printable {
  * @param x the x coordinate of the point.
  * @param y the y coordinate of the point.
  */
-export class Point implements Comparable, Hashable, Printable {
+export class Point implements IComparable, IHashable, IPrintable {
 	constructor(public x: number = 0, public y: number = 0) { }
 
 	static zero(): Point {
@@ -208,7 +208,7 @@ export class Point implements Comparable, Hashable, Printable {
  * @param p1 the start point of the line.
  * @param p2 the end point of the line.
  */
-export class Line implements Comparable, Hashable, Printable {
+export class Line implements IComparable, IHashable, IPrintable {
 	constructor(public p1: Point, public p2: Point) { }
 
 	public copy(): Line {
@@ -357,7 +357,7 @@ export class Line implements Comparable, Hashable, Printable {
  * @param vx the x component of the vector.
  * @param vy the y component of the vector.
  */
-export class Vector implements Comparable, Hashable, Printable {
+export class Vector implements IComparable, IHashable, IPrintable {
 	constructor(public vx: number = 0, public vy: number = 0) { }
 
 	static zero(): Vector {
@@ -442,7 +442,7 @@ export class Vector implements Comparable, Hashable, Printable {
  * @param pos the position of the rect.
  * @param size the size of the rect.
  */
-export class Rect implements Comparable, Hashable, Printable {
+export class Rect implements IComparable, IHashable, IPrintable {
 	constructor(public pos: Point = new Point(), public size: Size = new Size()) { }
 
 	/**
@@ -897,7 +897,7 @@ export class Rect implements Comparable, Hashable, Printable {
 	}
 }
 
-export class Bound implements Comparable, Hashable, Printable {
+export class Bound implements IComparable, IHashable, IPrintable {
 	constructor(public lftLmt: number | null = null, public rgtLmt: number | null = null) {
 		if (lftLmt !== null && rgtLmt !== null && lftLmt > rgtLmt) {
 			throw new Error('Bound: Left limit must be less than right limit')
@@ -986,7 +986,7 @@ export class Bound implements Comparable, Hashable, Printable {
 	}
 }
 
-export class PointBound implements Comparable, Printable {
+export class PointBound implements IComparable, IPrintable {
 	constructor(public x: Bound, public y: Bound) { }
 
 	public clone(): PointBound {
@@ -1031,7 +1031,7 @@ export class PointBound implements Comparable, Printable {
 	}
 }
 
-export class SizeBound implements Comparable, Printable {
+export class SizeBound implements IComparable, IPrintable {
 	constructor(public width: Bound, public height: Bound) { }
 
 	public clone(): SizeBound {

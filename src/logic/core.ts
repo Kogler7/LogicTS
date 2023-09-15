@@ -196,6 +196,7 @@ export default class LogicCore {
     public mount = this._renderHandler.mountLayer.bind(this._renderHandler)
     public unmount = this._renderHandler.unmountLayer.bind(this._renderHandler)
     public createCache = this._renderHandler.createCache.bind(this._renderHandler)
+    public resizeCache = this._renderHandler.resizeCache.bind(this._renderHandler)
     public destroyCache = this._renderHandler.destroyCache.bind(this._renderHandler)
     public crd2pos = this._layoutHandler.crd2pos.bind(this._layoutHandler)
     public pos2crdRect = this._layoutHandler.pos2crdRect.bind(this._layoutHandler)

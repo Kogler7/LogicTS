@@ -23,7 +23,7 @@
 import { onMounted } from "vue"
 import LogicCore from "./logic/core"
 import LogicLayer from "./logic/layer"
-import { Point } from "@/logic/common/types2D"
+import { Point, Rect } from "@/logic/common/types2D"
 import { uid } from "@/logic/common/uid"
 import FrameLayer from "@/layers/frame"
 import ScalarLayer from "@/layers/scalar"
@@ -52,7 +52,7 @@ class CompLayer extends LogicLayer {
     }
 }
 
-const testStr = 'Fig. 4(b) shows the hi, all. 作业请提交到坚果云，请从上面的URL提交作业。谢谢。average WCRT of DAG task sets with changing utilization. For the same priority assignment policy, we count the WCRT of every allocation strategy only when all the allocation str'
+const testStr = 'Once upon a time, 在远古村庄中, lived a clever little fox named Lily. Their friendship taught them that with kindness and determination, anything is possible. 故事完美落幕，他们的友谊将永远闪耀在心中。'
 
 onMounted(() => {
     const scene = document.getElementById("scene") as HTMLCanvasElement
@@ -85,8 +85,11 @@ onMounted(() => {
     const c3 = new Component(new Point(5, 20))
     const c4 = new Component(new Point(20, 25))
     const c5 = new Component(new Point(15, 15))
-    const t1 = new TextArea(new Point(0, 0), testStr, {
+    const t1 = new TextArea(Rect.fromLTWH(30, 20, 16, 8), testStr, {
+        size: 16,
         color: 'red',
+        padding: 0.5,
+        lineSpacing: 1.5,
     })
     compLayer.addComponent(c1)
     compLayer.addComponent(c2)

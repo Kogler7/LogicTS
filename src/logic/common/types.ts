@@ -17,20 +17,24 @@
 
 export type hash = number | string
 
-export interface Comparable {
-    equals(obj: Comparable): boolean
+export interface IComparable {
+    equals(obj: IComparable): boolean
 }
 
-export interface Hashable {
+export interface IHashable {
     get hash(): hash
 }
 
-export interface Orderable {
+export interface IOrderable {
     get order(): number
 }
 
-export interface Printable {
+export interface IPrintable {
     get desc(): string
+}
+
+export interface IDisposable {
+    dispose(): void
 }
 
 export enum HeapType {
@@ -43,7 +47,7 @@ export enum HeapType {
  * It uses the equals method to determine whether two objects are equal.
  * It has the same effect as the Set class in ES6.
  */
-export class EqualsSet<T extends Comparable>{
+export class EqualsSet<T extends IComparable>{
     private _set: Array<T>
 
     constructor(init: Array<T> = []) {
@@ -98,7 +102,7 @@ export class EqualsSet<T extends Comparable>{
  * It uses the equals method to determine whether two keys are equal.
  * It has the same effect as the Map class in ES6.
  */
-export class EqualsMap<K extends Comparable, V>{
+export class EqualsMap<K extends IComparable, V>{
     private _map: Array<{ key: K, value: V }>
 
     constructor(init: Array<{ key: K, value: V }> = []) {
@@ -162,7 +166,7 @@ export class EqualsMap<K extends Comparable, V>{
  * It uses the hash method to determine whether two objects are equal.
  * It has the same effect as the Set class in ES6.
  */
-export class HashSet<T extends Hashable>{
+export class HashSet<T extends IHashable>{
     private _set: Map<hash, T>
 
     constructor(init: Array<T> = []) {
@@ -215,7 +219,7 @@ export class HashSet<T extends Hashable>{
  * It uses the hash method to determine whether two keys are equal.
  * It has the same effect as the Map class in ES6.
  */
-export class HashMap<K extends Hashable, V>{
+export class HashMap<K extends IHashable, V>{
     private _vMap: Map<hash, V>
     private _kMap: Map<hash, K>
 
@@ -285,7 +289,7 @@ export class HashMap<K extends Hashable, V>{
  * It is used to store objects that implement the Orderable interface.
  * The heap can be used as a priority queue.
  */
-export class BinaryHeap<T extends Orderable>{
+export class BinaryHeap<T extends IOrderable>{
     private _type: HeapType
     private _heap: Array<T>
 
@@ -368,7 +372,7 @@ export class BinaryHeap<T extends Orderable>{
  * It is used to store objects that implement the Orderable interface.
  * The queue is implemented using a binary heap.
  */
-export class PriorityQueue<T extends Orderable> extends BinaryHeap<T>{
+export class PriorityQueue<T extends IOrderable> extends BinaryHeap<T>{
     get empty() {
         return this.size === 0
     }
