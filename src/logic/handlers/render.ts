@@ -15,6 +15,7 @@
 * Supported by: National Key Research and Development Program of China
 */
 
+import { Size } from "../common/types2D"
 import LogicCore from "../core"
 import LogicLayer from "../layer"
 import XPSChecker from "../utils/xps"
@@ -43,7 +44,8 @@ export default class RenderHandler {
 
     private _resizeObserver: ResizeObserver | null = null
 
-    private _cacheCanvas: HTMLCanvasElement[] = []
+    private _fullSizeCacheCanvasSet: Set<HTMLCanvasElement> = new Set()
+    private _fixedSizeCacheCanvasSet: Set<HTMLCanvasElement> = new Set()
 
     public get stageWidth(): number {
         return this._stageWidth
@@ -76,6 +78,8 @@ export default class RenderHandler {
     private _calcDPR() {
         if (window.devicePixelRatio > 1.5) {
             this._dpr = 2
+            console.warn('High resolution display detected, using 2x dpr.')
+            console.warn('High dpr mode is still under development, please report bugs.')
         }
         else {
             this._dpr = 1
@@ -109,7 +113,7 @@ export default class RenderHandler {
         this._cache.width = this._stageWidth
         this._cache.height = this._stageHeight
         // resize cache canvas contexts
-        for (const cache of this._cacheCanvas) {
+        for (const cache of this._fullSizeCacheCanvasSet) {
             cache.width = this._stageWidth
             cache.height = this._stageHeight
             const cacheCtx = cache.getContext('2d')
@@ -118,9 +122,17 @@ export default class RenderHandler {
             }
             cacheCtx.scale(this._dpr, this._dpr)
         }
+        for (const cache of this._fixedSizeCacheCanvasSet) {
+            const cacheCtx = cache.getContext('2d')
+            if (!cacheCtx) {
+                throw new Error('cache context is null')
+            }
+            cacheCtx.scale(this._dpr, this._dpr)
+        }
+        // wonder if it's necessary to scale stage context back first
+        // this._stageCtx.scale(1 / this._dpr, 1 / this._dpr)
         this._stageCtx.scale(this._dpr, this._dpr)
         this._cacheCtx.scale(this._dpr, this._dpr)
-        this._cacheCtx.clearRect(0, 0, this._stageWidth, this._stageHeight)
         this._core.fire('stage.resize')
         this.renderAll()
     }
@@ -258,15 +270,43 @@ export default class RenderHandler {
         }
     }
 
-    public createCache(): CanvasRenderingContext2D {
-        this._checkStage()
+    public createCache(size?: Size): CanvasRenderingContext2D {
         const cache = document.createElement('canvas')
         if (!cache) {
             throw new Error('Failed to create cache canvas')
         }
-        this._cacheCanvas.push(cache) // for auto resize
-        cache.width = this._stageWidth
-        cache.height = this._stageHeight
-        return cache.getContext('2d') as CanvasRenderingContext2D
+        if (size) {
+            this._fixedSizeCacheCanvasSet.add(cache)
+            cache.width = size.width * this._dpr
+            cache.height = size.height * this._dpr
+        } else {
+            this._checkStage()
+            this._fullSizeCacheCanvasSet.add(cache)
+            cache.width = this._stageWidth
+            cache.height = this._stageHeight
+        }
+        const ctx = cache.getContext('2d') as CanvasRenderingContext2D
+        ctx.scale(this._dpr, this._dpr)
+        return ctx
+    }
+
+    public resizeCache(cache: CanvasRenderingContext2D, size: Size) {
+        const canvas = cache.canvas
+        if (!this._fixedSizeCacheCanvasSet.has(canvas)) {
+            throw new Error('Cannot resize a full-size cache canvas')
+        }
+        canvas.width = size.width * this._dpr
+        canvas.height = size.height * this._dpr
+    }
+
+    public destroyCache(cache: CanvasRenderingContext2D, fixed: boolean = false) {
+        const canvas = cache.canvas
+        if (fixed) {
+            this._fixedSizeCacheCanvasSet.delete(canvas)
+        }
+        else {
+            this._fullSizeCacheCanvasSet.delete(canvas)
+        }
+        cache = null as any
     }
 }

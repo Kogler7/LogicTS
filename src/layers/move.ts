@@ -19,7 +19,7 @@ import LogicLayer from "../logic/layer"
 import { Point, Rect, Vector } from "@/logic/common/types2D"
 import { uid } from "@/logic/common/uid"
 import LogicCore from "@/logic/core"
-import { IRenderable } from "@/logic/mixins/renderable"
+import IRenderable from "@/logic/mixins/renderable"
 import { IMovable } from "@/logic/mixins/movable"
 import { Animation, Curves } from "@/logic/utils/anime"
 

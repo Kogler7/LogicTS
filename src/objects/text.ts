@@ -11,7 +11,7 @@
 * See the [Open Source License] for more details.
 * 
 * Author: Zhenjie Wei
-* Created: Sep. 7, 2023
+* Created: Sep. 15, 2023
 * Supported by: National Key Research and Development Program of China
 */
 
@@ -21,32 +21,33 @@ import IRenderable from "@/logic/mixins/renderable"
 import LogicCore from "@/logic/core"
 import { IObjectArena } from "@/logic/arena/arena"
 import { Flexible } from "@/logic/mixins/flexible"
+import { FontStyle, LogicText } from "@/logic/utils/text"
 
-export default class Component extends Flexible implements IRenderable {
+export default class TextArea extends Flexible implements IRenderable {
     private _moving: boolean = false
     private _resizing: boolean = false
     private _arena: IObjectArena | null = null
+    private _text: LogicText
+    private _cacheCtx: CanvasRenderingContext2D | null = null
 
-    constructor(pos: Point = Point.zero()) {
+    constructor(pos: Point = Point.zero(), text: string = "", style: FontStyle = {}) {
         super(uid_rt(), 0, new Rect(pos, new Size(4, 4)))
+        this._text = new LogicText(this.rect, text, style)
     }
 
     public onRegistered(core: LogicCore): void {
         super.onRegistered(core)
+        this._text.setCore(core)
         this._arena = core.logicArena
         core.on("movobj.logic.finish", true, this.onMoveFinished.bind(this))
         core.on("resizobj.logic.finish", true, this.onResizeFinished.bind(this))
     }
 
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {
-        const color = uid2hex(this.id)
-        if (!this._moving) {
-            ctx.strokeStyle = "#000000"
-            ctx.lineWidth = 1
-            ctx.strokeRect(...rect.ltwh)
-        }
-        ctx.fillStyle = color
-        ctx.fillRect(...rect.ltwh)
+        const textRect = rect.padding(-6)
+        this._text.renderAt(ctx, textRect)
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"
+        ctx.strokeRect(...rect.ltwh)
         return rect
     }
 

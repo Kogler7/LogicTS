@@ -17,7 +17,7 @@
 
 import { Rect } from "../common/types2D"
 
-export interface IRenderable {
+export default interface IRenderable {
     rect: Rect
     renderOn(ctx: CanvasRenderingContext2D): void
     renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect

@@ -32,13 +32,15 @@ import SelectLayer from "@/layers/select"
 import MoveObjectLayer from "@/layers/move"
 import ResizeObjectLayer from "@/layers/resize"
 import Component from "@/objects/comp"
+import TextArea from "@/objects/text"
+import IRenderable from "./logic/mixins/renderable"
 
 
-class TestLayer extends LogicLayer {
-    private _comps = new Map<uid, Component>()
+class CompLayer extends LogicLayer {
+    private _comps = new Set<IRenderable>()
 
-    public addComponent(comp: Component): TestLayer {
-        this._comps.set(comp.id, comp)
+    public addComponent(comp: IRenderable): CompLayer {
+        this._comps.add(comp)
         return this
     }
 
@@ -49,6 +51,8 @@ class TestLayer extends LogicLayer {
         return true
     }
 }
+
+const testStr = 'Fig. 4(b) shows the hi, all. 作业请提交到坚果云，请从上面的URL提交作业。谢谢。average WCRT of DAG task sets with changing utilization. For the same priority assignment policy, we count the WCRT of every allocation strategy only when all the allocation str'
 
 onMounted(() => {
     const scene = document.getElementById("scene") as HTMLCanvasElement
@@ -64,7 +68,7 @@ onMounted(() => {
     const selectLayer = new SelectLayer('select', 1)
     const moveLayer = new MoveObjectLayer('move', 3)
     const resizeLayer = new ResizeObjectLayer('resize', 3)
-    const testLayer = new TestLayer('test', 0)
+    const compLayer = new CompLayer('test', 0)
 
     core.connect(scene)
 
@@ -74,24 +78,29 @@ onMounted(() => {
     core.mount(selectLayer)
     core.mount(moveLayer)
     core.mount(resizeLayer)
-    core.mount(testLayer)
+    core.mount(compLayer)
 
     const c1 = new Component(new Point(10, 5))
     const c2 = new Component(new Point(25, 10))
     const c3 = new Component(new Point(5, 20))
     const c4 = new Component(new Point(20, 25))
     const c5 = new Component(new Point(15, 15))
-    testLayer.addComponent(c1)
-    testLayer.addComponent(c2)
-    testLayer.addComponent(c3)
-    testLayer.addComponent(c4)
-    testLayer.addComponent(c5)
+    const t1 = new TextArea(new Point(0, 0), testStr, {
+        color: 'red',
+    })
+    compLayer.addComponent(c1)
+    compLayer.addComponent(c2)
+    compLayer.addComponent(c3)
+    compLayer.addComponent(c4)
+    compLayer.addComponent(c5)
+    compLayer.addComponent(t1)
 
     core.register(c1)
     core.register(c2)
     core.register(c3)
     core.register(c4)
     core.register(c5)
+    core.register(t1)
 
     console.log(core)
     // core.render()
