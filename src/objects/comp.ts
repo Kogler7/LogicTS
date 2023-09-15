@@ -20,9 +20,9 @@ import { uid_rt, uid2hex } from "@/logic/common/uid"
 import IRenderable from "@/logic/mixins/renderable"
 import LogicCore from "@/logic/core"
 import { IObjectArena } from "@/logic/arena/arena"
-import { Flexible } from "@/logic/mixins/flexible"
+import { Movable } from "@/logic/mixins/movable"
 
-export default class Component extends Flexible implements IRenderable {
+export default class Component extends Movable implements IRenderable {
     private _moving: boolean = false
     private _resizing: boolean = false
     private _arena: IObjectArena | null = null
@@ -35,7 +35,6 @@ export default class Component extends Flexible implements IRenderable {
         super.onRegistered(core)
         this._arena = core.logicArena
         core.on("movobj.logic.finish", true, this.onMoveFinished.bind(this))
-        core.on("resizobj.logic.finish", true, this.onResizeFinished.bind(this))
     }
 
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {
@@ -78,27 +77,6 @@ export default class Component extends Flexible implements IRenderable {
 
     public onMoving(oldPos: Point, newPos: Point): boolean {
         const occupied = this._arena!.rectOccupied(this.target, this.id, true)
-        return occupied === null
-    }
-
-    public onResizeBegin(): void {
-        this._resizing = true
-    }
-
-    public onResizeEnd(): void {
-        const success = this._arena!.setObject(this.id, this.target)
-        if (success) {
-            this.rect = this.target
-        }
-    }
-
-    public onResizeFinished(): void {
-        this._resizing = false
-        this.core!.renderAll()
-    }
-
-    public onResizing(oldRect: Rect, newRect: Rect): boolean {
-        const occupied = this._arena!.rectOccupied(newRect, this.id, true)
         return occupied === null
     }
 }

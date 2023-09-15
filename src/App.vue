@@ -88,8 +88,6 @@ onMounted(() => {
     const t1 = new TextArea(Rect.fromLTWH(30, 20, 16, 8), testStr, {
         size: 16,
         color: 'red',
-        padding: 0.5,
-        lineSpacing: 1.5,
     })
     compLayer.addComponent(c1)
     compLayer.addComponent(c2)

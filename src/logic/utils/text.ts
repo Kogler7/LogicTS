@@ -16,8 +16,11 @@
 */
 
 import { Rect } from "../common/types2D"
+import LogicConfig from "../config"
 import LogicCore from "../core"
 import IRenderable from "../mixins/renderable"
+
+const config = LogicConfig.objects.text
 
 export type TextLineMetrics = {
     width: number
@@ -42,10 +45,10 @@ export type FontStyle = {
 }
 
 export function getFontString(style: FontStyle): string {
-    const size = style.size || 16
-    const family = style.family || "sans-serif"
-    const weight = style.weight || "normal"
-    const styleStr = style.style || "normal"
+    const size = style.size || config.size
+    const family = style.family || config.family
+    const weight = style.weight || config.weight
+    const styleStr = style.style || config.style
     return `${styleStr} ${weight} ${size}px ${family}`
 }
 
@@ -58,17 +61,24 @@ export class Text implements IRenderable {
         this.rect = rect
         this.text = text
         this.style = style
-        if (style.padding && style.padding < 0) {
+        if (!style.padding) {
+            style.padding = config.padding
+        }
+        else if (style.padding < 0) {
             // if padding is negative, we set it to 0
+            console.warn("padding should not be negative")
             style.padding = 0
+        }
+        if (!style.lineSpacing) {
+            style.lineSpacing = config.lineSpacing
         }
     }
 
     protected _configCtx(ctx: CanvasRenderingContext2D): void {
         ctx.font = getFontString(this.style)
-        ctx.fillStyle = this.style.color || "black"
-        ctx.textAlign = this.style.align || "left"
-        ctx.textBaseline = this.style.baseline || "top"
+        ctx.fillStyle = this.style.color || config.color
+        ctx.textAlign = this.style.align || config.align as CanvasTextAlign
+        ctx.textBaseline = this.style.baseline || config.baseline as CanvasTextBaseline
     }
 
     public renderOn(ctx: CanvasRenderingContext2D): void {
@@ -79,19 +89,19 @@ export class Text implements IRenderable {
         ctx.save()
         this._configCtx(ctx)
         const textRect = rect.padding(
-            -ctx.measureText('M').width * (this.style.padding || 0)
+            -ctx.measureText('M').width * this.style.padding!
         ).float()
         const textLines = fitTextIntoRect(
             this.text,
             textRect,
-            this.style.padding,
-            this.style.lineSpacing,
+            this.style.padding!,
+            this.style.lineSpacing!,
             ctx
         )
         let curHeight = 0
         for (const textLine of textLines) {
             ctx.fillText(textLine.text, textRect.left, textRect.top + curHeight)
-            curHeight += textLine.metrics.height * (this.style.lineSpacing || 1)
+            curHeight += textLine.metrics.height * (this.style.lineSpacing || config.lineSpacing)
         }
         ctx.restore()
         return rect
@@ -104,7 +114,7 @@ export class LogicText extends Text {
 
     constructor(rect: Rect, text: string, style: FontStyle) {
         super(rect, text, style)
-        this.fontSize = style.size || 16
+        this.fontSize = style.size || config.size
     }
 
     public setCore(core: LogicCore): void {
@@ -112,7 +122,7 @@ export class LogicText extends Text {
     }
 
     protected _configCtx(ctx: CanvasRenderingContext2D): void {
-        let realSize = this.fontSize * (this._core?.logicWidth ?? 1) / 6
+        let realSize = this.fontSize * (this._core?.logicWidth ?? 1) * config.logicFactor
         this.style.size = realSize
         super._configCtx(ctx)
     }
@@ -129,7 +139,7 @@ function measureText(text: string, ctx: CanvasRenderingContext2D): TextLineMetri
 function splitTextByWidth(
     text: string,
     maxWidth: number,
-    padding: number = 0,
+    padding: number,
     ctx: CanvasRenderingContext2D
 ): TextLine[] {
     const rawWords = text.split(' ')
@@ -183,8 +193,8 @@ function splitTextByWidth(
 function fitTextIntoRect(
     text: string,
     rect: Rect,
-    padding: number = 0,
-    lineSpacing: number = 1,
+    padding: number,
+    lineSpacing: number,
     ctx: CanvasRenderingContext2D
 ): TextLine[] {
     const textLines: TextLine[] = []
@@ -194,7 +204,7 @@ function fitTextIntoRect(
     for (const line of lines) {
         const splitLines = splitTextByWidth(line, rect.width, padding, ctx)
         for (const splitLine of splitLines) {
-            if (curHeight + splitLine.metrics.height > rect.height - heightPadding) {
+            if (curHeight + splitLine.metrics.height > rect.height) {
                 return textLines
             }
             textLines.push(splitLine)

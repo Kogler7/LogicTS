@@ -35,6 +35,20 @@ const configObject = {
             okColor: "#8BC34A",
             noColor: "#FF5722"
         }
+    },
+    objects: {
+        text: {
+            size : 16,
+            family : "Arial",
+            weight : "normal",
+            style : "normal",
+            color : "#000000",
+            align : "left",
+            padding : 0.5,
+            baseline : "top",
+            lineSpacing : 1.6,
+            logicFactor : 0.2,
+        }
     }
 }
 
@@ -68,5 +82,9 @@ export default class LogicConfig {
 
     public static get layers() {
         return configObject.layers
+    }
+
+    public static get objects() {
+        return configObject.objects
     }
 }
