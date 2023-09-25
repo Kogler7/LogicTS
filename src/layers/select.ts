@@ -21,7 +21,7 @@ import { ISelectable } from "@/logic/mixins/selectable"
 
 export default class SelectLayer extends LogicLayer {
     private _cache: CanvasRenderingContext2D | null = null
-    public onMount(): void {
+    public onMounted(): void {
         const core = this.core!
         const cornerSize = 6
         const halfCorner = cornerSize / 2
@@ -95,8 +95,9 @@ export default class SelectLayer extends LogicLayer {
             cacheCtx.setLineDash([])
             core.render()
         }
-        core.on("select.logic-changed", true, onChanged)
-        core.on("reloc", true, onChanged)
+        core.on("select.logic-changed", onChanged)
+        core.on("reloc", onChanged)
+        core.on('memory.switch.after', onChanged)
     }
 
     public onPaint(ctx: CanvasRenderingContext2D): boolean {

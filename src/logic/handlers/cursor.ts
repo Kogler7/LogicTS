@@ -15,11 +15,23 @@
 * Supported by: National Key Research and Development Program of China
 */
 
+import LogicCore from "../core"
+
 export default class CursorHandler {
     private _targetEl: HTMLElement | null = null
     private _cursorStack: string[] = []
 
-    public bind(el: HTMLElement) {
+    constructor(core: LogicCore) {
+        core.malloc('__cursor__', {
+            stack: []
+        }, (value: any) => {
+            value.stack = this._cursorStack
+        }, (value: any) => {
+            this._cursorStack = value.stack
+        })
+    }
+
+    public connect(el: HTMLElement) {
         this._targetEl = el
     }
 

@@ -29,12 +29,12 @@ export default class LogicLayer {
         this.visible = visible
     }
 
-    public _onMount(core: LogicCore) {
+    public _onMounted(core: LogicCore) {
         this.core = core
-        this.onMount(core)
+        this.onMounted(core)
     }
 
-    public onMount(core: LogicCore) { }
+    public onMounted(core: LogicCore) { }
 
     public onUnmount() { }
 

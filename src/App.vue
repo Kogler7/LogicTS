@@ -24,7 +24,6 @@ import { onMounted } from "vue"
 import LogicCore from "./logic/core"
 import LogicLayer from "./logic/layer"
 import { Point, Rect } from "@/logic/common/types2D"
-import { uid } from "@/logic/common/uid"
 import FrameLayer from "@/layers/frame"
 import ScalarLayer from "@/layers/scalar"
 import MeshLayer from "@/layers/mesh"
@@ -37,15 +36,20 @@ import IRenderable from "./logic/mixins/renderable"
 
 
 class CompLayer extends LogicLayer {
-    private _comps = new Set<IRenderable>()
+    private _comps: any
+
+    public onMounted(core: LogicCore): void {
+        this._comps = core.malloc('comps', { data: new Set() })
+        console.log(this._comps)
+    }
 
     public addComponent(comp: IRenderable): CompLayer {
-        this._comps.add(comp)
+        this._comps.data.add(comp)
         return this
     }
 
     public onCache(ctx: CanvasRenderingContext2D): boolean {
-        for (const comp of this._comps.values()) {
+        for (const comp of this._comps.data.values()) {
             comp.renderOn(ctx)
         }
         return true
@@ -92,15 +96,21 @@ onMounted(() => {
     compLayer.addComponent(c1)
     compLayer.addComponent(c2)
     compLayer.addComponent(c3)
-    compLayer.addComponent(c4)
-    compLayer.addComponent(c5)
-    compLayer.addComponent(t1)
-
     core.register(c1)
     core.register(c2)
     core.register(c3)
+
+    core.switchMemory(core.createMemory())
+
+    compLayer.addComponent(c4)
+    compLayer.addComponent(c5)
+
     core.register(c4)
     core.register(c5)
+
+    core.switchMemory(core.createMemory())
+    
+    compLayer.addComponent(t1)
     core.register(t1)
 
     console.log(core)
@@ -109,6 +119,11 @@ onMounted(() => {
     window.addEventListener('resize', () => {
         scene.style.width = window.innerWidth - 20 + 'px'
         scene.style.height = window.innerHeight - 20 + 'px'
+    })
+
+    core.on('keydown.alt.ctrl.s', () => {
+        console.log('switch')
+        core.switchMemoryToNext()
     })
 })
 

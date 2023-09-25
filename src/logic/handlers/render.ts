@@ -205,7 +205,7 @@ export default class RenderHandler {
         this._dirty = true
     }
 
-    public bind(stage: HTMLCanvasElement) {
+    public connect(stage: HTMLCanvasElement) {
         this._stage = stage
         const stageCtx = stage.getContext('2d')
         if (!stageCtx) {
@@ -219,7 +219,7 @@ export default class RenderHandler {
         this._updateSize()
     }
 
-    public unbind() {
+    public disconnect() {
         this._stage = this._cache
         this._stageCtx = this._cacheCtx
         this._stageWidth = this._cache.width
@@ -229,7 +229,7 @@ export default class RenderHandler {
     }
 
     public mountLayer(layer: LogicLayer) {
-        layer._onMount(this._core)
+        layer._onMounted(this._core)
         this._layers.push(layer)
         this._layers.sort((a, b) => a.level - b.level)
         if (layer.level < 0) {

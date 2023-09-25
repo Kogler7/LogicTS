@@ -38,7 +38,7 @@ export default class FrameLayer extends LogicLayer {
         // 写一行字
         ctx.font = "16.5px Arial"
         ctx.fillStyle = "#ff0000"
-        const text = `level: ${this.core!.zoomLevel}; ` + this.core!.fps
+        const text = `level: ${this.core!.zoomLevel}; Memo: ${this.core!.currentMemoryId}; ${this.core!.fps}`
         ctx.fillText(text, 40, 50)
         return true
     }

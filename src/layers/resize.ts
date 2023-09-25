@@ -20,7 +20,8 @@ import { Rect } from "@/logic/common/types2D"
 import LogicCore from "@/logic/core"
 import { Animation, Curves } from "@/logic/utils/anime"
 import { IResizable } from "@/logic/mixins/resizable"
-import { IRenderable } from "@/logic/mixins/renderable"
+import IRenderable from "@/logic/mixins/renderable"
+import LogicConfig from "@/logic/config"
 
 export default class ResizeObjectLayer extends LogicLayer {
     private _resizing: boolean = false
@@ -33,15 +34,27 @@ export default class ResizeObjectLayer extends LogicLayer {
     private _targetAnimating: boolean = false
     private _scaleAnimating: boolean = false
 
-    private _okColor: string = "#8BC34A"
-    private _noColor: string = "#FF5722"
+    private _okColor: string = LogicConfig.layers.occupy.okColor
+    private _noColor: string = LogicConfig.layers.occupy.noColor
 
-    public onMount(core: LogicCore) {
+    public onMounted(core: LogicCore) {
         this._resizingLogicObject = core.resizingLogicObject
         this._resizingLogicObjectState = core.resizingLogicObjectState
-        core.on("resizobj.logic.begin", true, this._onResizeObjectBegin.bind(this))
-        core.on("resizobj.logic.end", true, this._onResizeObjectEnd.bind(this))
-        core.on("resizobj.logic.step", true, this._onResizingObjectStep.bind(this))
+        core.on("resizobj.logic.begin", this._onResizeObjectBegin.bind(this))
+        core.on("resizobj.logic.end", this._onResizeObjectEnd.bind(this))
+        core.on("resizobj.logic.step", this._onResizingObjectStep.bind(this))
+        core.on('memory.switch.before', () => {
+            this._resizing = false
+            this._resizingFrameElapsed = 0
+            this._scaleAnimating = false
+            this._targetAnimating = false
+        })
+        core.on('memory.switch.after', () => {
+            this._resizingLogicObject = core.resizingLogicObject
+            this._resizingLogicObjectState = core.resizingLogicObjectState
+            this._currentScaledObjectRect = Rect.zero()
+            this._currentTargetObjectRect = Rect.zero()
+        })
     }
 
     private _updateAnimeFrame() {

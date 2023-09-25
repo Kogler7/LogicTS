@@ -22,6 +22,7 @@ import LogicCore from "@/logic/core"
 import IRenderable from "@/logic/mixins/renderable"
 import { IMovable } from "@/logic/mixins/movable"
 import { Animation, Curves } from "@/logic/utils/anime"
+import LogicConfig from "@/logic/config"
 
 export default class MoveObjectLayer extends LogicLayer {
     private _moving: boolean = false
@@ -38,16 +39,26 @@ export default class MoveObjectLayer extends LogicLayer {
     private _scaleAnimating: boolean = false
     private _targetAnimating: boolean = false
 
-    private _okColor: string = "#8BC34A"
-    private _noColor: string = "#FF5722"
+    private _okColor: string = LogicConfig.layers.occupy.okColor
+    private _noColor: string = LogicConfig.layers.occupy.noColor
 
-    public onMount(core: LogicCore) {
+    public onMounted(core: LogicCore) {
         this._movingObjects = core.movingLogicObjects
         this._movingObjectStates = core.movingLogicObjectStates
-        core.on("movobj.logic.begin", true, this._onMoveObjectBegin.bind(this))
-        core.on("movobj.logic.end", true, this._onMoveObjectEnd.bind(this))
-        core.on("movobj.logic.ing", true, this._onMovingObject.bind(this))
-        core.on("movobj.logic.step", true, this._onMovingObjectStep.bind(this))
+        core.on("movobj.logic.begin", this._onMoveObjectBegin.bind(this))
+        core.on("movobj.logic.end", this._onMoveObjectEnd.bind(this))
+        core.on("movobj.logic.ing", this._onMovingObject.bind(this))
+        core.on("movobj.logic.step", this._onMovingObjectStep.bind(this))
+        core.on('memory.switch.before', () => {
+            this._moving = false
+            this._movingFrameElapsed = 0
+            this._scaleAnimating = false
+            this._targetAnimating = false
+        })
+        core.on('memory.switch.after', () => {
+            this._movingObjects = core.movingLogicObjects
+            this._movingObjectStates = core.movingLogicObjectStates
+        })
     }
 
     private _updateAnimeFrame() {

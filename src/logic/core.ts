@@ -28,13 +28,18 @@ import { IMovable } from "./mixins/movable"
 import { IObjectArena } from "./arena/arena"
 import { uid } from "./common/uid"
 import { IResizable } from "./mixins/resizable"
+import { MemoryHandler } from "./handlers/memory"
 
 export default class LogicCore {
     private _scopedNotifier = new ScopedEventNotifier()
     private _stackedNotifier = new StackedEventNotifier()
 
-    private _cursorHandler = new CursorHandler()
+    private _memoryHandler = new MemoryHandler(this)
+
+    public malloc = this._memoryHandler.malloc.bind(this._memoryHandler)
+
     private _eventHandler = new EventHandler(this)
+    private _cursorHandler = new CursorHandler(this)
     private _renderHandler = new RenderHandler(this)
     private _layoutHandler = new LayoutHandler(this)
     private _objectHandler = new ObjectHandler(this)
@@ -43,6 +48,14 @@ export default class LogicCore {
         if (stage) {
             this.connect(stage)
         }
+    }
+
+    public get currentMemory() {
+        return this._memoryHandler.currentMemory
+    }
+
+    public get currentMemoryId() {
+        return this._memoryHandler.currentMemoryId
     }
 
     public get cursorStack() {
@@ -133,19 +146,19 @@ export default class LogicCore {
         return this._objectHandler.resizingLogicObjectState
     }
 
-    public on(event: string, scoped: boolean, callback: Function, level: number = 0) {
-        if (scoped) {
-            this._scopedNotifier.on(event, callback)
-        } else {
+    public on(event: string, callback: Function, level: number | null = null) {
+        if (level !== null) {
             this._stackedNotifier.on(event, callback, level)
+        } else {
+            this._scopedNotifier.on(event, callback)
         }
     }
 
-    public off(event: string, scoped: boolean, callback: Function | null = null, level = 0) {
-        if (scoped && callback) {
-            this._scopedNotifier.off(event, callback)
-        } else {
+    public off(event: string, callback: Function | null = null, level: number | null = null) {
+        if (level !== null) {
             this._stackedNotifier.off(event, callback, level)
+        } else if (callback) {
+            this._scopedNotifier.off(event, callback)
         }
     }
 
@@ -161,16 +174,14 @@ export default class LogicCore {
 
     // connect to a stage device, which is a canvas element
     public connect(stage: HTMLCanvasElement) {
-        this._eventHandler.bind(stage)
-        this._cursorHandler.bind(stage)
-        this._layoutHandler.bind(stage)
-        this._renderHandler.bind(stage)
+        this._eventHandler.connect(stage)
+        this._cursorHandler.connect(stage)
+        this._renderHandler.connect(stage)
     }
 
     public disconnect() {
-        this._eventHandler.unbind()
-        this._layoutHandler.unbind()
-        this._renderHandler.unbind()
+        this._eventHandler.disconnect()
+        this._renderHandler.disconnect()
         this.render()
     }
 
@@ -188,6 +199,11 @@ export default class LogicCore {
 
     public fire = this._scopedNotifier.fire.bind(this._scopedNotifier)
     public emit = this._stackedNotifier.emit.bind(this._stackedNotifier)
+    public free = this._memoryHandler.free.bind(this._memoryHandler)
+    public createMemory = this._memoryHandler.createMemory.bind(this._memoryHandler)
+    public switchMemory = this._memoryHandler.switchMemory.bind(this._memoryHandler)
+    public deleteMemory = this._memoryHandler.deleteMemory.bind(this._memoryHandler)
+    public switchMemoryToNext = this._memoryHandler.switchMemoryToNext.bind(this._memoryHandler)
     public register = this._objectHandler.addObject.bind(this._objectHandler)
     public unregister = this._objectHandler.delObject.bind(this._objectHandler)
     public render = this._renderHandler.render.bind(this._renderHandler)
@@ -199,9 +215,9 @@ export default class LogicCore {
     public resizeCache = this._renderHandler.resizeCache.bind(this._renderHandler)
     public destroyCache = this._renderHandler.destroyCache.bind(this._renderHandler)
     public crd2pos = this._layoutHandler.crd2pos.bind(this._layoutHandler)
-    public pos2crdRect = this._layoutHandler.pos2crdRect.bind(this._layoutHandler)
-    public pos2crd = this._layoutHandler.pos2crd.bind(this._layoutHandler)
     public crd2posRect = this._layoutHandler.crd2posRect.bind(this._layoutHandler)
+    public pos2crd = this._layoutHandler.pos2crd.bind(this._layoutHandler)
+    public pos2crdRect = this._layoutHandler.pos2crdRect.bind(this._layoutHandler)
     public addObject = this._objectHandler.addObject.bind(this._objectHandler)
     public delObject = this._objectHandler.delObject.bind(this._objectHandler)
     public setSelectable = this._objectHandler.setSelectable.bind(this._objectHandler)

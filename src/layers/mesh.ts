@@ -24,11 +24,11 @@ export default class MeshLayer extends LogicLayer {
     private _baseLineOpacity: number = 0.2
     private _origin: Point = Point.zero()
 
-    public onMount() {
-        this.core?.on("reloc.begin", true, () => {
+    public onMounted() {
+        this.core?.on("reloc.begin", () => {
             this._showBaseLines = false
         })
-        this.core?.on("reloc.end", true, () => {
+        this.core?.on("reloc.end", () => {
             this._showBaseLines = true
             this._baseLineOpacity = 0
             const anime = new Animation(

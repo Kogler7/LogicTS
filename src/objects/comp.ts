@@ -34,7 +34,7 @@ export default class Component extends Movable implements IRenderable {
     public onRegistered(core: LogicCore): void {
         super.onRegistered(core)
         this._arena = core.logicArena
-        core.on("movobj.logic.finish", true, this.onMoveFinished.bind(this))
+        core.on("movobj.logic.finish", this.onMoveFinished.bind(this))
     }
 
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {

@@ -82,7 +82,17 @@ export default class ScopedEventNotifier {
         }
         const child = this._children.get(first)
         if (child) {
-            return child.fire(event, ...args)
+            const success = child.fire(event, ...args)
+            const finalChild = this._children.get('finally')
+            if (finalChild) {
+                finalChild.fire('finally', ...args)
+            }
+            return success
+        } else {
+            const finalChild = this._children.get('finally')
+            if (finalChild) {
+                finalChild.fire('finally', ...args)
+            }
         }
         return true
     }

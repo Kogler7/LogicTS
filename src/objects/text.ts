@@ -57,9 +57,9 @@ export default class TextArea extends Flexible implements IRenderable, IDisposab
         this._text.setCore(core)
         this._arena = core.logicArena
         this._updateCache()
-        core.on("movobj.logic.finish", true, this.onMoveFinished.bind(this))
-        core.on("resizobj.logic.finish", true, this.onResizeFinished.bind(this))
-        core.on("zoom.end", true, this._updateCache.bind(this))
+        core.on("movobj.logic.finish", this.onMoveFinished.bind(this))
+        core.on("resizobj.logic.finish", this.onResizeFinished.bind(this))
+        core.on("zoom.end", this._updateCache.bind(this))
     }
 
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {

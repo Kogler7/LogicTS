@@ -89,6 +89,100 @@ export class ObjectHandler {
 
     private _boundRectPressed: boolean = false
 
+    constructor(core: LogicCore) {
+        this._core = core
+        core.malloc('__object__', {
+            arenas: this._arenas,
+            objects: this._objects,
+            callbacks: this._callbacks,
+            logicArena: this._logicArena,
+            selectableObjects: this._selectableObjects,
+            movableObjects: this._movableObjects,
+            resizableObject: this._resizableObjects,
+        }, (value: any) => {
+            value.arenas = this._arenas
+            value.objects = this._objects
+            value.callbacks = this._callbacks
+            value.logicArena = this._logicArena
+            value.selectableObjects = this._selectableObjects
+            value.movableObjects = this._movableObjects
+            value.resizableObject = this._resizableObjects
+
+            // don't forget to reset cursor
+            this._core.popCursor(this._resizingCursorStyle)
+        }, (value: any) => {
+            this._arenas = value.arenas
+            this._objects = value.objects
+            this._callbacks = value.callbacks
+            this._logicArena = value.logicArena
+            this._selectableObjects = value.selectableObjects
+            this._movableObjects = value.movableObjects
+            this._resizableObjects = value.resizableObject
+
+            // reset all states
+            this._recentSelectedLogicId = null
+            this._recentSelectedNonLogicId = null
+            this._selectedLogicBoundRect = Rect.zero()
+            this._selectedLogicObjects.clear()
+
+            this._movingLogicObjects.clear()
+            this._movingLogicObjectStates.clear()
+            this._movingNonLogicObject = null
+            this._movingNonLogicObjectState = false
+            this._startMovingObjectPos = Point.zero()
+            this._readyToMoveLogicObjects = false
+            this._isMovingLogicObjects = false
+            this._readyToMoveNonLogicObjects = false
+            this._isMovingNonLogicObjects = false
+
+            this._resizingLogicObject = []
+            this._resizingLogicObjectState = [false]
+            this._resizingNonLogicObject = []
+            this._resizingNonLogicObjectState = [false]
+            this._startResizingObjectPos = Point.zero()
+            this._readyToResizeLogicObject = false
+            this._isResizingLogicObject = false
+            this._readyToResizeNonLogicObject = false
+            this._isResizingNonLogicObject = false
+
+            this._resizingCursorStyle = 'nwse-resize'
+            this._ctrlDown = false
+            this._oldFramedLogicRect = Rect.zero()
+            this._oldFramedLogicObjectIds = new Set()
+            this._boundRectPressed = false
+        })
+        this._arenas.set(0, this._logicArena)
+        // register mouse down event listener to the bottom of the event stack
+        // if this callback is fired, it means that no object is selected
+        core.on('mousedown', this._onMousePressedBackground.bind(this), -Infinity)
+        // register mouse down event listener to the top of the event stack
+        core.on('mousedown', this._checkIfMousePressedBoundRect.bind(this), Infinity)
+        // listen to mouse up event to stop moving objects
+        core.on('mouseup', this._onMouseUp.bind(this), Infinity)
+        // listen to mouse move event to move objects
+        core.on('mousemove', this._onMouseMove.bind(this), Infinity)
+        // register level 0 arena callback event listener to the core
+        core.on('mousedown', this._onMousePressedLogicLevel.bind(this), 0)
+        // register ctrl key event listener to the core(level 0)
+        core.on('keydown.Control', () => { this._ctrlDown = true })
+        core.on('keyup.Control', () => { this._ctrlDown = false })
+        // register frame begin event listener to the core
+        core.on('frame.begin', (e: MouseEvent) => {
+            // clear all selected objects
+            this._selectedLogicObjects.clear()
+            // reset the old frame logic rect
+            this._oldFramedLogicRect = Rect.zero()
+        })
+        // register logic frame change event listener to the core
+        core.on('frame.change', this._onLogicFrameRectChanged.bind(this))
+        // recalculate the select bound rect after the objects are moved
+        core.on('update-bound', () => {
+            this._selectedLogicBoundRect = Rect.union(
+                [...this._selectedLogicObjects.set].map((obj) => obj.rect)
+            )
+        })
+    }
+
     public get logicArena(): IObjectArena {
         return this._logicArena
     }
@@ -122,40 +216,6 @@ export class ObjectHandler {
 
     public get resizingLogicObjectState(): boolean[] {
         return this._resizingLogicObjectState
-    }
-
-    constructor(core: LogicCore) {
-        this._core = core
-        this._arenas.set(0, this._logicArena)
-        // register mouse down event listener to the bottom of the event stack
-        // if this callback is fired, it means that no object is selected
-        core.on('mousedown', false, this._onMousePressedBackground.bind(this), -Infinity)
-        // register mouse down event listener to the top of the event stack
-        core.on('mousedown', false, this._checkIfMousePressedBoundRect.bind(this), Infinity)
-        // listen to mouse up event to stop moving objects
-        core.on('mouseup', false, this._onMouseUp.bind(this), Infinity)
-        // listen to mouse move event to move objects
-        core.on('mousemove', false, this._onMouseMove.bind(this), Infinity)
-        // register level 0 arena callback event listener to the core
-        core.on('mousedown', false, this._onMousePressedLogicLevel.bind(this), 0)
-        // register ctrl key event listener to the core(level 0)
-        core.on('keydown.Control', true, () => { this._ctrlDown = true }, 0)
-        core.on('keyup.Control', true, () => { this._ctrlDown = false }, 0)
-        // register frame begin event listener to the core
-        core.on('frame.begin', true, (e: MouseEvent) => {
-            // clear all selected objects
-            this._selectedLogicObjects.clear()
-            // reset the old frame logic rect
-            this._oldFramedLogicRect = Rect.zero()
-        })
-        // register logic frame change event listener to the core
-        core.on('frame.change', true, this._onLogicFrameRectChanged.bind(this))
-        // recalculate the select bound rect after the objects are moved
-        core.on('update-bound', true, () => {
-            this._selectedLogicBoundRect = Rect.union(
-                [...this._selectedLogicObjects.set].map((obj) => obj.rect)
-            )
-        })
     }
 
     private _onLogicFrameRectChanged(oldRect: Rect, newRect: Rect) {
@@ -345,7 +405,7 @@ export class ObjectHandler {
                 return true
             }
             this._callbacks.set(level, cbk)
-            this._core.on('mousedown', false, cbk, level)
+            this._core.on('mousedown', cbk, level)
         }
     }
 
@@ -358,7 +418,7 @@ export class ObjectHandler {
             this._arenas.delete(level)
             const cbk = this._callbacks.get(level)
             if (cbk) {
-                this._core.off('mousedown', false, cbk)
+                this._core.off('mousedown', cbk, 0)
                 this._callbacks.delete(level)
             }
         }

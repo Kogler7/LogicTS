@@ -31,7 +31,7 @@ const configObject = {
         }
     },
     layers: {
-        move: {
+        occupy: {
             okColor: "#8BC34A",
             noColor: "#FF5722"
         }

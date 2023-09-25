@@ -22,13 +22,12 @@ import LogicConfig from "../config"
 
 export default class LayoutHandler {
     private _core: LogicCore
-    private _targetEl: HTMLElement | null = null
 
-    private _cache: Map<HTMLElement, any> = new Map()
     private _config = LogicConfig.core.layout
 
     public originBias: Point = new Point()
     public logicWidth: number = this._config.logicWidth // 25 pixels per logic unit by default
+
     public logicWidthMin: number = this._config.logicWidthMin // 1 pixel per logic unit at least
     public logicWidthMax: number = this._config.logicWidthMax // 100 pixels per logic unit at most
 
@@ -47,32 +46,47 @@ export default class LayoutHandler {
 
     constructor(core: LogicCore) {
         this._core = core
-        core.on('pan.ing', true, () => {
+        core.malloc('__layout__', {
+            originBias: this.originBias,
+            logicWidth: this.logicWidth,
+            zoomLevel: this.zoomLevel,
+        }, (value: any) => {
+            value.originBias = this.originBias
+            value.logicWidth = this.logicWidth
+            value.zoomLevel = this.zoomLevel
+        }, (value: any) => {
+            this.originBias = value.originBias
+            this.logicWidth = value.logicWidth
+            this.zoomLevel = value.zoomLevel
+            this.gridWidthFactor = this.levelUpFactor ** this.zoomLevel
+            this.gridWidth = this.logicWidth * this.gridWidthFactor
+        })
+        core.on('pan.ing', () => {
             const { lastPos, focusPos } = this._core
             this._panTo(Vector.fromPoints(lastPos, focusPos))
         })
-        core.on('zoom.ing', true, (e: WheelEvent) => {
+        core.on('zoom.ing', (e: WheelEvent) => {
             const { focusPos } = this._core
             this._zoomAt(e.deltaY, focusPos)
         })
-        core.on('slide.ing', true, () => {
+        core.on('slide.ing', () => {
             const vec = Vector.fromPoints(
                 this._core.focusPos,
                 this._core.anchorPos
             ).divide(this.logicWidth * 30)
             this._slideVector = vec
         })
-        core.on('slide.begin', true, () => {
+        core.on('slide.begin', () => {
             this._sliding = true
             this._slideVector = new Vector()
             this._trySlide()
         })
-        core.on('slide.end', true, () => {
+        core.on('slide.end', () => {
             this._sliding = false
             this._slideVector = new Vector()
         })
         // double click middle button to reset originBias
-        core.on('doubleclick.middle', true, () => {
+        core.on('doubleclick.middle', () => {
             const bias = this.originBias.copy()
             const anime = new Animation(
                 (value: number) => {
@@ -86,25 +100,6 @@ export default class LayoutHandler {
             )
             anime.start()
         })
-    }
-
-    public bind(el: HTMLElement) {
-        this._targetEl = el
-        const cachedData = this._cache.get(el)
-        if (cachedData) {
-            this.originBias = cachedData.logicOrigin
-            this.logicWidth = cachedData.logicLength
-        }
-    }
-
-    public unbind() {
-        if (this._targetEl) {
-            this._cache.set(this._targetEl, {
-                logicOrigin: this.originBias,
-                logicLength: this.logicWidth
-            })
-        }
-        this._targetEl = null
     }
 
     public crd2pos(crd: Point): Point {

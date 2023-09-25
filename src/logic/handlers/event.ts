@@ -55,12 +55,12 @@ export default class EventHandler {
     constructor(core: LogicCore) {
         this._core = core
         // for any event, we should rerender part of the canvas
-        core.on('', true, () => { core.render() })
+        core.on('finally', () => { core.render() })
         // for any event related to relocating, we should rerender the whole canvas
-        core.on('reloc', true, () => { core.renderAll() })
+        core.on('reloc.finally', () => { core.renderAll() })
     }
 
-    public bind(el: HTMLElement) {
+    public connect(el: HTMLElement) {
         // bind event listeners to the target element, and set it focusable
         // so that we can receive keyboard and mouse events
         el.addEventListener('mousedown', this._handleMouseDown)
@@ -73,7 +73,7 @@ export default class EventHandler {
         this._targetEl = el
     }
 
-    public unbind() {
+    public disconnect() {
         // unbind event listeners from the target element
         // to prevent receiving unwanted events
         if (this._targetEl) {
@@ -211,6 +211,7 @@ export default class EventHandler {
 
     private _onKeyDown(e: KeyboardEvent) {
         if (!this._core.emit('keydown', e)) return
+        let modifiers = ''
         if (e.key === 'Alt') {
             this._altKey = true
         }
@@ -220,11 +221,18 @@ export default class EventHandler {
         else if (e.key === 'Shift') {
             this._shiftKey = true
         }
-        this._core.fire('keydown.' + e.key, e)
+        else {
+            modifiers = (this._altKey ? 'alt.' : '') +
+                (this._ctrlKey ? 'ctrl.' : '') +
+                (this._shiftKey ? 'shift.' : '')
+        }
+        const event = 'keydown.' + modifiers + e.key.toLowerCase()
+        this._core.fire(event, e)
     }
 
     private _onKeyUp(e: KeyboardEvent) {
         if (!this._core.emit('keyup', e)) return
+        let modifiers = ''
         if (e.key === 'Alt') {
             this._altKey = false
         }
@@ -234,6 +242,12 @@ export default class EventHandler {
         else if (e.key === 'Shift') {
             this._shiftKey = false
         }
-        this._core.fire('keyup.' + e.key, e)
+        else {
+            modifiers = (this._altKey ? 'alt.' : '') +
+                (this._ctrlKey ? 'ctrl.' : '') +
+                (this._shiftKey ? 'shift.' : '')
+        }
+        const event = 'keyup.' + modifiers + e.key.toLowerCase()
+        this._core.fire(event, e)
     }
 } 
