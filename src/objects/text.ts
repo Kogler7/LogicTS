@@ -41,7 +41,6 @@ export default class TextArea extends Flexible implements IRenderable, IDisposab
     }
 
     private _updateCache() {
-        console.log("update cache")
         const realRect = this.core!.crd2posRect(this.rect).float().scale(4)
         realRect.moveTo(Point.zero())
         if (this._cacheCtx) {

@@ -24,7 +24,7 @@ export default class CursorHandler {
     constructor(core: LogicCore) {
         core.malloc('__cursor__', this, {
             _cursorStack: 1
-        })
+        }, null, () => { this._update() })
     }
 
     public connect(el: HTMLElement) {

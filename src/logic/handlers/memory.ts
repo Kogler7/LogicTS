@@ -100,6 +100,9 @@ export class MemoryHandler {
     ) {
         this._protoAdd(name, { target, descriptor })
         this._core.on('memory.switch.before', (id: uid) => {
+            if (!this._prototypes.has(name)) {
+                return
+            }
             // save the current memory
             this._currentMemory.set(
                 name,
@@ -110,6 +113,9 @@ export class MemoryHandler {
             }
         })
         this._core.on('memory.switch.after', (id: uid) => {
+            if (!this._prototypes.has(name)) {
+                return
+            }
             // load the new memory
             this._forceSyncByProto(
                 this._prototypes.get(name)!,
@@ -122,8 +128,6 @@ export class MemoryHandler {
     }
 
     public free(name: string) {
-        console.warn(`[MemoryHandler] The free function is not well implemented yet.`)
-        // consider if we should delete the prototype as well as the callbacks
         this._prototypes.delete(name)
         for (const memory of this._memories.values()) {
             memory.delete(name)

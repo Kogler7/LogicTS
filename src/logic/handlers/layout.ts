@@ -50,7 +50,7 @@ export default class LayoutHandler {
             originBias: 1,
             logicWidth: 1,
             zoomLevel: 1,
-        }, null, (value: any) => {
+        }, null, () => {
             this.gridWidthFactor = this.levelUpFactor ** this.zoomLevel
             this.gridWidth = this.logicWidth * this.gridWidthFactor
         })

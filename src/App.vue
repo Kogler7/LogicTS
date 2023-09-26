@@ -40,7 +40,6 @@ class CompLayer extends LogicLayer {
 
     public onMounted(core: LogicCore): void {
         core.malloc('comps', this, { _comps: 1 })
-        console.log(this._comps)
     }
 
     public addComponent(comp: IRenderable): CompLayer {
