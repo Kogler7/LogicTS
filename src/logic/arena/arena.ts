@@ -15,10 +15,11 @@
 * Supported by: National Key Research and Development Program of China
 */
 
+import { ICloneable } from '../common/types'
 import { Point, Line, Rect } from '../common/types2D'
 import { uid } from '../common/uid'
 
-export interface IObjectArena {
+export interface IObjectArena extends ICloneable<IObjectArena> {
     get empty(): boolean
     get boundRect(): Rect
     addObject(id: uid, rect: Rect): boolean
@@ -42,6 +43,13 @@ export class QueryObjectArena implements IObjectArena {
 
     public get boundRect(): Rect {
         return this._boundRect
+    }
+
+    public clone(): IObjectArena {
+        let ret = new QueryObjectArena()
+        ret._objects = new Map(this._objects)
+        ret._boundRect = this._boundRect.clone()
+        return ret
     }
 
     public addObject(id: uid, rect: Rect): boolean {

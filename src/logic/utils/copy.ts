@@ -19,6 +19,12 @@ export function deepCopy(obj: any, depth: number = 1): any {
     // Handle the 3 simple types, and null or undefined
     if (null == obj || "object" != typeof obj) return obj
 
+    // Handle Cloneable objects
+    if (obj.clone) {
+        console.log('clone', obj)
+        return obj.clone()
+    }
+
     if (depth <= 0) return obj
     depth--
 

@@ -95,44 +95,39 @@ export class ObjectHandler {
     constructor(core: LogicCore) {
         this._core = core
         core.malloc('__object__', this, {
-            _arenas: 3,
+            _arenas: 1,
             _objects: 1,
             _callbacks: 1,
-            _logicArena: 2,
+            _logicArena: 1,
             _selectableObjects: 1,
+            _selectedLogicObjects: 1,
+            _selectedLogicBoundRect: 1,
+            _recentSelectedLogicId: 1,
+            _recentSelectedNonLogicId: 1,
             _movableObjects: 1,
-            _resizableObject: 1,
+            _movingLogicObjects: 1,
+            _movingLogicObjectStates: 1,
+            _movingNonLogicObject: 1,
+            _movingNonLogicObjectState: 1,
+            _startMovingObjectPos: 1,
+            _readyToMoveLogicObjects: 1,
+            _isMovingLogicObjects: 1,
+            _readyToMoveNonLogicObjects: 1,
+            _isMovingNonLogicObjects: 1,
+            _resizableObjects: 1,
+            _resizingLogicObject: 1,
+            _resizingLogicObjectState: 1,
+            _resizingNonLogicObject: 1,
+            _resizingNonLogicObjectState: 1,
+            _startResizingObjectPos: 1,
+            _readyToResizeLogicObject: 1,
+            _isResizingLogicObject: 1,
         }, () => {
             // don't forget to reset cursor
             this._core.popCursor(this._resizingCursorStyle)
         }, () => {
             this._logicArena = this._arenas.get(0)!
-            // reset all states
-            this._recentSelectedLogicId = null
-            this._recentSelectedNonLogicId = null
-            this._selectedLogicBoundRect = Rect.zero()
-            this._selectedLogicObjects.clear()
-
-            this._movingLogicObjects.clear()
-            this._movingLogicObjectStates.clear()
-            this._movingNonLogicObject = null
-            this._movingNonLogicObjectState = false
-            this._startMovingObjectPos = Point.zero()
-            this._readyToMoveLogicObjects = false
-            this._isMovingLogicObjects = false
-            this._readyToMoveNonLogicObjects = false
-            this._isMovingNonLogicObjects = false
-
-            this._resizingLogicObject = []
-            this._resizingLogicObjectState = [false]
-            this._resizingNonLogicObject = []
-            this._resizingNonLogicObjectState = [false]
-            this._startResizingObjectPos = Point.zero()
-            this._readyToResizeLogicObject = false
-            this._isResizingLogicObject = false
-            this._readyToResizeNonLogicObject = false
-            this._isResizingNonLogicObject = false
-
+            // reset rest states
             this._resizingCursorStyle = 'nwse-resize'
             this._ctrlDown = false
             this._oldFramedLogicRect = Rect.zero()

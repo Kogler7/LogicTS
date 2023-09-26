@@ -69,6 +69,7 @@ export default class MoveObjectLayer extends LogicLayer {
     }
 
     private _onMoveObjectBegin(pos: Point) {
+        console.log(this._movingObjects)
         this._moving = true
         // init moving objects bias
         for (const obj of this._movingObjects) {
