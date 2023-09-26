@@ -43,6 +43,9 @@ class CompLayer extends LogicLayer {
     }
 
     public addComponent(comp: IRenderable): CompLayer {
+        if (!this.core) {
+            console.warn('Components should be added after the layer is mounted.')
+        }
         this._comps.add(comp)
         return this
     }
@@ -63,8 +66,6 @@ onMounted(() => {
     scene.style.width = window.innerWidth - 20 + 'px'
     scene.style.height = window.innerHeight - 20 + 'px'
 
-    const core = new LogicCore()
-
     const frameLayer = new FrameLayer('frame', 2)
     const scalarLayer = new ScalarLayer('scalar', 4)
     const meshLayer = new MeshLayer('mesh', -1)
@@ -72,6 +73,18 @@ onMounted(() => {
     const moveLayer = new MoveObjectLayer('move', 3)
     const resizeLayer = new ResizeObjectLayer('resize', 3)
     const compLayer = new CompLayer('test', 0)
+
+    const c1 = new Component(new Point(10, 5))
+    const c2 = new Component(new Point(25, 10))
+    const c3 = new Component(new Point(5, 20))
+    const c4 = new Component(new Point(20, 25))
+    const c5 = new Component(new Point(15, 15))
+    const t1 = new TextArea(Rect.fromLTWH(30, 20, 16, 8), testStr, {
+        size: 16,
+        color: 'red',
+    })
+
+    const core = new LogicCore()
 
     core.connect(scene)
 
@@ -83,18 +96,10 @@ onMounted(() => {
     core.mount(resizeLayer)
     core.mount(compLayer)
 
-    const c1 = new Component(new Point(10, 5))
-    const c2 = new Component(new Point(25, 10))
-    const c3 = new Component(new Point(5, 20))
-    const c4 = new Component(new Point(20, 25))
-    const c5 = new Component(new Point(15, 15))
-    const t1 = new TextArea(Rect.fromLTWH(30, 20, 16, 8), testStr, {
-        size: 16,
-        color: 'red',
-    })
     compLayer.addComponent(c1)
     compLayer.addComponent(c2)
     compLayer.addComponent(c3)
+
     core.register(c1)
     core.register(c2)
     core.register(c3)
@@ -113,7 +118,6 @@ onMounted(() => {
     core.register(t1)
 
     console.log(core)
-    // core.render()
 
     window.addEventListener('resize', () => {
         scene.style.width = window.innerWidth - 20 + 'px'
@@ -123,6 +127,8 @@ onMounted(() => {
     core.on('keydown.ctrl.s', () => {
         core.switchMemoryToNext()
     })
+
+    core.focus()
 })
 
 </script>

@@ -31,6 +31,7 @@ import { IResizable } from "./mixins/resizable"
 import { MemoryHandler } from "./handlers/memory"
 
 export default class LogicCore {
+    private _stage: HTMLCanvasElement | null = null
     private _scopedNotifier = new ScopedEventNotifier()
     private _stackedNotifier = new StackedEventNotifier()
 
@@ -48,6 +49,10 @@ export default class LogicCore {
         if (stage) {
             this.connect(stage)
         }
+    }
+
+    public get stage(): HTMLCanvasElement | null {
+        return this._stage
     }
 
     public get currentMemory() {
@@ -162,6 +167,10 @@ export default class LogicCore {
         }
     }
 
+    public focus() {
+        this._stage?.focus()
+    }
+
     public setCursor = this._cursorHandler.push.bind(this._cursorHandler)
 
     public popCursor(cursor: string = '') {
@@ -174,10 +183,10 @@ export default class LogicCore {
 
     // connect to a stage device, which is a canvas element
     public connect(stage: HTMLCanvasElement) {
+        this._stage = stage
         this._eventHandler.connect(stage)
         this._cursorHandler.connect(stage)
         this._renderHandler.connect(stage)
-        stage.focus()
     }
 
     public disconnect() {

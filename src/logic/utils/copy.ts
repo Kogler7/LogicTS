@@ -21,7 +21,6 @@ export function deepCopy(obj: any, depth: number = 1): any {
 
     // Handle Cloneable objects
     if (obj.clone) {
-        console.log('clone', obj)
         return obj.clone()
     }
 
