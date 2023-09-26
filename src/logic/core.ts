@@ -123,6 +123,10 @@ export default class LogicCore {
         return this._objectHandler.logicArena
     }
 
+    public get logicObjectIds(): Set<uid> {
+        return this._objectHandler.logicObjectIds
+    }
+
     public get selectedLogicObjects(): Set<ISelectable> {
         return this._objectHandler.selectedLogicObjects
     }
@@ -231,6 +235,7 @@ export default class LogicCore {
     public pos2crdRect = this._layoutHandler.pos2crdRect.bind(this._layoutHandler)
     public addObject = this._objectHandler.addObject.bind(this._objectHandler)
     public delObject = this._objectHandler.delObject.bind(this._objectHandler)
+    public getObject = this._objectHandler.getObject.bind(this._objectHandler)
     public setSelectable = this._objectHandler.setSelectable.bind(this._objectHandler)
     public setMovable = this._objectHandler.setMovable.bind(this._objectHandler)
     public setResizable = this._objectHandler.setResizable.bind(this._objectHandler)

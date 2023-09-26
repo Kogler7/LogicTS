@@ -169,6 +169,10 @@ export class ObjectHandler {
         return this._logicArena
     }
 
+    public get logicObjectIds(): Set<uid> {
+        return this._logicArena.getObjects()
+    }
+
     public get selectedLogicObjects(): Set<ISelectable> {
         return this._selectedLogicObjects.set
     }
@@ -640,6 +644,10 @@ export class ObjectHandler {
             this._delSelectSupportForNonLogicLevel(level)
         }
         return success
+    }
+
+    public getObject(id: uid): IObject | null {
+        return this._objects.get(id) || null
     }
 
     public setSelectable(obj: ISelectable, selectable: boolean) {

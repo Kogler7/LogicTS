@@ -26,6 +26,7 @@ export interface IObjectArena extends ICloneable<IObjectArena> {
     getObject(id: uid): Rect | null
     setObject(id: uid, rect: Rect): boolean
     delObject(id: uid): boolean
+    getObjects(): Set<uid>
     posOccupied(pos: Point): uid | null
     lineOccupied(line: Line, except: uid): uid | null
     rectOccupied(rect: Rect, except: uid, fill: boolean): uid | null
@@ -100,6 +101,10 @@ export class QueryObjectArena implements IObjectArena {
             this._boundRect = this._boundRect.union(v)
         }
         return true
+    }
+
+    public getObjects(): Set<uid> {
+        return new Set(this._objects.keys())
     }
 
     public posOccupied(pos: Point): uid | null {

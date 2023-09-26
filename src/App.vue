@@ -28,6 +28,7 @@ import FrameLayer from "@/layers/frame"
 import ScalarLayer from "@/layers/scalar"
 import MeshLayer from "@/layers/mesh"
 import SelectLayer from "@/layers/select"
+import LinkLayer from "./layers/link"
 import MoveObjectLayer from "@/layers/move"
 import ResizeObjectLayer from "@/layers/resize"
 import Component from "@/objects/comp"
@@ -73,6 +74,7 @@ onMounted(() => {
     const moveLayer = new MoveObjectLayer('move', 3)
     const resizeLayer = new ResizeObjectLayer('resize', 3)
     const compLayer = new CompLayer('test', 0)
+    const linkLayer = new LinkLayer('link', -1)
 
     const c1 = new Component(new Point(10, 5))
     const c2 = new Component(new Point(25, 10))
@@ -95,6 +97,7 @@ onMounted(() => {
     core.mount(moveLayer)
     core.mount(resizeLayer)
     core.mount(compLayer)
+    core.mount(linkLayer)
 
     compLayer.addComponent(c1)
     compLayer.addComponent(c2)

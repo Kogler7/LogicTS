@@ -40,6 +40,7 @@ export class Movable implements IMovable {
         this.id = id
         this.level = level
         this.rect = rect
+        this.target = rect.clone()
     }
 
     public onRegistered(core: LogicCore): void {
