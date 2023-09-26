@@ -23,6 +23,7 @@ import { IMovable } from "../mixins/movable"
 import { IResizable } from "../mixins/resizable"
 import { uid } from "../common/uid"
 import { TrapSet } from "../common/types"
+import { deepCopy } from "../utils/copy"
 
 export interface IObject {
     id: uid
@@ -91,33 +92,36 @@ export class ObjectHandler {
 
     constructor(core: LogicCore) {
         this._core = core
+        this._arenas.set(0, this._logicArena)
         core.malloc('__object__', {
-            arenas: this._arenas,
-            objects: this._objects,
-            callbacks: this._callbacks,
-            logicArena: this._logicArena,
-            selectableObjects: this._selectableObjects,
-            movableObjects: this._movableObjects,
-            resizableObject: this._resizableObjects,
+            arenas: deepCopy(this._arenas, 3),
+            objects: deepCopy(this._objects),
+            callbacks: deepCopy(this._callbacks),
+            logicArena: deepCopy(this._logicArena, 2),
+            selectableObjects: deepCopy(this._selectableObjects),
+            movableObjects: deepCopy(this._movableObjects),
+            resizableObject: deepCopy(this._resizableObjects),
         }, (value: any) => {
-            value.arenas = this._arenas
-            value.objects = this._objects
-            value.callbacks = this._callbacks
-            value.logicArena = this._logicArena
-            value.selectableObjects = this._selectableObjects
-            value.movableObjects = this._movableObjects
-            value.resizableObject = this._resizableObjects
+            console.log('before', value)
+            value.arenas = deepCopy(this._arenas, 3)
+            value.objects = deepCopy(this._objects)
+            value.callbacks = deepCopy(this._callbacks)
+            value.logicArena = deepCopy(this._logicArena, 2)
+            value.selectableObjects = deepCopy(this._selectableObjects)
+            value.movableObjects = deepCopy(this._movableObjects)
+            value.resizableObject = deepCopy(this._resizableObjects)
 
             // don't forget to reset cursor
             this._core.popCursor(this._resizingCursorStyle)
         }, (value: any) => {
-            this._arenas = value.arenas
-            this._objects = value.objects
-            this._callbacks = value.callbacks
-            this._logicArena = value.logicArena
-            this._selectableObjects = value.selectableObjects
-            this._movableObjects = value.movableObjects
-            this._resizableObjects = value.resizableObject
+            console.log('after', value)
+            this._arenas = deepCopy(value.arenas, 3)
+            this._objects = deepCopy(value.objects)
+            this._callbacks = deepCopy(value.callbacks)
+            this._logicArena = deepCopy(value.logicArena, 2)
+            this._selectableObjects = deepCopy(value.selectableObjects)
+            this._movableObjects = deepCopy(value.movableObjects)
+            this._resizableObjects = deepCopy(value.resizableObject)
 
             // reset all states
             this._recentSelectedLogicId = null
@@ -151,7 +155,6 @@ export class ObjectHandler {
             this._oldFramedLogicObjectIds = new Set()
             this._boundRectPressed = false
         })
-        this._arenas.set(0, this._logicArena)
         // register mouse down event listener to the bottom of the event stack
         // if this callback is fired, it means that no object is selected
         core.on('mousedown', this._onMousePressedBackground.bind(this), -Infinity)
@@ -466,7 +469,7 @@ export class ObjectHandler {
                     this._startResizingObjectPos = hitCrd
                     this._resizingLogicObjectState[0] = true
                     const obj = this._resizingLogicObject[0]
-                    obj.target = obj.rect.copy()
+                    obj.target = obj.rect.clone()
                     obj.onResizeBegin()
                     this._core.fire('resizobj.logic.begin', obj.target, e)
                     return false
@@ -476,7 +479,7 @@ export class ObjectHandler {
                     this._startResizingObjectPos = hitPos
                     this._resizingNonLogicObjectState[0] = true
                     const obj = this._resizingNonLogicObject[0]
-                    obj.target = obj.rect.copy()
+                    obj.target = obj.rect.clone()
                     obj.onResizeBegin()
                     this._core.fire('resizobj.non-logic.begin', obj.target, e)
                     return false
@@ -494,7 +497,7 @@ export class ObjectHandler {
                 this._isMovingLogicObjects = true
                 for (const obj of this._movingLogicObjects) {
                     this.movingLogicObjectStates.set(obj.id, true)
-                    obj.target = obj.rect.copy()
+                    obj.target = obj.rect.clone()
                     obj.onMoveBegin()
                 }
                 this._core.fire('movobj.logic.begin', newPos, e)
@@ -513,7 +516,7 @@ export class ObjectHandler {
             if (!this._isMovingNonLogicObjects) {
                 const obj = this._movingNonLogicObject!
                 this._isMovingNonLogicObjects = true
-                obj.target = obj.rect.copy()
+                obj.target = obj.rect.clone()
                 obj.onMoveBegin()
                 this._core.fire('movobj.non-logic.begin', newPos, e)
             }

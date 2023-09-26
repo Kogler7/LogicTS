@@ -87,7 +87,7 @@ export default class LayoutHandler {
         })
         // double click middle button to reset originBias
         core.on('doubleclick.middle', () => {
-            const bias = this.originBias.copy()
+            const bias = this.originBias.clone()
             const anime = new Animation(
                 (value: number) => {
                     this.originBias = bias.times(1 - value)

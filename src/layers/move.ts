@@ -82,8 +82,8 @@ export default class MoveObjectLayer extends LogicLayer {
             }
             this._movingScaledObjectsBias.set(obj.id, Vector.fromPoints(pos, scaled.pos))
             this._movingScaledObjectsRect.set(obj.id, scaled)
-            this._currentScaledObjectsRect.set(obj.id, obj.rect.copy())
-            this._currentTargetObjectsRect.set(obj.id, obj.target.copy())
+            this._currentScaledObjectsRect.set(obj.id, obj.rect.clone())
+            this._currentTargetObjectsRect.set(obj.id, obj.target.clone())
         }
         // start scale animation
         for (const obj of this._movingObjects) {
@@ -112,7 +112,7 @@ export default class MoveObjectLayer extends LogicLayer {
         this._movingFrameElapsed = 0
         // start scale animation
         for (const obj of this._movingObjects) {
-            const curr = this._movingScaledObjectsRect.get(obj.id)!.copy()
+            const curr = this._movingScaledObjectsRect.get(obj.id)!.clone()
             const scaleAnime = new Animation(
                 (progress: number) => {
                     this._currentScaledObjectsRect.set(obj.id, curr.lerp(obj.rect, progress))
@@ -130,7 +130,7 @@ export default class MoveObjectLayer extends LogicLayer {
                 }
             )
             const curTarget = this._currentTargetObjectsRect.get(obj.id)!
-            const oldTarget = curTarget.copy()
+            const oldTarget = curTarget.clone()
             const targetAnime = new Animation(
                 (progress: number) => {
                     const targetPos = oldTarget.pos.lerp(obj.rect.pos, progress)
@@ -159,7 +159,7 @@ export default class MoveObjectLayer extends LogicLayer {
         if (this._targetAnimating) return
         for (const obj of this._movingObjects) {
             const curTarget = this._currentTargetObjectsRect.get(obj.id)!
-            const oldTarget = curTarget.copy()
+            const oldTarget = curTarget.clone()
             const moveTargetAnime = new Animation(
                 (progress: number) => {
                     const targetPos = oldTarget.pos.lerp(obj.target.pos, progress)

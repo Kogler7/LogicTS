@@ -16,6 +16,7 @@
 */
 
 import LogicCore from "../core"
+import { deepCopy } from "../utils/copy"
 
 export default class CursorHandler {
     private _targetEl: HTMLElement | null = null
@@ -25,7 +26,7 @@ export default class CursorHandler {
         core.malloc('__cursor__', {
             stack: []
         }, (value: any) => {
-            value.stack = this._cursorStack
+            value.stack = deepCopy(this._cursorStack)
         }, (value: any) => {
             this._cursorStack = value.stack
         })

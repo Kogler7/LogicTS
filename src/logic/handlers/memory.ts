@@ -16,63 +16,10 @@
 */
 
 import { uid, uid_rt } from "../common/uid"
+import { deepCopy } from "../utils/copy"
 import LogicCore from "../core"
 
 export type Memory = Map<string, any>
-
-function deepCopy(obj: any): any {
-    let copy
-
-    // Handle the 3 simple types, and null or undefined
-    if (null == obj || "object" != typeof obj) return obj
-
-    // Handle Date
-    if (obj instanceof Date) {
-        copy = new Date()
-        copy.setTime(obj.getTime())
-        return copy
-    }
-
-    // Handle Array
-    if (obj instanceof Array) {
-        copy = []
-        for (var i = 0, len = obj.length; i < len; i++) {
-            copy[i] = deepCopy(obj[i])
-        }
-        return copy
-    }
-
-    // Handle Map
-    if (obj instanceof Map) {
-        copy = new Map()
-        for (const [key, value] of obj) {
-            copy.set(key, deepCopy(value))
-        }
-        return copy
-    }
-
-    // Handle Set
-    if (obj instanceof Set) {
-        copy = new Set()
-        for (const value of obj) {
-            copy.add(deepCopy(value))
-        }
-        return copy
-    }
-
-    // Handle Object
-    if (obj instanceof Object) {
-        // copy = {}
-        // for (var attr in obj) {
-        //     // console.log(attr)
-        //     if (obj.hasOwnProperty(attr)) (copy as any)[attr] = deepCopy(obj[attr])
-        // }
-        // return copy
-        return Object.assign(Object.create(obj), obj)
-    }
-
-    throw new Error("Unable to copy obj! Its type isn't supported.")
-}
 
 export class MemoryHandler {
     private _core: LogicCore
@@ -85,6 +32,8 @@ export class MemoryHandler {
         core.on('memory.switch.after.finally', () => {
             core.renderAll()
         })
+        this._currentMemoryId = this.createMemory()
+        this._currentMemory = this._memories.get(this._currentMemoryId)!
     }
 
     get currentMemory(): Memory {
@@ -120,10 +69,13 @@ export class MemoryHandler {
         onBeforeSwitch: ((value: any) => void) | null = null,
         onAfterSwitch: ((value: any) => void) | null = null
     ): typeof Proxy {
+        object.id = uid_rt()
+        console.log(object)
+        console.log(`[MemoryHandler] Malloc "${name}" with id "${object.id}".`)
         this._protoSet(name, object)
         if (onBeforeSwitch) {
-            this._core.on('memory.switch.before', () => {
-                const mem = this.currentMemory
+            this._core.on('memory.switch.before', (id: uid) => {
+                const mem = this._memories.get(id)!
                 if (mem.has(name)) {
                     onBeforeSwitch(mem.get(name))
                 } else {
@@ -132,8 +84,8 @@ export class MemoryHandler {
             })
         }
         if (onAfterSwitch) {
-            this._core.on('memory.switch.after', () => {
-                const mem = this.currentMemory
+            this._core.on('memory.switch.after', (id: uid) => {
+                const mem = this._memories.get(id)!
                 if (mem.has(name)) {
                     onAfterSwitch(mem.get(name))
                 } else {
@@ -141,7 +93,7 @@ export class MemoryHandler {
                 }
             })
         }
-        return new Proxy(object, {
+        return new Proxy(this.currentMemory.get(name)!, {
             get: (_, prop, receiver) => {
                 const object = this.currentMemory.get(name)
                 return Reflect.get(object, prop, receiver)
@@ -161,13 +113,16 @@ export class MemoryHandler {
     }
 
     public createMemory(): uid {
+        console.log(`[MemoryHandler] Creating a new memory.`)
         const id = uid_rt()
         const object = new Map<string, any>()
         for (const [name, proto] of this._prototypes) {
+            console.log(`[MemoryHandler] Copying "${name}" in memory "${id}", ${proto}.`)
+            // debugger
             object.set(name, deepCopy(proto))
+            object.get(name).id = id
         }
         this._memories.set(id, object)
-        this._core.fire('memory.create', id)
         return id
     }
 
@@ -176,16 +131,19 @@ export class MemoryHandler {
             console.error(`[MemoryHandler] Memory "${id}" does not exist.`)
             return
         }
-        this._core.fire('memory.switch.before', id)
+        this._core.fire('memory.switch.before', this._currentMemoryId)
         this._currentMemoryId = id
         this._currentMemory = this._memories.get(id)!
         this._core.fire('memory.switch.after', id)
+        console.log(`[MemoryHandler] Switched to memory "${id}".`)
+        for (const memo of this._memories.values()) {
+            console.log(memo)
+        }
     }
 
     public deleteMemory(id: uid) {
         const success = this._memories.delete(id)
         if (success) {
-            this._core.fire('memory.delete', id)
             // if the current memory is deleted, switch to another one
             if (id === this._currentMemoryId) {
                 // if there is no memory left, create a new one

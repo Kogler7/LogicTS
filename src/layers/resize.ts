@@ -67,7 +67,7 @@ export default class ResizeObjectLayer extends LogicLayer {
     private _onResizeObjectBegin(rect: Rect) {
         this._resizing = true
         this._currentTargetObjectRect = rect
-        this._currentScaledObjectRect = rect.copy()
+        this._currentScaledObjectRect = rect.clone()
         this._updateAnimeFrame()
         this.core!.renderAll()
     }
@@ -76,7 +76,7 @@ export default class ResizeObjectLayer extends LogicLayer {
         this._resizingFrameElapsed = 0
         // start scale animation
         const obj = this._resizingLogicObject[0]
-        const oldRect = this._currentScaledObjectRect.copy()
+        const oldRect = this._currentScaledObjectRect.clone()
         const scaleAnime = new Animation(
             (progress: number) => {
                 this._currentScaledObjectRect = oldRect.lerp(obj.rect, progress)
@@ -91,7 +91,7 @@ export default class ResizeObjectLayer extends LogicLayer {
                 this._scaleAnimating = false
             }
         )
-        const oldTarget = this._currentTargetObjectRect.copy()
+        const oldTarget = this._currentTargetObjectRect.clone()
         const targetAnime = new Animation(
             (progress: number) => {
                 this._currentTargetObjectRect = oldTarget.lerp(obj.rect, progress)
@@ -118,7 +118,7 @@ export default class ResizeObjectLayer extends LogicLayer {
     private _onResizingObjectStep(oldRect: Rect, newRect: Rect) {
         if (this._targetAnimating) return
         const obj = this._resizingLogicObject[0]
-        const oldTarget = this._currentTargetObjectRect.copy()
+        const oldTarget = this._currentTargetObjectRect.clone()
         const moveTargetAnime = new Animation(
             (progress: number) => {
                 this._currentTargetObjectRect = oldTarget.lerp(obj.target, progress)

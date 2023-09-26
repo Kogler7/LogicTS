@@ -15,7 +15,7 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import { IComparable, IHashable, hash, IPrintable } from "./types"
+import { IComparable, IHashable, hash, IPrintable, ICloneable } from "./types"
 
 export type Element = null | Line | Point | Rect
 export type PairTuple = readonly [number, number]
@@ -28,7 +28,7 @@ const HASH_UNIT = 1e4
  * @param width the width of the size.
  * @param height the height of the size.
  */
-export class Size implements IComparable, IHashable, IPrintable {
+export class Size implements IComparable, IHashable, IPrintable, ICloneable<Size> {
 	constructor(public width: number = 0, public height: number = 0) { }
 
 	static zero(): Size {
@@ -66,7 +66,7 @@ export class Size implements IComparable, IHashable, IPrintable {
 		return this.width === s.width && this.height === s.height
 	}
 
-	public copy(): Size {
+	public clone(): Size {
 		return new Size(this.width, this.height)
 	}
 
@@ -88,7 +88,7 @@ export class Size implements IComparable, IHashable, IPrintable {
  * @param x the x coordinate of the point.
  * @param y the y coordinate of the point.
  */
-export class Point implements IComparable, IHashable, IPrintable {
+export class Point implements IComparable, IHashable, IPrintable, ICloneable<Point> {
 	constructor(public x: number = 0, public y: number = 0) { }
 
 	static zero(): Point {
@@ -182,7 +182,7 @@ export class Point implements IComparable, IHashable, IPrintable {
 		return new Point(this.x, this.y + dy)
 	}
 
-	public copy(): Point {
+	public clone(): Point {
 		return new Point(this.x, this.y)
 	}
 
@@ -208,11 +208,11 @@ export class Point implements IComparable, IHashable, IPrintable {
  * @param p1 the start point of the line.
  * @param p2 the end point of the line.
  */
-export class Line implements IComparable, IHashable, IPrintable {
+export class Line implements IComparable, IHashable, IPrintable, ICloneable<Line> {
 	constructor(public p1: Point, public p2: Point) { }
 
-	public copy(): Line {
-		return new Line(this.p1.copy(), this.p2.copy())
+	public clone(): Line {
+		return new Line(this.p1.clone(), this.p2.clone())
 	}
 
 	/**
@@ -357,7 +357,7 @@ export class Line implements IComparable, IHashable, IPrintable {
  * @param vx the x component of the vector.
  * @param vy the y component of the vector.
  */
-export class Vector implements IComparable, IHashable, IPrintable {
+export class Vector implements IComparable, IHashable, IPrintable, ICloneable<Vector> {
 	constructor(public vx: number = 0, public vy: number = 0) { }
 
 	static zero(): Vector {
@@ -408,7 +408,7 @@ export class Vector implements IComparable, IHashable, IPrintable {
 		return new Vector(this.vx / length, this.vy / length)
 	}
 
-	public copy(): Vector {
+	public clone(): Vector {
 		return new Vector(this.vx, this.vy)
 	}
 
@@ -442,7 +442,7 @@ export class Vector implements IComparable, IHashable, IPrintable {
  * @param pos the position of the rect.
  * @param size the size of the rect.
  */
-export class Rect implements IComparable, IHashable, IPrintable {
+export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect> {
 	constructor(public pos: Point = new Point(), public size: Size = new Size()) { }
 
 	/**
@@ -517,18 +517,18 @@ export class Rect implements IComparable, IHashable, IPrintable {
 	 * @return the shifted rect.
 	 */
 	public shift(v: Vector): Rect {
-		return new Rect(this.pos.shift(v), this.size.copy())
+		return new Rect(this.pos.shift(v), this.size.clone())
 	}
 
 	public float(): Rect {
-		const res = new Rect(this.pos.float(), this.size.copy())
+		const res = new Rect(this.pos.float(), this.size.clone())
 		res.right = Math.round(res.right) + 0.5
 		res.bottom = Math.round(res.bottom) + 0.5
 		return res
 	}
 
 	public round(): Rect {
-		const res = new Rect(this.pos.round(), this.size.copy())
+		const res = new Rect(this.pos.round(), this.size.clone())
 		res.right = Math.round(res.right)
 		res.bottom = Math.round(res.bottom)
 		return res
@@ -571,7 +571,7 @@ export class Rect implements IComparable, IHashable, IPrintable {
 			} else if (p1.y >= this.bottom) {
 				r = Rect.fromVertices(this.topLeft, this.topRight).expandToInclude(p2)
 			} else {
-				r = this.copy()
+				r = this.clone()
 			}
 		}
 		return r
@@ -606,8 +606,8 @@ export class Rect implements IComparable, IHashable, IPrintable {
 		return Rect.fromLTRB(left, top, right, bottom)
 	}
 
-	public copy(): Rect {
-		return new Rect(this.pos.copy(), this.size.copy())
+	public clone(): Rect {
+		return new Rect(this.pos.clone(), this.size.clone())
 	}
 
 	public get left(): number { return this.pos.x }
@@ -897,14 +897,14 @@ export class Rect implements IComparable, IHashable, IPrintable {
 	}
 }
 
-export class Bound implements IComparable, IHashable, IPrintable {
+export class Bound implements IComparable, IHashable, IPrintable, ICloneable<Bound> {
 	constructor(public lftLmt: number | null = null, public rgtLmt: number | null = null) {
 		if (lftLmt !== null && rgtLmt !== null && lftLmt > rgtLmt) {
 			throw new Error('Bound: Left limit must be less than right limit')
 		}
 	}
 
-	public copy(): Bound {
+	public clone(): Bound {
 		return new Bound(this.lftLmt, this.rgtLmt)
 	}
 
@@ -986,11 +986,11 @@ export class Bound implements IComparable, IHashable, IPrintable {
 	}
 }
 
-export class PointBound implements IComparable, IPrintable {
+export class PointBound implements IComparable, IPrintable, ICloneable<PointBound> {
 	constructor(public x: Bound, public y: Bound) { }
 
 	public clone(): PointBound {
-		return new PointBound(this.x.copy(), this.y.copy())
+		return new PointBound(this.x.clone(), this.y.clone())
 	}
 
 	/**
@@ -1031,11 +1031,11 @@ export class PointBound implements IComparable, IPrintable {
 	}
 }
 
-export class SizeBound implements IComparable, IPrintable {
+export class SizeBound implements IComparable, IPrintable, ICloneable<SizeBound> {
 	constructor(public width: Bound, public height: Bound) { }
 
 	public clone(): SizeBound {
-		return new SizeBound(this.width.copy(), this.height.copy())
+		return new SizeBound(this.width.clone(), this.height.clone())
 	}
 
 	public restrict(size: Size): Size {

@@ -37,6 +37,14 @@ export interface IDisposable {
     dispose(): void
 }
 
+export interface ICloneable<T> {
+    clone(): T
+}
+
+export function isCloneable<T>(obj: any): obj is ICloneable<T> {
+    return obj.copy !== undefined
+}
+
 export enum HeapType {
     MIN,
     MAX
@@ -47,11 +55,17 @@ export enum HeapType {
  * It uses the equals method to determine whether two objects are equal.
  * It has the same effect as the Set class in ES6.
  */
-export class EqualsSet<T extends IComparable>{
+export class EqualsSet<T extends IComparable> implements ICloneable<EqualsSet<T>>{
     private _set: Array<T>
 
     constructor(init: Array<T> = []) {
         this._set = init
+    }
+
+    clone(): EqualsSet<T> {
+        return new EqualsSet(
+            [...this._set]
+        )
     }
 
     add(obj: T): EqualsSet<T> {
@@ -102,11 +116,17 @@ export class EqualsSet<T extends IComparable>{
  * It uses the equals method to determine whether two keys are equal.
  * It has the same effect as the Map class in ES6.
  */
-export class EqualsMap<K extends IComparable, V>{
+export class EqualsMap<K extends IComparable, V> implements ICloneable<EqualsMap<K, V>>{
     private _map: Array<{ key: K, value: V }>
 
     constructor(init: Array<{ key: K, value: V }> = []) {
         this._map = init
+    }
+
+    clone(): EqualsMap<K, V> {
+        return new EqualsMap(
+            [...this._map]
+        )
     }
 
     set(key: K, value: V): EqualsMap<K, V> {
@@ -166,11 +186,17 @@ export class EqualsMap<K extends IComparable, V>{
  * It uses the hash method to determine whether two objects are equal.
  * It has the same effect as the Set class in ES6.
  */
-export class HashSet<T extends IHashable>{
+export class HashSet<T extends IHashable> implements ICloneable<HashSet<T>>{
     private _set: Map<hash, T>
 
     constructor(init: Array<T> = []) {
         this._set = new Map(init.map(obj => [obj.hash, obj]))
+    }
+
+    clone(): HashSet<T> {
+        return new HashSet(
+            [...this._set.values()]
+        )
     }
 
     add(obj: T): HashSet<T> {
@@ -219,13 +245,22 @@ export class HashSet<T extends IHashable>{
  * It uses the hash method to determine whether two keys are equal.
  * It has the same effect as the Map class in ES6.
  */
-export class HashMap<K extends IHashable, V>{
+export class HashMap<K extends IHashable, V> implements ICloneable<HashMap<K, V>>{
     private _vMap: Map<hash, V>
     private _kMap: Map<hash, K>
 
     constructor(init: Array<{ key: K, value: V }> = []) {
         this._vMap = new Map(init.map(({ key, value }) => [key.hash, value]))
         this._kMap = new Map(init.map(({ key }) => [key.hash, key]))
+    }
+
+    clone(): HashMap<K, V> {
+        return new HashMap(
+            [...this._vMap.entries()].map(([hash, value]) => {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                return { key: this._kMap.get(hash)!, value }
+            })
+        )
     }
 
     set(key: K, value: V): HashMap<K, V> {
@@ -289,14 +324,21 @@ export class HashMap<K extends IHashable, V>{
  * It is used to store objects that implement the Orderable interface.
  * The heap can be used as a priority queue.
  */
-export class BinaryHeap<T extends IOrderable>{
-    private _type: HeapType
-    private _heap: Array<T>
+export class BinaryHeap<T extends IOrderable> implements ICloneable<BinaryHeap<T>>{
+    protected _type: HeapType
+    protected _heap: Array<T>
 
     constructor(init: Array<T> = [], type: HeapType = HeapType.MIN) {
         this._type = type
         this._heap = []
         init.forEach(obj => this.add(obj))
+    }
+
+    clone(): BinaryHeap<T> {
+        return new BinaryHeap(
+            [...this._heap],
+            this._type
+        )
     }
 
     private _lessThan(a: T, b: T) {
@@ -377,6 +419,13 @@ export class PriorityQueue<T extends IOrderable> extends BinaryHeap<T>{
         return this.size === 0
     }
 
+    public clone(): PriorityQueue<T> {
+        return new PriorityQueue(
+            [...this._heap],
+            this._type
+        )
+    }
+
     public enqueue(obj: T): PriorityQueue<T> {
         this.add(obj)
         return this
@@ -387,7 +436,7 @@ export class PriorityQueue<T extends IOrderable> extends BinaryHeap<T>{
     }
 }
 
-export class TrapSet<T> {
+export class TrapSet<T> implements ICloneable<TrapSet<T>>{
     private _set: Set<T>
     private _onAdded: (obj: T) => void
     private _onDelete: (obj: T) => void
@@ -403,6 +452,15 @@ export class TrapSet<T> {
         this._onAdded = onAdded
         this._onDelete = onDelete
         this._onChanged = onChanged
+    }
+
+    clone(): TrapSet<T> {
+        return new TrapSet(
+            this._onAdded,
+            this._onDelete,
+            this._onChanged,
+            [...this._set]
+        )
     }
 
     add(obj: T): TrapSet<T> {
