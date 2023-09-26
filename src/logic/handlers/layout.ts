@@ -46,18 +46,11 @@ export default class LayoutHandler {
 
     constructor(core: LogicCore) {
         this._core = core
-        core.malloc('__layout__', {
-            originBias: this.originBias,
-            logicWidth: this.logicWidth,
-            zoomLevel: this.zoomLevel,
-        }, (value: any) => {
-            value.originBias = this.originBias
-            value.logicWidth = this.logicWidth
-            value.zoomLevel = this.zoomLevel
-        }, (value: any) => {
-            this.originBias = value.originBias
-            this.logicWidth = value.logicWidth
-            this.zoomLevel = value.zoomLevel
+        core.malloc('__layout__', this, {
+            originBias: 1,
+            logicWidth: 1,
+            zoomLevel: 1,
+        }, null, (value: any) => {
             this.gridWidthFactor = this.levelUpFactor ** this.zoomLevel
             this.gridWidth = this.logicWidth * this.gridWidthFactor
         })

@@ -60,6 +60,7 @@ export default class TextArea extends Flexible implements IRenderable, IDisposab
         core.on("movobj.logic.finish", this.onMoveFinished.bind(this))
         core.on("resizobj.logic.finish", this.onResizeFinished.bind(this))
         core.on("zoom.end", this._updateCache.bind(this))
+        core.on('memory.switch.after', this._updateCache.bind(this))
     }
 
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {

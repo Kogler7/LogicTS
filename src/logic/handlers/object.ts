@@ -35,10 +35,12 @@ export interface IObject {
 
 export class ObjectHandler {
     private _core: LogicCore
-    private _arenas: Map<uid, IObjectArena> = new Map()
+    private _logicArena: IObjectArena = new QueryObjectArena()
+    private _arenas: Map<uid, IObjectArena> = new Map(
+        [[0, this._logicArena]]
+    )
     private _objects: Map<uid, IObject> = new Map()
     private _callbacks: Map<uid, (e: MouseEvent) => boolean> = new Map()
-    private _logicArena: IObjectArena = new QueryObjectArena()
     private _recentSelectedLogicId: uid | null = null
     private _recentSelectedNonLogicId: uid | null = null
 
@@ -92,37 +94,19 @@ export class ObjectHandler {
 
     constructor(core: LogicCore) {
         this._core = core
-        this._arenas.set(0, this._logicArena)
-        core.malloc('__object__', {
-            arenas: deepCopy(this._arenas, 3),
-            objects: deepCopy(this._objects),
-            callbacks: deepCopy(this._callbacks),
-            logicArena: deepCopy(this._logicArena, 2),
-            selectableObjects: deepCopy(this._selectableObjects),
-            movableObjects: deepCopy(this._movableObjects),
-            resizableObject: deepCopy(this._resizableObjects),
-        }, (value: any) => {
-            console.log('before', value)
-            value.arenas = deepCopy(this._arenas, 3)
-            value.objects = deepCopy(this._objects)
-            value.callbacks = deepCopy(this._callbacks)
-            value.logicArena = deepCopy(this._logicArena, 2)
-            value.selectableObjects = deepCopy(this._selectableObjects)
-            value.movableObjects = deepCopy(this._movableObjects)
-            value.resizableObject = deepCopy(this._resizableObjects)
-
+        core.malloc('__object__', this, {
+            _arenas: 3,
+            _objects: 1,
+            _callbacks: 1,
+            _logicArena: 2,
+            _selectableObjects: 1,
+            _movableObjects: 1,
+            _resizableObject: 1,
+        }, () => {
             // don't forget to reset cursor
             this._core.popCursor(this._resizingCursorStyle)
-        }, (value: any) => {
-            console.log('after', value)
-            this._arenas = deepCopy(value.arenas, 3)
-            this._objects = deepCopy(value.objects)
-            this._callbacks = deepCopy(value.callbacks)
-            this._logicArena = deepCopy(value.logicArena, 2)
-            this._selectableObjects = deepCopy(value.selectableObjects)
-            this._movableObjects = deepCopy(value.movableObjects)
-            this._resizableObjects = deepCopy(value.resizableObject)
-
+        }, () => {
+            this._logicArena = this._arenas.get(0)!
             // reset all states
             this._recentSelectedLogicId = null
             this._recentSelectedNonLogicId = null

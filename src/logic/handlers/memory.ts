@@ -20,92 +20,110 @@ import { deepCopy } from "../utils/copy"
 import LogicCore from "../core"
 
 export type Memory = Map<string, any>
+export type MemoryDescriptor = { [key: string]: number }
+export type MemoryPrototype = { target: any, descriptor: MemoryDescriptor }
 
 export class MemoryHandler {
     private _core: LogicCore
-    private _memories: Map<uid, Memory> = new Map()
-    private _prototypes: Map<string, any> = new Map()
-    private _currentMemory: Memory | null = null
-    private _currentMemoryId: uid | null = null
+    private _defaults: Memory = new Map()
+    private _currentMemory: Memory = new Map()
+    private _currentMemoryId: uid = uid_rt()
+    private _memories: Map<uid, Memory> = new Map(
+        [[this._currentMemoryId, this._currentMemory]]
+    )
+    private _prototypes: Map<string, MemoryPrototype> = new Map()
     constructor(core: LogicCore) {
         this._core = core
         core.on('memory.switch.after.finally', () => {
             core.renderAll()
         })
-        this._currentMemoryId = this.createMemory()
-        this._currentMemory = this._memories.get(this._currentMemoryId)!
     }
 
     get currentMemory(): Memory {
-        if (!this._currentMemory) {
-            this._currentMemoryId = this.createMemory()
-            this._currentMemory = this._memories.get(this._currentMemoryId)!
-        }
         return this._currentMemory
     }
 
     get currentMemoryId(): uid {
-        if (!this._currentMemoryId) {
-            this._currentMemoryId = this.createMemory()
-            this._currentMemory = this._memories.get(this._currentMemoryId)!
-        }
         return this._currentMemoryId
     }
 
-    private _protoSet(name: string, proto: any) {
+    private _cloneDataByProto(name: string, srcMem: Memory, proto: MemoryPrototype): any {
+        const entry = srcMem.get(name)
+        if (!entry) {
+            throw new Error(`[MemoryHandler] Memory "${name}" does not exist.`)
+        }
+        const data: any = {}
+        for (const [key, depth] of Object.entries(proto.descriptor)) {
+            data[key] = deepCopy(entry[key], depth)
+        }
+        return data
+    }
+
+    private _fetchDataByProto(proto: MemoryPrototype, copy: boolean): any {
+        const { target, descriptor } = proto
+        const data: any = {}
+        for (const [key, depth] of Object.entries(descriptor)) {
+            data[key] = copy ? deepCopy(target[key], depth) : target[key]
+        }
+        return data
+    }
+
+    private _forceSyncByProto(proto: MemoryPrototype, data: any) {
+        const { target, descriptor } = proto
+        for (const [key, _] of Object.entries(descriptor)) {
+            target[key] = data[key]
+        }
+    }
+
+    private _protoAdd(name: string, proto: MemoryPrototype) {
         if (this._prototypes.has(name)) {
             console.warn(`[MemoryHandler] Prototype "${name}" already exists.`)
         }
         this._prototypes.set(name, proto)
-        for (const memory of this._memories.values()) {
-            const copy = deepCopy(proto)
-            memory.set(name, copy)
+        // first, set the target data to the current memory without copying
+        this._currentMemory.set(name, this._fetchDataByProto(proto, false))
+        // then, copy the target data to the memory defaults for copying
+        this._defaults.set(name, this._fetchDataByProto(proto, true))
+        // finally, copy the default data to all the other memories
+        for (const [id, memory] of this._memories) {
+            if (id === this._currentMemoryId) continue
+            memory.set(name, this._cloneDataByProto(name, this._defaults, proto))
         }
     }
 
     public malloc(
         name: string,
-        object: any,
+        target: any,
+        descriptor: MemoryDescriptor,
         onBeforeSwitch: ((value: any) => void) | null = null,
         onAfterSwitch: ((value: any) => void) | null = null
-    ): typeof Proxy {
-        object.id = uid_rt()
-        console.log(object)
-        console.log(`[MemoryHandler] Malloc "${name}" with id "${object.id}".`)
-        this._protoSet(name, object)
-        if (onBeforeSwitch) {
-            this._core.on('memory.switch.before', (id: uid) => {
-                const mem = this._memories.get(id)!
-                if (mem.has(name)) {
-                    onBeforeSwitch(mem.get(name))
-                } else {
-                    onBeforeSwitch(null)
-                }
-            })
-        }
-        if (onAfterSwitch) {
-            this._core.on('memory.switch.after', (id: uid) => {
-                const mem = this._memories.get(id)!
-                if (mem.has(name)) {
-                    onAfterSwitch(mem.get(name))
-                } else {
-                    onAfterSwitch(null)
-                }
-            })
-        }
-        return new Proxy(this.currentMemory.get(name)!, {
-            get: (_, prop, receiver) => {
-                const object = this.currentMemory.get(name)
-                return Reflect.get(object, prop, receiver)
-            },
-            set: (_, prop, value, receiver) => {
-                const object = this.currentMemory.get(name)
-                return Reflect.set(object, prop, value, receiver)
+    ) {
+        this._protoAdd(name, { target, descriptor })
+        this._core.on('memory.switch.before', (id: uid) => {
+            // save the current memory
+            this._currentMemory.set(
+                name,
+                this._fetchDataByProto(this._prototypes.get(name)!, false)
+            )
+            if (onBeforeSwitch) {
+                onBeforeSwitch(id)
+            }
+        })
+        this._core.on('memory.switch.after', (id: uid) => {
+            // load the new memory
+            this._forceSyncByProto(
+                this._prototypes.get(name)!,
+                this._memories.get(id)!.get(name)
+            )
+            if (onAfterSwitch) {
+                onAfterSwitch(id)
             }
         })
     }
 
     public free(name: string) {
+        console.warn(`[MemoryHandler] The free function is not well implemented yet.`)
+        // consider if we should delete the prototype as well as the callbacks
         this._prototypes.delete(name)
         for (const memory of this._memories.values()) {
             memory.delete(name)
@@ -113,16 +131,13 @@ export class MemoryHandler {
     }
 
     public createMemory(): uid {
-        console.log(`[MemoryHandler] Creating a new memory.`)
         const id = uid_rt()
-        const object = new Map<string, any>()
+        console.log(`[MemoryHandler] Creating a new memory "${id}".`)
+        const memory = new Map<string, any>()
         for (const [name, proto] of this._prototypes) {
-            console.log(`[MemoryHandler] Copying "${name}" in memory "${id}", ${proto}.`)
-            // debugger
-            object.set(name, deepCopy(proto))
-            object.get(name).id = id
+            memory.set(name, this._cloneDataByProto(name, this._defaults, proto))
         }
-        this._memories.set(id, object)
+        this._memories.set(id, memory)
         return id
     }
 
@@ -135,10 +150,9 @@ export class MemoryHandler {
         this._currentMemoryId = id
         this._currentMemory = this._memories.get(id)!
         this._core.fire('memory.switch.after', id)
-        console.log(`[MemoryHandler] Switched to memory "${id}".`)
-        for (const memo of this._memories.values()) {
-            console.log(memo)
-        }
+        console.group(`[MemoryHandler] Switched to memory "${id}".`)
+        console.log(this._memories.get(id))
+        console.groupEnd()
     }
 
     public deleteMemory(id: uid) {
@@ -155,6 +169,13 @@ export class MemoryHandler {
                 }
             }
         }
+    }
+
+    public getMemoryById(id: uid): Memory {
+        if (!this._memories.has(id)) {
+            throw new Error(`[MemoryHandler] Memory "${id}" does not exist.`)
+        }
+        return this._memories.get(id)!
     }
 
     public switchMemoryToNext() {

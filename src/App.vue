@@ -36,20 +36,20 @@ import IRenderable from "./logic/mixins/renderable"
 
 
 class CompLayer extends LogicLayer {
-    private _comps: any
+    private _comps: Set<IRenderable> = new Set()
 
     public onMounted(core: LogicCore): void {
-        this._comps = core.malloc('comps', { data: new Set() })
+        core.malloc('comps', this, { _comps: 1 })
         console.log(this._comps)
     }
 
     public addComponent(comp: IRenderable): CompLayer {
-        this._comps.data.add(comp)
+        this._comps.add(comp)
         return this
     }
 
     public onCache(ctx: CanvasRenderingContext2D): boolean {
-        for (const comp of this._comps.data.values()) {
+        for (const comp of this._comps.values()) {
             comp.renderOn(ctx)
         }
         return true
@@ -109,7 +109,7 @@ onMounted(() => {
     core.register(c5)
 
     core.switchMemory(core.createMemory())
-    
+
     compLayer.addComponent(t1)
     core.register(t1)
 
@@ -121,8 +121,7 @@ onMounted(() => {
         scene.style.height = window.innerHeight - 20 + 'px'
     })
 
-    core.on('keydown.alt.ctrl.s', () => {
-        console.log('switch')
+    core.on('keydown.ctrl.s', () => {
         core.switchMemoryToNext()
     })
 })

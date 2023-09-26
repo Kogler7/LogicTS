@@ -177,6 +177,7 @@ export default class LogicCore {
         this._eventHandler.connect(stage)
         this._cursorHandler.connect(stage)
         this._renderHandler.connect(stage)
+        stage.focus()
     }
 
     public disconnect() {
@@ -203,6 +204,7 @@ export default class LogicCore {
     public createMemory = this._memoryHandler.createMemory.bind(this._memoryHandler)
     public switchMemory = this._memoryHandler.switchMemory.bind(this._memoryHandler)
     public deleteMemory = this._memoryHandler.deleteMemory.bind(this._memoryHandler)
+    public getMemoryById = this._memoryHandler.getMemoryById.bind(this._memoryHandler)
     public switchMemoryToNext = this._memoryHandler.switchMemoryToNext.bind(this._memoryHandler)
     public register = this._objectHandler.addObject.bind(this._objectHandler)
     public unregister = this._objectHandler.delObject.bind(this._objectHandler)
