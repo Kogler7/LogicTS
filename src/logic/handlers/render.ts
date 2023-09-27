@@ -40,7 +40,7 @@ export default class RenderHandler {
     private _dirty = true
 
     private _xps = new XPSChecker()
-    private _fps: string = ''
+    private _rps: string = ''
 
     private _dpr: number = 1
 
@@ -61,8 +61,12 @@ export default class RenderHandler {
         return this._dpr
     }
 
-    public get fps(): string {
-        return this._fps
+    public get rps(): string {
+        return this._rps
+    }
+
+    public get perf(): string {
+        return this._xps.getPerfDesc()
     }
 
     constructor(core: LogicCore) {
@@ -187,8 +191,8 @@ export default class RenderHandler {
             }
         })
         // check fps
-        this._xps.check('FPS', '')
-        this._fps = this._xps.get('FPS')
+        this._xps.check('rps', '')
+        this._rps = this._xps.get('rps')
     }
 
     public render() {

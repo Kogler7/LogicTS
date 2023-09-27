@@ -73,7 +73,7 @@ onMounted(() => {
     const selectLayer = new SelectLayer('select', 1)
     const moveLayer = new MoveObjectLayer('move', 3)
     const resizeLayer = new ResizeObjectLayer('resize', 3)
-    const compLayer = new CompLayer('test', 0)
+    const compLayer = new CompLayer('comp', 0)
     const linkLayer = new LinkLayer('link', -1)
 
     const c1 = new Component(new Point(10, 5))
@@ -127,7 +127,7 @@ onMounted(() => {
         scene.style.height = window.innerHeight - 20 + 'px'
     })
 
-    core.on('keydown.ctrl.tab', () => {
+    core.on('keydown.tab', () => {
         core.switchMemoryToNext()
     })
 

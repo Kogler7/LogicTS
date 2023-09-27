@@ -69,14 +69,14 @@ export default class MeshLayer extends LogicLayer {
     }
 
     public onPaint(ctx: CanvasRenderingContext2D): boolean {
-        // draw mesh
-        const { stageWidth, stageHeight, gridWidth } = this.core!
-        // console.log(gridWidth)
-        let startPos = this.core!.crd2pos(this._origin).mod(gridWidth).float()
-        // draw base lines
-        ctx.beginPath()
-        ctx.strokeStyle = `rgba(200, 200, 200, ${this._baseLineOpacity})`
         if (this._showBaseLines) {
+            // draw mesh
+            const { stageWidth, stageHeight, gridWidth } = this.core!
+            // console.log(gridWidth)
+            let startPos = this.core!.crd2pos(this._origin).mod(gridWidth).float()
+            // draw base lines
+            ctx.beginPath()
+            ctx.strokeStyle = `rgba(200, 200, 200, ${this._baseLineOpacity})`
             ctx.lineWidth = 1
             for (let x = startPos.x; x < stageWidth; x += gridWidth) {
                 ctx.moveTo(x, 0)
@@ -86,8 +86,9 @@ export default class MeshLayer extends LogicLayer {
                 ctx.moveTo(0, y)
                 ctx.lineTo(stageWidth, y)
             }
+            ctx.stroke()
+            return true
         }
-        ctx.stroke()
-        return true
+        return false
     }
 }

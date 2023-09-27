@@ -17,7 +17,7 @@
 
 export default class XPSChecker {
     private timeCache: { [key: string]: number }
-    private perfCache: { [key: string]: number | string }
+    private perfCache: { [key: string]: number }
     private lastHead: string
 
     constructor() {
@@ -38,12 +38,13 @@ export default class XPSChecker {
             dif_from = this.lastHead
         }
         const diff = this.timeCache[head] - this.timeCache[dif_from]
-        let xps: string | number = "inf"
+        let xps: number = 0
+        const cache = this.perfCache[head]
         if (diff > 0) {
             xps = Math.floor(1000 / diff * factor)
-            if (xps === 0) {
-                xps = `-${Math.floor(diff)}`
-            }
+            xps = cache ? Math.floor(cache * 0.7 + xps * 0.3) : xps
+        } else {
+            xps = cache ? cache : 0
         }
         this.perfCache[head] = xps
         this.lastHead = head
@@ -52,5 +53,13 @@ export default class XPSChecker {
     public get(head: string, tail: string = ""): string {
         const xps = this.perfCache[head]
         return `${head}: ${xps}${tail}`
+    }
+
+    public getPerfDesc(): string {
+        let desc = ""
+        for (const [head, xps] of Object.entries(this.perfCache)) {
+            desc += `${head}:${(xps.toString()).padStart(5)}; `
+        }
+        return desc
     }
 }

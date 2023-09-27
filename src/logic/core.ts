@@ -79,8 +79,12 @@ export default class LogicCore {
         return this._renderHandler.dpr
     }
 
-    public get fps(): string {
-        return this._renderHandler.fps
+    public get rps(): string {
+        return this._renderHandler.rps
+    }
+
+    public get perf(): string {
+        return this._renderHandler.perf
     }
 
     public get originBias(): Point {
