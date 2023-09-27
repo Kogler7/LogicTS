@@ -72,6 +72,7 @@ export default class Component extends Movable implements IRenderable {
 
     public onMoveFinished(): void {
         this._moving = false
+        this.target = this.rect
         this.core!.renderAll()
     }
 

@@ -27,6 +27,8 @@ export default class RenderHandler {
     private _stage: HTMLCanvasElement
     private _stageCtx: CanvasRenderingContext2D
 
+    private _connected = false
+
     private _stageWidth: number = -1
     private _stageHeight: number = -1
 
@@ -87,20 +89,24 @@ export default class RenderHandler {
     }
 
     private _checkStage() {
+        if (!this._connected) return false
         const { _stageWidth: width, _stageHeight: height } = this
         if (width <= 0 || height <= 0) {
             console.error(
                 `Invalid stage size [${width}, ${height}].`
             )
-            return
+            return false
         }
+        return true
     }
 
     private _updateSize() {
         this._calcDPR()
+        if (!this._connected) return
         const stage = this._stage
         // configure stage size, with dpr considered
         const { width: cssWidth, height: cssHeight } = stage.getBoundingClientRect()
+        if (cssWidth <= 0 || cssHeight <= 0) return
         // resize stage element size
         stage.style.width = `${cssWidth}px`
         stage.style.height = `${cssHeight}px`
@@ -138,7 +144,7 @@ export default class RenderHandler {
     }
 
     private _render() {
-        this._checkStage()
+        if (!this._checkStage()) return
         this._xps.start()
         const { _stageWidth: width, _stageHeight: height } = this
         // clear stage
@@ -212,11 +218,15 @@ export default class RenderHandler {
             throw new Error('stage context is null')
         }
         this._stageCtx = stageCtx
+        this._connected = true
         this._resizeObserver = new ResizeObserver(() => {
             this._updateSize()
         })
         this._resizeObserver.observe(stage)
         this._updateSize()
+        setTimeout(() => {
+            this.renderAll()
+        })
     }
 
     public disconnect() {
@@ -225,6 +235,7 @@ export default class RenderHandler {
         this._stageWidth = this._cache.width
         this._stageHeight = this._cache.height
         this._dirty = true
+        this._connected = false
         this._resizeObserver?.disconnect()
     }
 

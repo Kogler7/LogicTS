@@ -23,7 +23,6 @@ import { IMovable } from "../mixins/movable"
 import { IResizable } from "../mixins/resizable"
 import { uid } from "../common/uid"
 import { TrapSet } from "../common/types"
-import { deepCopy } from "../utils/copy"
 
 export interface IObject {
     id: uid

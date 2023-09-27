@@ -196,7 +196,6 @@ export default class LogicCore {
     public disconnect() {
         this._eventHandler.disconnect()
         this._renderHandler.disconnect()
-        this.render()
     }
 
     public attach() {

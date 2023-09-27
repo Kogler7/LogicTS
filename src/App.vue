@@ -127,7 +127,7 @@ onMounted(() => {
         scene.style.height = window.innerHeight - 20 + 'px'
     })
 
-    core.on('keydown.ctrl.s', () => {
+    core.on('keydown.ctrl.tab', () => {
         core.switchMemoryToNext()
     })
 
