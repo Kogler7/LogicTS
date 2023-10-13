@@ -23,6 +23,13 @@ export type SquareTuple = readonly [number, number, number, number]
 
 const HASH_UNIT = 1e4
 
+export enum Direction {
+	Left,
+	Right,
+	Up,
+	Down
+}
+
 /**
  * Size class for 2D applications.
  * @param width the width of the size.
@@ -196,6 +203,14 @@ export class Point implements IComparable, IHashable, IPrintable, ICloneable<Poi
 
 	public get hash(): number {
 		return this.x * HASH_UNIT + this.y
+	}
+
+	public get normalDir(): Direction {
+		if (Math.abs(this.x) >= Math.abs(this.y)) {
+			return this.x >= 0 ? Direction.Right : Direction.Left
+		} else {
+			return this.y >= 0 ? Direction.Down : Direction.Up
+		}
 	}
 
 	public get desc(): string {
@@ -414,6 +429,14 @@ export class Vector implements IComparable, IHashable, IPrintable, ICloneable<Ve
 
 	public get direction(): number {
 		return Math.atan2(this.vy, this.vx)
+	}
+
+	public get normalDir(): Direction {
+		if (Math.abs(this.vx) >= Math.abs(this.vy)) {
+			return this.vx >= 0 ? Direction.Right : Direction.Left
+		} else {
+			return this.vy >= 0 ? Direction.Down : Direction.Up
+		}
 	}
 
 	public get length(): number {
