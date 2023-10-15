@@ -52,7 +52,7 @@ export class ObjectHandler {
             if (delta <= 0) {
                 // if there are objects deselected, we need to recalculate the select bound rect
                 const rects = [...this._selectedLogicObjects.set].map((obj) => obj.rect)
-                this._selectedLogicBoundRect = Rect.union(rects)
+                this._selectedLogicBoundRect = Rect.unionAll(rects)
             }
             this._core.fire('select.logic-changed')
         }
@@ -158,7 +158,7 @@ export class ObjectHandler {
         core.on('frame.change', this._onLogicFrameRectChanged.bind(this))
         // recalculate the select bound rect after the objects are moved
         core.on('update-bound', () => {
-            this._selectedLogicBoundRect = Rect.union(
+            this._selectedLogicBoundRect = Rect.unionAll(
                 [...this._selectedLogicObjects.set].map((obj) => obj.rect)
             )
         })
@@ -252,9 +252,9 @@ export class ObjectHandler {
         if (this._selectedLogicBoundRect.isZero()) {
             // zero rect represents no object selected
             // so we set the bound rect to the object's rect
-            this._selectedLogicBoundRect = obj.rect
+            this._selectedLogicBoundRect = obj.rect.clone()
         } else {
-            this._selectedLogicBoundRect = this._selectedLogicBoundRect.union(obj.rect)
+            this._selectedLogicBoundRect.union(obj.rect)
         }
         // notify the object and the core
         this._recentSelectedLogicId = obj.id
@@ -485,7 +485,7 @@ export class ObjectHandler {
                 this._core.fire('movobj.logic.begin', newPos, e)
             }
             for (const obj of this._movingLogicObjects) {
-                const moved = obj.target.moveTo(obj.rect.pos.plus(newPos.minus(oldPos)).round())
+                const moved = obj.target.moveTo(Point.plus(obj.rect.pos, Point.minus(newPos, oldPos)).round())
                 if (moved) {
                     const accept = obj.onMoving(oldPos, newPos)
                     this._movingLogicObjectStates.set(obj.id, accept as boolean)
@@ -504,7 +504,7 @@ export class ObjectHandler {
             }
             const obj = this._movableObjects.get(this._recentSelectedNonLogicId!)
             if (obj) {
-                obj.target.moveTo(obj.rect.pos.plus(newPos.minus(oldPos)))
+                obj.target.moveTo(Point.plus(obj.rect.pos, Point.minus(newPos, oldPos)))
                 const accept = obj.onMoving(oldPos, newPos)
                 this._movingNonLogicObjectState = accept as boolean
             }
@@ -514,7 +514,7 @@ export class ObjectHandler {
         else if (this._isResizingLogicObject) {
             const pos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
             const obj = this._resizingLogicObject[0]
-            const newRect = obj.rect.resizeBy(this._startResizingObjectPos, pos).round()
+            const newRect = Rect.resizeToIncludeBy(obj.rect, this._startResizingObjectPos, pos).round()
             if (!newRect.equals(obj.target)) {
                 obj.target = newRect
                 const accept = obj.onResizing(obj.rect, obj.target)
@@ -526,7 +526,7 @@ export class ObjectHandler {
         else if (this._isResizingNonLogicObject) {
             const pos = new Point(e.offsetX, e.offsetY)
             const obj = this._resizingNonLogicObject![0]
-            const newRect = obj.rect.resizeBy(this._startResizingObjectPos, pos).round()
+            const newRect = Rect.resizeToIncludeBy(obj.rect, this._startResizingObjectPos, pos).round()
             if (!newRect.equals(obj.rect)) {
                 obj.target = newRect
                 const accept = obj.onResizing(obj.rect, obj.target)
@@ -549,7 +549,7 @@ export class ObjectHandler {
             } else if (
                 this._resizingNonLogicObject.length > 0 &&
                 !this._resizingNonLogicObject[0].rect.containsPoint(mousePos) &&
-                this._resizingNonLogicObject[0].rect.padding(16).containsPoint(mousePos)
+                Rect.padding(this._resizingNonLogicObject[0].rect, 16).containsPoint(mousePos)
             ) {
                 this._setReadyToResizeObjects(mousePos, false)
             } else {

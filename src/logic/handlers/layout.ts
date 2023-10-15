@@ -15,7 +15,7 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import { Point, Rect, Vector } from "../common/types2D"
+import { Point, Rect, Size, Vector } from "../common/types2D"
 import LogicCore from "../core"
 import { Animation, Curves } from "../utils/anime"
 import LogicConfig from "../config"
@@ -97,30 +97,30 @@ export default class LayoutHandler {
 
     public crd2pos(crd: Point): Point {
         const { originBias: origin, logicWidth: length } = this
-        return crd.plus(origin).times(length)
+        return Point.plus(crd, origin).times(length)
     }
 
     public crd2posRect(rect: Rect): Rect {
-        const { originBias: origin, logicWidth: length } = this
-        return new Rect(this.crd2pos(rect.pos), rect.size.times(length))
+        const { logicWidth: length } = this
+        return new Rect(this.crd2pos(rect.pos), Size.times(rect.size, length))
     }
 
     public pos2crd(pos: Point): Point {
         const { originBias: origin, logicWidth: length } = this
-        return pos.divide(length).minus(origin)
+        return Point.divide(pos, length).minus(origin)
     }
 
     public pos2crdRect(rect: Rect): Rect {
-        const { originBias: origin, logicWidth: length } = this
-        return new Rect(this.pos2crd(rect.pos), rect.size.divide(length))
+        const { logicWidth: length } = this
+        return new Rect(this.pos2crd(rect.pos), Size.divide(rect.size, length))
     }
 
     private _panTo(delta: Vector) {
-        this.originBias = this.originBias.shift(delta.divide(this.logicWidth))
+        this.originBias.shift(delta.divide(this.logicWidth))
     }
 
     private _zoomAt(angle: number, center: Point) {
-        const { logicWidth: length, originBias: origin } = this
+        const { logicWidth: length } = this
         const angle2zoomUnit = 1 / 293.33 // zoom unit per wheel event (deltaY)
         const factor = - this.zoomSpeed * angle2zoomUnit / this.gridWidthFactor
         const delta = angle * factor
@@ -139,7 +139,7 @@ export default class LayoutHandler {
         this.logicWidth = length + delta
         const newCtrCrd = this.pos2crd(center)
         const crdBias = Vector.fromPoints(lastCtrCrd, newCtrCrd)
-        this.originBias = origin.shift(crdBias)
+        this.originBias.shift(crdBias)
         // update grid related properties
         if (this.gridWidth < this.gridWidthMin) {
             if (this.zoomLevel < this.zoomLevelMax) {
@@ -159,7 +159,7 @@ export default class LayoutHandler {
         if (!this._sliding) {
             return
         }
-        this.originBias = this.originBias.shift(this._slideVector)
+        this.originBias.shift(this._slideVector)
         this._core.fire('reloc.ing')
         requestAnimationFrame(this._trySlide.bind(this))
     }

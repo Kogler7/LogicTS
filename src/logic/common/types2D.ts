@@ -24,10 +24,10 @@ export type SquareTuple = readonly [number, number, number, number]
 const HASH_UNIT = 1e4
 
 export enum Direction {
-	Left,
-	Right,
-	Up,
-	Down
+	LEFT,
+	RIGHT,
+	UP,
+	DOWN
 }
 
 /**
@@ -42,10 +42,10 @@ export class Size implements IComparable, IHashable, IPrintable, ICloneable<Size
 		return new Size(0, 0)
 	}
 
-	public lerp(s: Size, factor: number): Size {
+	static lerp(s1: Size, s2: Size, factor: number): Size {
 		return new Size(
-			this.width + (s.width - this.width) * factor,
-			this.height + (s.height - this.height) * factor
+			s1.width + (s2.width - s1.width) * factor,
+			s1.height + (s2.height - s1.height) * factor
 		)
 	}
 
@@ -54,19 +54,103 @@ export class Size implements IComparable, IHashable, IPrintable, ICloneable<Size
 	}
 
 	public floor(): Size {
-		return new Size(Math.floor(this.width), Math.floor(this.height))
+		this.width = Math.floor(this.width)
+		this.height = Math.floor(this.height)
+		return this
+	}
+
+	static floor(s: Size): Size {
+		return new Size(Math.floor(s.width), Math.floor(s.height))
+	}
+
+	public ceil(): Size {
+		this.width = Math.ceil(this.width)
+		this.height = Math.ceil(this.height)
+		return this
+	}
+
+	static ceil(s: Size): Size {
+		return new Size(Math.ceil(s.width), Math.ceil(s.height))
+	}
+
+	public round(): Size {
+		this.width = Math.round(this.width)
+		this.height = Math.round(this.height)
+		return this
+	}
+
+	static round(s: Size): Size {
+		return new Size(Math.round(s.width), Math.round(s.height))
+	}
+
+	public decimal(): Size {
+		this.width = this.width - Math.floor(this.width)
+		this.height = this.height - Math.floor(this.height)
+		return this
+	}
+
+	static decimal(s: Size): Size {
+		return new Size(s.width - Math.floor(s.width), s.height - Math.floor(s.height))
+	}
+
+	public float(): Size {
+		this.width = Math.round(this.width) + 0.5
+		this.height = Math.round(this.height) + 0.5
+		return this
+	}
+
+	static float(s: Size): Size {
+		return new Size(Math.round(s.width) + 0.5, Math.round(s.height) + 0.5)
+	}
+
+	public plus(s: Size): Size {
+		this.width = this.width + s.width
+		this.height = this.height + s.height
+		return this
+	}
+
+	static plus(s1: Size, s2: Size): Size {
+		return new Size(s1.width + s2.width, s1.height + s2.height)
+	}
+
+	public minus(s: Size): Size {
+		this.width = this.width - s.width
+		this.height = this.height - s.height
+		return this
+	}
+
+	static minus(s1: Size, s2: Size): Size {
+		return new Size(s1.width - s2.width, s1.height - s2.height)
 	}
 
 	public times(factor: number): Size {
-		return new Size(this.width * factor, this.height * factor)
+		this.width = this.width * factor
+		this.height = this.height * factor
+		return this
+	}
+
+	static times(s: Size, factor: number): Size {
+		return new Size(s.width * factor, s.height * factor)
 	}
 
 	public divide(factor: number): Size {
-		return new Size(this.width / factor, this.height / factor)
+		this.width = this.width / factor
+		this.height = this.height / factor
+		return this
+	}
+
+	static divide(s: Size, factor: number): Size {
+		return new Size(s.width / factor, s.height / factor)
 	}
 
 	public scale(factor: number): Size {
-		return new Size(this.width * factor, this.height * factor)
+		this.width = this.width * factor
+		this.height = this.height * factor
+		return this
+	}
+
+	static scale(s: Size, factor: number): Size {
+		return new Size(s.width * factor, s.height * factor)
 	}
 
 	public equals(s: Size): boolean {
@@ -102,10 +186,10 @@ export class Point implements IComparable, IHashable, IPrintable, ICloneable<Poi
 		return new Point(0, 0)
 	}
 
-	public lerp(p: Point, factor: number): Point {
+	static lerp(p1: Point, p2: Point, factor: number): Point {
 		return new Point(
-			this.x + (p.x - this.x) * factor,
-			this.y + (p.y - this.y) * factor
+			p1.x + (p2.x - p1.x) * factor,
+			p1.y + (p2.y - p1.y) * factor
 		)
 	}
 
@@ -119,9 +203,15 @@ export class Point implements IComparable, IHashable, IPrintable, ICloneable<Poi
 	}
 
 	public scale(factor: number, center: Point): Point {
+		this.x = center.x + (this.x - center.x) * factor
+		this.y = center.y + (this.y - center.y) * factor
+		return this
+	}
+
+	static scale(p: Point, factor: number, center: Point): Point {
 		return new Point(
-			center.x + (this.x - center.x) * factor,
-			center.y + (this.y - center.y) * factor
+			center.x + (p.x - center.x) * factor,
+			center.y + (p.y - center.y) * factor
 		)
 	}
 
@@ -130,46 +220,103 @@ export class Point implements IComparable, IHashable, IPrintable, ICloneable<Poi
 	}
 
 	public round(): Point {
-		return new Point(Math.round(this.x), Math.round(this.y))
+		this.x = Math.round(this.x)
+		this.y = Math.round(this.y)
+		return this
 	}
 
-	public floor(): Point {
-		return new Point(Math.floor(this.x), Math.floor(this.y))
+	static round(p: Point): Point {
+		return new Point(Math.round(p.x), Math.round(p.y))
 	}
 
 	public ceil(): Point {
-		return new Point(Math.ceil(this.x), Math.ceil(this.y))
+		this.x = Math.ceil(this.x)
+		this.y = Math.ceil(this.y)
+		return this
+	}
+
+	static ceil(p: Point): Point {
+		return new Point(Math.ceil(p.x), Math.ceil(p.y))
+	}
+
+	public floor(): Point {
+		this.x = Math.floor(this.x)
+		this.y = Math.floor(this.y)
+		return this
+	}
+
+	static floor(p: Point): Point {
+		return new Point(Math.floor(p.x), Math.floor(p.y))
 	}
 
 	public decimal(): Point {
-		return new Point(this.x - Math.floor(this.x), this.y - Math.floor(this.y))
+		this.x = this.x - Math.floor(this.x)
+		this.y = this.y - Math.floor(this.y)
+		return this
 	}
 
-	// add 0.5 to avoid the point being rounded to the wrong position
+	static decimal(p: Point): Point {
+		return new Point(p.x - Math.floor(p.x), p.y - Math.floor(p.y))
+	}
+
 	public float(): Point {
-		return new Point(Math.round(this.x) + 0.5, Math.round(this.y) + 0.5)
+		this.x = Math.round(this.x) + 0.5
+		this.y = Math.round(this.y) + 0.5
+		return this
+	}
+
+	static float(p: Point): Point {
+		return new Point(Math.round(p.x) + 0.5, Math.round(p.y) + 0.5)
 	}
 
 	public plus(p: Point): Point {
-		return new Point(this.x + p.x, this.y + p.y)
+		this.x = this.x + p.x
+		this.y = this.y + p.y
+		return this
+	}
+
+	static plus(p1: Point, p2: Point): Point {
+		return new Point(p1.x + p2.x, p1.y + p2.y)
 	}
 
 	public minus(p: Point): Point {
-		return new Point(this.x - p.x, this.y - p.y)
+		this.x = this.x - p.x
+		this.y = this.y - p.y
+		return this
+	}
+
+	static minus(p1: Point, p2: Point): Point {
+		return new Point(p1.x - p2.x, p1.y - p2.y)
 	}
 
 	public times(factor: number): Point {
-		return new Point(this.x * factor, this.y * factor)
+		this.x = this.x * factor
+		this.y = this.y * factor
+		return this
+	}
+
+	static times(p: Point, factor: number): Point {
+		return new Point(p.x * factor, p.y * factor)
 	}
 
 	public divide(factor: number): Point {
-		return new Point(this.x / factor, this.y / factor)
+		this.x = this.x / factor
+		this.y = this.y / factor
+		return this
+	}
+
+	static divide(p: Point, factor: number): Point {
+		return new Point(p.x / factor, p.y / factor)
 	}
 
 	public mod(factor: number): Point {
-		const x = this.x / factor
-		const y = this.y / factor
-		return new Point(this.x - Math.floor(x) * factor, this.y - Math.floor(y) * factor)
+		this.x = this.x - Math.floor(this.x / factor) * factor
+		this.y = this.y - Math.floor(this.y / factor) * factor
+		return this
+	}
+
+	static mod(p: Point, factor: number): Point {
+		return new Point(p.x - Math.floor(p.x / factor) * factor, p.y - Math.floor(p.y / factor) * factor)
 	}
 
 	/**
@@ -178,15 +325,31 @@ export class Point implements IComparable, IHashable, IPrintable, ICloneable<Poi
 	 * @return the shifted point.
 	 */
 	public shift(v: Vector): Point {
-		return new Point(this.x + v.vx, this.y + v.vy)
+		this.x = this.x + v.vx
+		this.y = this.y + v.vy
+		return this
+	}
+
+	static shift(p: Point, v: Vector): Point {
+		return new Point(p.x + v.vx, p.y + v.vy)
 	}
 
 	public shiftX(dx: number): Point {
-		return new Point(this.x + dx, this.y)
+		this.x = this.x + dx
+		return this
+	}
+
+	static shiftX(p: Point, dx: number): Point {
+		return new Point(p.x + dx, p.y)
 	}
 
 	public shiftY(dy: number): Point {
-		return new Point(this.x, this.y + dy)
+		this.y = this.y + dy
+		return this
+	}
+
+	static shiftY(p: Point, dy: number): Point {
+		return new Point(p.x, p.y + dy)
 	}
 
 	public clone(): Point {
@@ -207,9 +370,9 @@ export class Point implements IComparable, IHashable, IPrintable, ICloneable<Poi
 
 	public get normalDir(): Direction {
 		if (Math.abs(this.x) >= Math.abs(this.y)) {
-			return this.x >= 0 ? Direction.Right : Direction.Left
+			return this.x >= 0 ? Direction.RIGHT : Direction.LEFT
 		} else {
-			return this.y >= 0 ? Direction.Down : Direction.Up
+			return this.y >= 0 ? Direction.DOWN : Direction.UP
 		}
 	}
 
@@ -236,7 +399,16 @@ export class Line implements IComparable, IHashable, IPrintable, ICloneable<Line
 	 * @returns the shifted line.
 	 */
 	public shift(v: Vector): Line {
-		return new Line(this.p1.shift(v), this.p2.shift(v))
+		this.p1.shift(v)
+		this.p2.shift(v)
+		return this
+	}
+
+	static shift(l: Line, v: Vector): Line {
+		return new Line(
+			Point.shift(l.p1, v),
+			Point.shift(l.p2, v)
+		)
 	}
 
 	public equals(l: Line): boolean {
@@ -384,23 +556,61 @@ export class Vector implements IComparable, IHashable, IPrintable, ICloneable<Ve
 	}
 
 	public plus(v: Vector): Vector {
-		return new Vector(this.vx + v.vx, this.vy + v.vy)
+		this.vx = this.vx + v.vx
+		this.vy = this.vy + v.vy
+		return this
+	}
+
+	static plus(v1: Vector, v2: Vector): Vector {
+		return new Vector(v1.vx + v2.vx, v1.vy + v2.vy)
 	}
 
 	public minus(v: Vector): Vector {
-		return new Vector(this.vx - v.vx, this.vy - v.vy)
+		this.vx = this.vx - v.vx
+		this.vy = this.vy - v.vy
+		return this
+	}
+
+	static minus(v1: Vector, v2: Vector): Vector {
+		return new Vector(v1.vx - v2.vx, v1.vy - v2.vy)
+	}
+
+	public dot(v: Vector): number {
+		return this.vx * v.vx + this.vy * v.vy
+	}
+
+	public cross(v: Vector): number {
+		return this.vx * v.vy - this.vy * v.vx
 	}
 
 	public reverse(): Vector {
-		return new Vector(-this.vx, -this.vy)
+		this.vx = -this.vx
+		this.vy = -this.vy
+		return this
+	}
+
+	static reverse(v: Vector): Vector {
+		return new Vector(-v.vx, -v.vy)
 	}
 
 	public times(v: number): Vector {
-		return new Vector(this.vx * v, this.vy * v)
+		this.vx = this.vx * v
+		this.vy = this.vy * v
+		return this
+	}
+
+	static times(v: Vector, factor: number): Vector {
+		return new Vector(v.vx * factor, v.vy * factor)
 	}
 
 	public divide(v: number): Vector {
-		return new Vector(this.vx / v, this.vy / v)
+		this.vx = this.vx / v
+		this.vy = this.vy / v
+		return this
+	}
+
+	static divide(v: Vector, factor: number): Vector {
+		return new Vector(v.vx / factor, v.vy / factor)
 	}
 
 	public equals(v: Vector): boolean {
@@ -418,9 +628,18 @@ export class Vector implements IComparable, IHashable, IPrintable, ICloneable<Ve
 	public normalize(): Vector {
 		const length = this.length
 		if (length === 0) {
-			return Vector.zero()
+			this.vx = 0
+			this.vy = 0
 		}
-		return new Vector(this.vx / length, this.vy / length)
+		this.vx = this.vx / length
+		this.vy = this.vy / length
+		return this
+	}
+
+	static normalize(v: Vector): Vector {
+		const length = v.length
+		if (length === 0) return Vector.zero()
+		return new Vector(v.vx / length, v.vy / length)
 	}
 
 	public clone(): Vector {
@@ -433,9 +652,9 @@ export class Vector implements IComparable, IHashable, IPrintable, ICloneable<Ve
 
 	public get normalDir(): Direction {
 		if (Math.abs(this.vx) >= Math.abs(this.vy)) {
-			return this.vx >= 0 ? Direction.Right : Direction.Left
+			return this.vx >= 0 ? Direction.RIGHT : Direction.LEFT
 		} else {
-			return this.vy >= 0 ? Direction.Down : Direction.Up
+			return this.vy >= 0 ? Direction.DOWN : Direction.UP
 		}
 	}
 
@@ -512,15 +731,21 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 	 * @param factor The interpolation factor.
 	 * @returns the interpolated rect.
 	 */
-	public lerp(r: Rect, factor: number): Rect {
+	static lerp(r1: Rect, r2: Rect, factor: number): Rect {
 		return new Rect(
-			this.pos.lerp(r.pos, factor),
-			this.size.lerp(r.size, factor)
+			Point.lerp(r1.pos, r2.pos, factor),
+			Size.lerp(r1.size, r2.size, factor)
 		)
 	}
 
 	public home(): Rect {
-		return new Rect(Point.zero(), this.size)
+		this.pos.x = 0
+		this.pos.y = 0
+		return this
+	}
+
+	static home(r: Rect): Rect {
+		return new Rect(Point.zero(), r.size)
 	}
 
 	public isZero(): boolean {
@@ -528,9 +753,17 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 	}
 
 	public shrink(): Rect {
+		const bottomRight = Point.floor(this.bottomRight)
+		this.pos.ceil()
+		this.size.width = bottomRight.x - this.pos.x
+		this.size.height = bottomRight.y - this.pos.y
+		return this
+	}
+
+	static shrink(r: Rect): Rect {
 		return Rect.fromVertices(
-			this.topLeft.ceil(),
-			this.bottomRight.floor()
+			Point.ceil(r.topLeft),
+			Point.floor(r.bottomRight)
 		)
 	}
 
@@ -540,27 +773,54 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 	 * @return the shifted rect.
 	 */
 	public shift(v: Vector): Rect {
-		return new Rect(this.pos.shift(v), this.size.clone())
+		this.pos.shift(v)
+		return this
+	}
+
+	static shift(r: Rect, v: Vector): Rect {
+		return new Rect(Point.shift(r.pos, v), r.size.clone())
 	}
 
 	public float(): Rect {
-		const res = new Rect(this.pos.float(), this.size.clone())
+		this.pos.float()
+		const bottomRight = Point.float(this.bottomRight)
+		this.size.width = bottomRight.x - this.pos.x
+		this.size.height = bottomRight.y - this.pos.y
+		return this
+	}
+
+	static float(r: Rect): Rect {
+		const res = new Rect(Point.float(r.pos), r.size.clone())
 		res.right = Math.round(res.right) + 0.5
 		res.bottom = Math.round(res.bottom) + 0.5
 		return res
 	}
 
 	public round(): Rect {
-		const res = new Rect(this.pos.round(), this.size.clone())
+		this.pos.round()
+		const bottomRight = Point.round(this.bottomRight)
+		this.size.width = bottomRight.x - this.pos.x
+		this.size.height = bottomRight.y - this.pos.y
+		return this
+	}
+
+	static round(r: Rect): Rect {
+		const res = new Rect(Point.round(r.pos), r.size.clone())
 		res.right = Math.round(res.right)
 		res.bottom = Math.round(res.bottom)
 		return res
 	}
 
 	public scale(factor: number, center: Point = Point.zero()): Rect {
+		this.pos.scale(factor, center)
+		this.size.scale(factor)
+		return this
+	}
+
+	static scale(r: Rect, factor: number, center: Point = Point.zero()): Rect {
 		return new Rect(
-			this.pos.scale(factor, center),
-			this.size.scale(factor)
+			Point.scale(r.pos, factor, center),
+			Size.scale(r.size, factor)
 		)
 	}
 
@@ -570,38 +830,68 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 		return true
 	}
 
-	public resizeBy(p1: Point, p2: Point): Rect {
-		let r: Rect
-		if (p1.x <= this.left) {
-			if (p1.y <= this.top) {
-				r = Rect.fromVertices(p2, this.bottomRight)
-			} else if (p1.y >= this.bottom) {
-				r = Rect.fromVertices(p2, this.topRight)
-			} else {
-				r = Rect.fromVertices(this.bottomRight, this.topRight).expandToInclude(p2)
-			}
-		} else if (p1.x >= this.right) {
-			if (p1.y <= this.top) {
-				r = Rect.fromVertices(p2, this.bottomLeft)
-			} else if (p1.y >= this.bottom) {
-				r = Rect.fromVertices(p2, this.topLeft)
-			} else {
-				r = Rect.fromVertices(this.bottomLeft, this.topLeft).expandToInclude(p2)
-			}
-		} else {
-			if (p1.y <= this.top) {
-				r = Rect.fromVertices(this.bottomLeft, this.bottomRight).expandToInclude(p2)
-			} else if (p1.y >= this.bottom) {
-				r = Rect.fromVertices(this.topLeft, this.topRight).expandToInclude(p2)
-			} else {
-				r = this.clone()
-			}
-		}
-		return r
+	static moveCenterTo(r: Rect, t: Point): Rect {
+		return new Rect(
+			new Point(t.x - r.width / 2, t.y - r.height / 2),
+			r.size.clone()
+		)
 	}
 
-	public moveBy(v: Vector) {
-		this.pos = this.pos.shift(v)
+	public fitWidthTo(width: number, centered: boolean = true): Rect {
+		if (centered) {
+			this.pos.x -= (width - this.size.width) / 2
+		}
+		this.size.width = width
+		return this
+	}
+
+	public fitHeightTo(height: number, centered: boolean = true): Rect {
+		if (centered) {
+			this.pos.y -= (height - this.size.height) / 2
+		}
+		this.size.height = height
+		return this
+	}
+
+	static resizeToIncludeBy(r: Rect, aspectPos: Point, newVert: Point): Rect {
+		let res: Rect
+		if (aspectPos.x <= r.left) {
+			if (aspectPos.y <= r.top) {
+				res = Rect.fromVertices(newVert, r.bottomRight)
+			} else if (aspectPos.y >= r.bottom) {
+				res = Rect.fromVertices(newVert, r.topRight)
+			} else {
+				res = Rect.fromVertices(r.bottomRight, r.topRight)
+				res.expandToInclude(newVert)
+			}
+		} else if (aspectPos.x >= r.right) {
+			if (aspectPos.y <= r.top) {
+				res = Rect.fromVertices(newVert, r.bottomLeft)
+			} else if (aspectPos.y >= r.bottom) {
+				res = Rect.fromVertices(newVert, r.topLeft)
+			} else {
+				res = Rect.fromVertices(r.bottomLeft, r.topLeft)
+				res.expandToInclude(newVert)
+			}
+		} else {
+			if (aspectPos.y <= r.top) {
+				res = Rect.fromVertices(r.bottomLeft, r.bottomRight)
+				res.expandToInclude(newVert)
+			} else if (aspectPos.y >= r.bottom) {
+				res = Rect.fromVertices(r.topLeft, r.topRight)
+				res.expandToInclude(newVert)
+			} else {
+				res = r.clone()
+			}
+		}
+		return res
+	}
+
+	public resizeToIncludeBy(aspectPos: Point, newVert: Point): Rect {
+		const res = Rect.resizeToIncludeBy(this, aspectPos, newVert)
+		this.pos = res.pos
+		this.size = res.size
+		return this
 	}
 
 	/**
@@ -610,9 +900,17 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 	 * @return the padded rect.
 	 */
 	public padding(val: number): Rect {
+		this.pos.x -= val
+		this.pos.y -= val
+		this.size.width += 2 * val
+		this.size.height += 2 * val
+		return this
+	}
+
+	static padding(r: Rect, val: number): Rect {
 		return new Rect(
-			this.pos.shift(new Vector(-val, -val)),
-			new Size(this.size.width + 2 * val, this.size.height + 2 * val)
+			new Point(r.pos.x - val, r.pos.y - val),
+			new Size(r.size.width + 2 * val, r.size.height + 2 * val)
 		)
 	}
 
@@ -622,10 +920,17 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 	 * @return the expanded rect.
 	 */
 	public expandToInclude(p: Point): Rect {
-		const left = Math.min(this.left, p.x)
-		const top = Math.min(this.top, p.y)
-		const right = Math.max(this.right, p.x)
-		const bottom = Math.max(this.bottom, p.y)
+		const r = Rect.expandToInclude(this, p)
+		this.pos = r.pos
+		this.size = r.size
+		return this
+	}
+
+	static expandToInclude(r: Rect, p: Point): Rect {
+		const left = Math.min(r.left, p.x)
+		const top = Math.min(r.top, p.y)
+		const right = Math.max(r.right, p.x)
+		const bottom = Math.max(r.bottom, p.y)
 		return Rect.fromLTRB(left, top, right, bottom)
 	}
 
@@ -654,6 +959,9 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 	public get centerX(): number { return this.pos.x + this.size.width / 2 }
 	public get centerY(): number { return this.pos.y + this.size.height / 2 }
 	public get center(): Point { return new Point(this.centerX, this.centerY) }
+	public set center(p: Point) {
+		this.pos = new Point(p.x - this.size.width / 2, p.y - this.size.height / 2)
+	}
 
 	public get topLeft(): Point { return this.pos }
 	public get topRight(): Point { return new Point(this.right, this.top) }
@@ -683,7 +991,16 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 	}
 
 	public times(factor: number): Rect {
-		return new Rect(this.pos.times(factor), this.size.times(factor))
+		this.pos.times(factor)
+		this.size.times(factor)
+		return this
+	}
+
+	static times(r: Rect, factor: number): Rect {
+		return new Rect(
+			Point.times(r.pos, factor),
+			Size.times(r.size, factor)
+		)
 	}
 
 	/**
@@ -780,14 +1097,26 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 		const top = Math.min(this.top, rect.top)
 		const right = Math.max(this.right, rect.right)
 		const bottom = Math.max(this.bottom, rect.bottom)
+		this.pos.x = left
+		this.pos.y = top
+		this.size.width = right - left
+		this.size.height = bottom - top
+		return this
+	}
+
+	static union(r1: Rect, r2: Rect): Rect {
+		const left = Math.min(r1.left, r2.left)
+		const top = Math.min(r1.top, r2.top)
+		const right = Math.max(r1.right, r2.right)
+		const bottom = Math.max(r1.bottom, r2.bottom)
 		return Rect.fromLTRB(left, top, right, bottom)
 	}
 
-	public static union(rects: Rect[]): Rect {
+	static unionAll(rects: Rect[]): Rect {
 		if (rects.length === 0) return Rect.zero()
 		let res = rects[0]
 		for (let i = 1; i < rects.length; i++) {
-			res = res.union(rects[i])
+			res = Rect.union(res, rects[i])
 		}
 		return res
 	}

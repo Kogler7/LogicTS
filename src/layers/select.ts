@@ -49,7 +49,7 @@ export default class SelectLayer extends LogicLayer {
                     cacheCtx.beginPath()
                     for (const corner of boundRect.corners) {
                         const cornerRect = new Rect(
-                            corner.minus(new Point(halfCorner, halfCorner)),
+                            Point.minus(corner, new Point(halfCorner, halfCorner)),
                             new Size(cornerSize, cornerSize)
                         )
                         cacheCtx.clearRect(...cornerRect.ltwh)
@@ -57,7 +57,7 @@ export default class SelectLayer extends LogicLayer {
                     }
                     for (const edgeCenter of boundRect.edgeCenters) {
                         const edgeCenterRect = new Rect(
-                            edgeCenter.minus(new Point(halfCorner, halfCorner)),
+                            Point.minus(edgeCenter, new Point(halfCorner, halfCorner)),
                             new Size(cornerSize, cornerSize)
                         )
                         cacheCtx.clearRect(...edgeCenterRect.ltwh)
@@ -81,7 +81,7 @@ export default class SelectLayer extends LogicLayer {
             }
             // draw four corners for the bounding rectangle
             const boundRect = core.crd2posRect(core.selectedLogicBoundRect).padding(cornerSize).float()
-            const corners = boundRect.padding(halfCorner).corners
+            const corners = Rect.padding(boundRect, halfCorner).corners
             for (const corner of corners) {
                 const cornerRect = new Rect(
                     corner.minus(new Point(halfCorner, halfCorner)),

@@ -11,13 +11,6 @@
 * See the [Open Source License] for more details.
 * 
 * Author: Zhenjie Wei
-* Created: Aug. 3, 2023
+* Created: Oct. 13, 2023
 * Supported by: National Key Research and Development Program of China
 */
-
-import { Rect } from "../common/types2D"
-
-export default interface IRenderable {
-    renderOn(ctx: CanvasRenderingContext2D): void
-    renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect
-}

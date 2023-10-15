@@ -79,7 +79,7 @@ export default class ResizeObjectLayer extends LogicLayer {
         const oldRect = this._currentScaledObjectRect.clone()
         const scaleAnime = new Animation(
             (progress: number) => {
-                this._currentScaledObjectRect = oldRect.lerp(obj.rect, progress)
+                this._currentScaledObjectRect = Rect.lerp(oldRect, obj.rect, progress)
                 this.core!.render()
             },
             200,
@@ -94,7 +94,7 @@ export default class ResizeObjectLayer extends LogicLayer {
         const oldTarget = this._currentTargetObjectRect.clone()
         const targetAnime = new Animation(
             (progress: number) => {
-                this._currentTargetObjectRect = oldTarget.lerp(obj.rect, progress)
+                this._currentTargetObjectRect = Rect.lerp(oldTarget, obj.rect, progress)
                 this.core!.render()
             },
             150,
@@ -121,7 +121,7 @@ export default class ResizeObjectLayer extends LogicLayer {
         const oldTarget = this._currentTargetObjectRect.clone()
         const moveTargetAnime = new Animation(
             (progress: number) => {
-                this._currentTargetObjectRect = oldTarget.lerp(obj.target, progress)
+                this._currentTargetObjectRect = Rect.lerp(oldTarget, obj.target, progress)
                 this.core!.render()
             },
             150,

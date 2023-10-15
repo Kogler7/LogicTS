@@ -15,7 +15,7 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import { Rect } from "../common/types2D"
+import { Point, Rect, Size } from "../common/types2D"
 import LogicConfig from "../config"
 import LogicCore from "../core"
 import IRenderable from "../mixins/renderable"
@@ -38,6 +38,9 @@ export type FontStyle = {
     weight?: string
     style?: string
     color?: string
+}
+
+export type FontAlign = {
     align?: CanvasTextAlign
     padding?: number
     baseline?: CanvasTextBaseline
@@ -52,33 +55,79 @@ export function getFontString(style: FontStyle): string {
     return `${styleStr} ${weight} ${size}px ${family}`
 }
 
-export class Text implements IRenderable {
-    public text: string
-    public rect: Rect
-    public style: FontStyle
+export interface IText {
+    get text(): string
+    set text(value: string)
+    get style(): FontStyle
+    set style(value: FontStyle)
+    get align(): FontAlign
+    set align(value: FontAlign)
+    calcSize(ctx: CanvasRenderingContext2D): Size
+    renderAt(ctx: CanvasRenderingContext2D, pos: Point): void
+}
 
-    constructor(rect: Rect, text: string, style: FontStyle) {
+export class Text implements IText {
+    public text: string
+    public style: FontStyle
+    public align: FontAlign
+
+    constructor(text: string, style: FontStyle = {}, align: FontAlign = {}) {
+        this.text = text
+        this.style = style
+        this.align = align
+    }
+
+    public calcSize(ctx: CanvasRenderingContext2D): Size {
+        ctx.save()
+        ctx.font = getFontString(this.style)
+        const metrics = ctx.measureText(this.text)
+        ctx.restore()
+        return new Size(
+            metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight,
+            metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
+        )
+    }
+
+    public renderAt(ctx: CanvasRenderingContext2D, pos: Point): void {
+        ctx.save()
+        ctx.font = getFontString(this.style)
+        ctx.fillStyle = this.style.color || config.color
+        ctx.textAlign = this.align.align || config.align as CanvasTextAlign
+        ctx.textBaseline = this.align.baseline || config.baseline as CanvasTextBaseline
+        ctx.fillText(this.text, pos.x, pos.y)
+        ctx.restore()
+    }
+}
+
+export class TextArea implements IRenderable {
+    public rect: Rect
+    public text: string
+    public style: FontStyle
+    public align: FontAlign
+
+    constructor(rect: Rect, text: string, style: FontStyle, align: FontAlign) {
         this.rect = rect
         this.text = text
         this.style = style
-        if (!style.padding) {
-            style.padding = config.padding
+        this.align = align
+        if (!align.padding) {
+            align.padding = config.padding
         }
-        else if (style.padding < 0) {
+        else if (align.padding < 0) {
             // if padding is negative, we set it to 0
             console.warn("padding should not be negative")
-            style.padding = 0
+            align.padding = 0
         }
-        if (!style.lineSpacing) {
-            style.lineSpacing = config.lineSpacing
+        if (!align.lineSpacing) {
+            align.lineSpacing = config.lineSpacing
         }
     }
 
     protected _configCtx(ctx: CanvasRenderingContext2D): void {
         ctx.font = getFontString(this.style)
         ctx.fillStyle = this.style.color || config.color
-        ctx.textAlign = this.style.align || config.align as CanvasTextAlign
-        ctx.textBaseline = this.style.baseline || config.baseline as CanvasTextBaseline
+        ctx.textAlign = this.align.align || config.align as CanvasTextAlign
+        ctx.textBaseline = this.align.baseline || config.baseline as CanvasTextBaseline
     }
 
     public renderOn(ctx: CanvasRenderingContext2D): void {
@@ -88,32 +137,33 @@ export class Text implements IRenderable {
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {
         ctx.save()
         this._configCtx(ctx)
-        const textRect = rect.padding(
-            -ctx.measureText('M').width * this.style.padding!
+        const textRect = Rect.padding(
+            rect,
+            -ctx.measureText('M').width * this.align.padding!
         ).float()
         const textLines = fitTextIntoRect(
             this.text,
             textRect,
-            this.style.padding!,
-            this.style.lineSpacing!,
+            this.align.padding!,
+            this.align.lineSpacing!,
             ctx
         )
         let curHeight = 0
         for (const textLine of textLines) {
             ctx.fillText(textLine.text, textRect.left, textRect.top + curHeight)
-            curHeight += textLine.metrics.height * (this.style.lineSpacing || config.lineSpacing)
+            curHeight += textLine.metrics.height * (this.align.lineSpacing || config.lineSpacing)
         }
         ctx.restore()
         return rect
     }
 }
 
-export class LogicText extends Text {
+export class LogicTextArea extends TextArea {
     private _core: LogicCore | null = null
     public fontSize: number
 
-    constructor(rect: Rect, text: string, style: FontStyle) {
-        super(rect, text, style)
+    constructor(rect: Rect, text: string, style: FontStyle, align: FontAlign) {
+        super(rect, text, style, align)
         this.fontSize = style.size || config.size
     }
 

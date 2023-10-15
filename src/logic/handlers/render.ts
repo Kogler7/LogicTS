@@ -48,6 +48,7 @@ export default class RenderHandler {
 
     private _fullSizeCacheCanvasSet: Set<HTMLCanvasElement> = new Set()
     private _fixedSizeCacheCanvasSet: Set<HTMLCanvasElement> = new Set()
+    private _tagCacheCanvasMap: Map<string, HTMLCanvasElement> = new Map()
 
     public get stageWidth(): number {
         return this._stageWidth
@@ -312,6 +313,15 @@ export default class RenderHandler {
         }
         canvas.width = size.width * this._dpr
         canvas.height = size.height * this._dpr
+    }
+
+    public requireCache(tag: string, size?: Size): CanvasRenderingContext2D {
+        if (this._tagCacheCanvasMap.has(tag)) {
+            return this._tagCacheCanvasMap.get(tag)!.getContext('2d') as CanvasRenderingContext2D
+        }
+        const cache = this.createCache(size)
+        this._tagCacheCanvasMap.set(tag, cache.canvas)
+        return cache
     }
 
     public destroyCache(cache: CanvasRenderingContext2D, fixed: boolean = false) {

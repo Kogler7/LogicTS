@@ -18,11 +18,10 @@
 import { uid } from "@/logic/common/uid"
 import LogicCore from "@/logic/core"
 import LogicLayer from "../logic/layer"
-import { Point, Rect, Vector, Direction } from "@/logic/common/types2D"
-import { IMovable } from "@/logic/mixins/movable"
+import { Point, Vector, Direction } from "@/logic/common/types2D"
 
 class WayPoint extends Point {
-    public direction: Direction = Direction.Right
+    public direction: Direction = Direction.RIGHT
     constructor(x: number, y: number, direction: Direction) {
         super(x, y)
         this.direction = direction
@@ -36,7 +35,7 @@ class WayPoint extends Point {
 export class LinkRoute {
     private _wayPoints: WayPoint[] = []
 
-    constructor(initPoint: Point, dir: Direction = Direction.Right) {
+    constructor(initPoint: Point, dir: Direction = Direction.RIGHT) {
         this._wayPoints.push(WayPoint.fromPoint(initPoint, dir))
     }
 
@@ -54,13 +53,13 @@ export class LinkRoute {
             length = -length
         }
         switch (p.direction) {
-            case Direction.Left:
+            case Direction.LEFT:
                 return new Point(p.x - length, p.y)
-            case Direction.Right:
+            case Direction.RIGHT:
                 return new Point(p.x + length, p.y)
-            case Direction.Up:
+            case Direction.UP:
                 return new Point(p.x, p.y - length)
-            case Direction.Down:
+            case Direction.DOWN:
                 return new Point(p.x, p.y + length)
         }
     }
@@ -100,6 +99,8 @@ export default class LinkLayer extends LogicLayer {
     private _route: LinkRoute = new LinkRoute(Point.zero())
     private _linking: boolean = false
     private _lastPos: Point = Point.zero()
+    private _dirLocked: boolean = false
+    private _currDir: Direction = Direction.RIGHT
 
     public onMounted(core: LogicCore): void {
         this._objectIds = core.logicObjectIds
@@ -108,6 +109,8 @@ export default class LinkLayer extends LogicLayer {
         })
         core.on('mousedown', this._onMouseDown.bind(this), -1)
         core.on('mousemove', this._onMouseMove.bind(this), -1)
+        core.on('keydown.shift', () => { this._dirLocked = true })
+        core.on('keyup.shift', () => { this._dirLocked = false })
     }
 
     private _onMouseDown(e: MouseEvent) {
@@ -118,7 +121,7 @@ export default class LinkLayer extends LogicLayer {
                 const crd = this.core?.pos2crd(pos)
                 if (!crd) return
                 this._route = new LinkRoute(crd)
-                this._route.addWayPoint(crd, Direction.Right)
+                this._route.addWayPoint(crd, Direction.RIGHT)
             } else {
                 const pos = new Point(e.offsetX, e.offsetY)
                 const crd = this.core?.pos2crd(pos)
@@ -140,8 +143,11 @@ export default class LinkLayer extends LogicLayer {
         const crd = this.core?.pos2crd(pos)
         if (!crd) return
         if (this._linking) {
-            const dir = pos.minus(this._lastPos).normalDir
-            this._route.setLastWayPoint(crd, dir)
+            if (!this._dirLocked){
+                const dir = pos.minus(this._lastPos).normalDir
+                this._currDir = dir
+            }
+            this._route.setLastWayPoint(crd, this._currDir)
         }
         // smooth the last position
         this._lastPos = this._lastPos.times(0.9).plus(pos.times(0.1))

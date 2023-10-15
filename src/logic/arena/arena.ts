@@ -65,7 +65,7 @@ export class QueryObjectArena implements IObjectArena {
             }
         }
         this._objects.set(id, rect)
-        this._boundRect = this._boundRect.union(rect)
+        this._boundRect.union(rect)
         return true
     }
 
@@ -86,7 +86,7 @@ export class QueryObjectArena implements IObjectArena {
             }
         }
         this._objects.set(id, rect)
-        this._boundRect = this._boundRect.union(rect)
+        this._boundRect.union(rect)
         return true
     }
 
@@ -98,7 +98,7 @@ export class QueryObjectArena implements IObjectArena {
         this._objects.delete(id)
         this._boundRect = Rect.zero()
         for (let [k, v] of this._objects) {
-            this._boundRect = this._boundRect.union(v)
+            this._boundRect.union(v)
         }
         return true
     }

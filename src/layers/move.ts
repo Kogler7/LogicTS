@@ -76,9 +76,9 @@ export default class MoveObjectLayer extends LogicLayer {
             // else scale the object to the its center
             let scaled: Rect
             if (obj.rect.containsPoint(pos)) {
-                scaled = obj.rect.scale(0.7, pos)
+                scaled = Rect.scale(obj.rect, 0.7, pos)
             } else {
-                scaled = obj.rect.scale(0.7, obj.rect.center)
+                scaled = Rect.scale(obj.rect, 0.7, obj.rect.center)
             }
             this._movingScaledObjectsBias.set(obj.id, Vector.fromPoints(pos, scaled.pos))
             this._movingScaledObjectsRect.set(obj.id, scaled)
@@ -90,7 +90,7 @@ export default class MoveObjectLayer extends LogicLayer {
             const target = this._movingScaledObjectsRect.get(obj.id)!
             const scaleAnime = new Animation(
                 (progress: number) => {
-                    this._currentScaledObjectsRect.set(obj.id, obj.rect.lerp(target, progress))
+                    this._currentScaledObjectsRect.set(obj.id, Rect.lerp(obj.rect, target, progress))
                     this.core!.render()
                 },
                 300,
@@ -115,7 +115,7 @@ export default class MoveObjectLayer extends LogicLayer {
             const curr = this._movingScaledObjectsRect.get(obj.id)!.clone()
             const scaleAnime = new Animation(
                 (progress: number) => {
-                    this._currentScaledObjectsRect.set(obj.id, curr.lerp(obj.rect, progress))
+                    this._currentScaledObjectsRect.set(obj.id, Rect.lerp(curr, obj.rect, progress))
                     this.core!.render()
                 },
                 200,
@@ -133,7 +133,7 @@ export default class MoveObjectLayer extends LogicLayer {
             const oldTarget = curTarget.clone()
             const targetAnime = new Animation(
                 (progress: number) => {
-                    const targetPos = oldTarget.pos.lerp(obj.rect.pos, progress)
+                    const targetPos = Point.lerp(oldTarget.pos, obj.rect.pos, progress)
                     curTarget.pos = targetPos
                     this.core!.render()
                 },
@@ -151,7 +151,7 @@ export default class MoveObjectLayer extends LogicLayer {
     private _onMovingObject(oldPos: Point, newPos: Point) {
         for (const [id, rect] of this._movingScaledObjectsRect) {
             const bias = this._movingScaledObjectsBias.get(id)!
-            rect.moveTo(newPos.shift(bias))
+            rect.moveTo(Point.shift(newPos, bias))
         }
     }
 
@@ -162,7 +162,7 @@ export default class MoveObjectLayer extends LogicLayer {
             const oldTarget = curTarget.clone()
             const moveTargetAnime = new Animation(
                 (progress: number) => {
-                    const targetPos = oldTarget.pos.lerp(obj.target.pos, progress)
+                    const targetPos = Point.lerp(oldTarget.pos, obj.target.pos, progress)
                     curTarget.pos = targetPos
                     this.core!.render()
                 },

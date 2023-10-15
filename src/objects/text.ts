@@ -21,19 +21,19 @@ import IRenderable from "@/logic/mixins/renderable"
 import LogicCore from "@/logic/core"
 import { IObjectArena } from "@/logic/arena/arena"
 import { Flexible } from "@/logic/mixins/flexible"
-import { FontStyle, LogicText } from "@/logic/utils/text"
+import { FontStyle, FontAlign, LogicTextArea } from "@/logic/utils/text"
 import { IDisposable } from "@/logic/common/types"
 
 export default class TextArea extends Flexible implements IRenderable, IDisposable {
     private _moving: boolean = false
     private _resizing: boolean = false
     private _arena: IObjectArena | null = null
-    private _text: LogicText
+    private _text: LogicTextArea
     private _cacheCtx: CanvasRenderingContext2D | null = null
 
-    constructor(rect: Rect, text: string = "", style: FontStyle = {}) {
+    constructor(rect: Rect, text: string = "", style: FontStyle = {}, align: FontAlign = {}) {
         super(uid_rt(), 0, rect)
-        this._text = new LogicText(this.rect, text, style)
+        this._text = new LogicTextArea(this.rect, text, style, align)
     }
 
     dispose(): void {
