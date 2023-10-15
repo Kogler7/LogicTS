@@ -39,6 +39,8 @@ export default class Toast implements IRenderable {
     private _rect: Rect = Rect.zero()
     private _innerAnchor: Point = new Point()
     private _outerAnchor: Point = new Point()
+    private _innerCenter: Point = new Point()
+    private _outerCenter: Point = new Point()
 
     private _timer: Timer = new Timer(() => {
         this.hide()
@@ -72,7 +74,7 @@ export default class Toast implements IRenderable {
         const size = this._text.calcSize(this._ctx)
         this._rect.fitWidthTo(size.width + this._padding * 2, true)
         this._rect.fitHeightTo(size.height + this._padding * 2, true)
-        this._calcOuterAnchor()
+        this._calcOtherPoints()
     }
 
     public get padding(): number {
@@ -85,7 +87,7 @@ export default class Toast implements IRenderable {
         const size = this._text.calcSize(this._ctx)
         this._rect.fitWidthTo(size.width + this._padding * 2, true)
         this._rect.fitHeightTo(size.height + this._padding * 2, true)
-        this._calcOuterAnchor()
+        this._calcOtherPoints()
     }
 
     public get style(): FontStyle {
@@ -102,7 +104,7 @@ export default class Toast implements IRenderable {
 
     public set anchor(value: Point) {
         this._innerAnchor = value
-        this._calcOuterAnchor()
+        this._calcOtherPoints()
         this._rect.center = this._hidden ? this._outerAnchor : this._innerAnchor
     }
 
@@ -112,33 +114,48 @@ export default class Toast implements IRenderable {
 
     public set baseline(value: ToastBaseline) {
         this._baseline = value
-        console.log('change baseline to', value)
-        this._calcOuterAnchor()
+        this._calcOtherPoints()
     }
 
-    private _calcOuterAnchor(): void {
+    private _calcOtherPoints(): void {
+        const clone = this._rect.clone()
         if (this._baseline === ToastBaseline.TOP) {
             this._outerAnchor = new Point(
                 this._innerAnchor.x,
                 -this._rect.height / 2 - this._padding
             )
+            clone.topCenter = this._innerAnchor
+            this._innerCenter = clone.center
+            clone.bottomCenter = this._outerAnchor
+            this._outerCenter = clone.center
         } else if (this._baseline === ToastBaseline.BOTTOM) {
             this._outerAnchor = new Point(
                 this._innerAnchor.x,
                 this._core.stageHeight + this._rect.height / 2 + this._padding
             )
+            clone.bottomCenter = this._innerAnchor
+            this._innerCenter = clone.center
+            clone.topCenter = this._outerAnchor
+            this._outerCenter = clone.center
         } else if (this._baseline === ToastBaseline.LEFT) {
             this._outerAnchor = new Point(
                 -this._rect.width / 2 - this._padding,
                 this._innerAnchor.y
             )
+            clone.leftCenter = this._innerAnchor
+            this._innerCenter = clone.center
+            clone.rightCenter = this._outerAnchor
+            this._outerCenter = clone.center
         } else if (this._baseline === ToastBaseline.RIGHT) {
             this._outerAnchor = new Point(
                 this._core.stageWidth + this._rect.width / 2 + this._padding,
                 this._innerAnchor.y
             )
+            clone.rightCenter = this._innerAnchor
+            this._innerCenter = clone.center
+            clone.leftCenter = this._outerAnchor
+            this._outerCenter = clone.center
         }
-        console.log('calc outer anchor', this._outerAnchor)
     }
 
     constructor(
@@ -158,7 +175,7 @@ export default class Toast implements IRenderable {
         this._radius = radius
         this._padding = padding
         this._baseline = baseline
-        this._calcOuterAnchor()
+        this._calcOtherPoints()
         this._duration = duration
         this._background = background
         this._rect.center = this._hidden ? this._outerAnchor : this._innerAnchor
@@ -209,16 +226,10 @@ export default class Toast implements IRenderable {
         if (text) {
             this.text = text
         }
-        if (!this._hidden) {
-            if (duration !== null) {
-                this._timer.reset(duration)
-            }
-            return
-        }
         // cancel the previous animation first if any
         this._hideAnime?.cancel()
         const source = this._rect.clone()
-        const target = Rect.setCenter(this._rect, this._innerAnchor)
+        const target = Rect.setCenter(this._rect, this._innerCenter)
         this._showAnime = new Animation(
             (t: number) => {
                 this._rect = Rect.lerp(source, target, t)
@@ -226,26 +237,25 @@ export default class Toast implements IRenderable {
             },
             this._duration,
             Curves.easeIn,
+            null,
             () => {
                 this._hidden = false
-            },
-            () => {
                 this._core.render()
                 if (duration !== null) {
                     this._timer.reset(duration).start()
                 }
             }
         ).start()
+        if (!this._hidden) {
+            this._showAnime.cancel(true)
+        }
     }
 
     public hide(): void {
-        if (this._hidden) {
-            return
-        }
         // cancel the previous animation first if any
         this._showAnime?.cancel()
         const source = this._rect.clone()
-        const target = Rect.setCenter(this._rect, this._outerAnchor)
+        const target = Rect.setCenter(this._rect, this._outerCenter)
         this._hideAnime = new Animation(
             (t: number) => {
                 this._rect = Rect.lerp(source, target, t)

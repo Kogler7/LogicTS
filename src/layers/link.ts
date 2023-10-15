@@ -109,8 +109,15 @@ export default class LinkLayer extends LogicLayer {
         })
         core.on('mousedown', this._onMouseDown.bind(this), -1)
         core.on('mousemove', this._onMouseMove.bind(this), -1)
-        core.on('keydown.shift', () => { this._dirLocked = true })
-        core.on('keyup.shift', () => { this._dirLocked = false })
+        core.on('keydown.shift', () => {
+            if (this._dirLocked) return
+            this._dirLocked = true
+            this.core?.fire('toast.show', 'Direction of the link is LOCKED.')
+        })
+        core.on('keyup.shift', () => {
+            this._dirLocked = false
+            this.core?.fire('toast.show', 'Direction of the link is UNLOCKED.')
+        })
     }
 
     private _onMouseDown(e: MouseEvent) {

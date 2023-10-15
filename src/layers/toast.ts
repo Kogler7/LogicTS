@@ -25,7 +25,7 @@ export default class ToastLayer extends LogicLayer {
 
     private _calcAnchor(): Point {
         // return new Point(this.core!.stageWidth / 2, this.core!.stageHeight - 40)
-        return new Point(this.core!.stageWidth - 250, this.core!.stageHeight - 40)
+        return new Point(this.core!.stageWidth - 40, this.core!.stageHeight - 40)
     }
 
     public onMounted(core: LogicCore): void {

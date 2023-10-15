@@ -968,6 +968,16 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 	public get bottomLeft(): Point { return new Point(this.left, this.bottom) }
 	public get bottomRight(): Point { return new Point(this.right, this.bottom) }
 
+	public get topCenter(): Point { return new Point(this.centerX, this.top) }
+	public get rightCenter(): Point { return new Point(this.right, this.centerY) }
+	public get bottomCenter(): Point { return new Point(this.centerX, this.bottom) }
+	public get leftCenter(): Point { return new Point(this.left, this.centerY) }
+
+	public set topCenter(p: Point) { this.pos.x = p.x - this.size.width / 2; this.pos.y = p.y }
+	public set rightCenter(p: Point) { this.pos.x = p.x - this.size.width; this.pos.y = p.y - this.size.height / 2 }
+	public set bottomCenter(p: Point) { this.pos.x = p.x - this.size.width / 2; this.pos.y = p.y - this.size.height }
+	public set leftCenter(p: Point) { this.pos.x = p.x; this.pos.y = p.y - this.size.height / 2 }
+
 	public get corners(): Point[] {
 		return [this.topLeft, this.topRight, this.bottomRight, this.bottomLeft]
 	}
