@@ -77,7 +77,7 @@ export default class MeshLayer extends LogicLayer {
             // draw base lines
             ctx.beginPath()
             ctx.strokeStyle = `rgba(200, 200, 200, ${this._baseLineOpacity})`
-            ctx.lineWidth = 1
+            ctx.lineWidth = 0.8
             for (let x = startPos.x; x < stageWidth; x += gridWidth) {
                 ctx.moveTo(x, 0)
                 ctx.lineTo(x, stageHeight)

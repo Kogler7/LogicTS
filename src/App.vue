@@ -131,7 +131,7 @@ onMounted(() => {
         core.switchMemoryToNext()
     })
 
-    core.focus()
+    // core.focus()
 })
 
 </script>

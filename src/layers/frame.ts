@@ -15,13 +15,15 @@
 * Supported by: National Key Research and Development Program of China
 */
 
+import { Rect } from "@/logic/common/types2D"
 import LogicLayer from "../logic/layer"
 
 export default class FrameLayer extends LogicLayer {
     public onCache(ctx: CanvasRenderingContext2D): boolean {
-        ctx.strokeStyle = "#ff0000"
-        ctx.lineWidth = 1
-        ctx.strokeRect(0, 0, this.core!.stageWidth - 2, this.core!.stageHeight - 2)
+        const rect = Rect.fromLTWH(0, 0, this.core!.stageWidth-2, this.core!.stageHeight-2).float()
+        ctx.strokeStyle = "#000000"
+        ctx.lineWidth = 0.5
+        ctx.strokeRect(...rect.ltwh)
         return true
     }
 

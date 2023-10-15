@@ -143,14 +143,14 @@ export default class LinkLayer extends LogicLayer {
         const crd = this.core?.pos2crd(pos)
         if (!crd) return
         if (this._linking) {
-            if (!this._dirLocked){
-                const dir = pos.minus(this._lastPos).normalDir
+            if (!this._dirLocked) {
+                const dir = Point.minus(pos, this._lastPos).normalDir
                 this._currDir = dir
             }
             this._route.setLastWayPoint(crd, this._currDir)
         }
         // smooth the last position
-        this._lastPos = this._lastPos.times(0.9).plus(pos.times(0.1))
+        this._lastPos.times(0.99).plus(pos.times(0.01))
     }
 
     public onCache(ctx: CanvasRenderingContext2D): boolean {

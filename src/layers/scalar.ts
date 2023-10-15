@@ -20,7 +20,7 @@ import { Point } from "@/logic/common/types2D"
 
 export default class ScalarLayer extends LogicLayer {
     public onCache(ctx: CanvasRenderingContext2D): boolean {
-        ctx.font = "14px Arial"
+        ctx.font = "15px Arial"
         ctx.fillStyle = "rgba(100, 100, 100, 1)"
         const offset = 10
         const { gridWidth, levelUpFactor, originBias: origin, logicWidth } = this.core!
