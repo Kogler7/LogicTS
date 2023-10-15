@@ -41,7 +41,11 @@ export default class EventHandler {
     private _ctrlKey = false
     private _shiftKey = false
 
-    private _countdownTimer: Timer | null = null
+    private _countdownTimer: Timer = new Timer(() => {
+        this._zooming = false
+        this._core.fire('zoom.end')
+        this._tryEndReloc()
+    })
     private _waitingForDoubleClick = false
 
     // make sure the context of these functions is EventHandler
@@ -196,15 +200,9 @@ export default class EventHandler {
         if (!this._zooming) {
             this._core.fire('zoom.begin', e)
             this._tryStartReloc()
-            this._countdownTimer = new Timer(() => {
-                this._zooming = false
-                this._core.fire('zoom.end', e)
-                this._tryEndReloc()
-                this._countdownTimer = null
-            })
         }
         this._zooming = true
-        this._countdownTimer?.reset()
+        this._countdownTimer.reset().start()
         this._core.fire('zoom.ing', e)
         this._core.fire('reloc.ing', e)
     }

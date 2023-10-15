@@ -45,7 +45,7 @@ export class Animation {
         this._onEnd = onEnd
     }
 
-    public start() {
+    public start(): Animation {
         this._startTime = Date.now()
         this._endTime = this._startTime + this._duration
         if (this._onStart) {
@@ -53,11 +53,12 @@ export class Animation {
         }
         this._callback(0)
         requestAnimationFrame(() => { this._update() })
+        return this
     }
 
-    public cancel(terminate: boolean = false) {
+    public cancel(finish: boolean = false) {
         this.cancelled = true
-        if (terminate) {
+        if (finish) {
             this._callback(1)
             if (this._onEnd) {
                 this._onEnd()

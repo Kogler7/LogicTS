@@ -20,6 +20,7 @@ import LogicCore from "../core"
 import IRenderable from "../mixins/renderable"
 import { Animation, Curves } from "./anime"
 import { FontStyle, Text, IText } from "./text"
+import Timer from "./timer"
 
 export enum ToastBaseline {
     TOP = 'top',
@@ -39,16 +40,27 @@ export default class Toast implements IRenderable {
     private _innerAnchor: Point = new Point()
     private _outerAnchor: Point = new Point()
 
-    private _timer: number = 0
-    private _duration: number = 0
-    private _animeDuration: number = 300
+    private _timer: Timer = new Timer(() => {
+        this.hide()
+    }, 300, 10, () => {
+        this._progress = this._timer.progress
+        this._core.render()
+    })
+    private _duration: number = 300
 
     private _radius: number = 0
     private _hidden: boolean = true
     private _padding: number = 10
     private _baseline: ToastBaseline
 
+    private _background: string
+
     private _ctx: CanvasRenderingContext2D
+
+    private _showAnime: Animation | null = null
+    private _hideAnime: Animation | null = null
+
+    private _progress: number = 0
 
     public get text(): string {
         return this._text.text
@@ -60,6 +72,7 @@ export default class Toast implements IRenderable {
         const size = this._text.calcSize(this._ctx)
         this._rect.fitWidthTo(size.width + this._padding * 2, true)
         this._rect.fitHeightTo(size.height + this._padding * 2, true)
+        this._calcOuterAnchor()
     }
 
     public get padding(): number {
@@ -72,6 +85,7 @@ export default class Toast implements IRenderable {
         const size = this._text.calcSize(this._ctx)
         this._rect.fitWidthTo(size.width + this._padding * 2, true)
         this._rect.fitHeightTo(size.height + this._padding * 2, true)
+        this._calcOuterAnchor()
     }
 
     public get style(): FontStyle {
@@ -89,6 +103,7 @@ export default class Toast implements IRenderable {
     public set anchor(value: Point) {
         this._innerAnchor = value
         this._calcOuterAnchor()
+        this._rect.center = this._hidden ? this._outerAnchor : this._innerAnchor
     }
 
     public get baseline(): ToastBaseline {
@@ -97,6 +112,7 @@ export default class Toast implements IRenderable {
 
     public set baseline(value: ToastBaseline) {
         this._baseline = value
+        console.log('change baseline to', value)
         this._calcOuterAnchor()
     }
 
@@ -122,31 +138,37 @@ export default class Toast implements IRenderable {
                 this._innerAnchor.y
             )
         }
+        console.log('calc outer anchor', this._outerAnchor)
     }
 
     constructor(
         core: LogicCore,
         anchor: Point,
         text: string = '',
-        padding: number = 10,
+        radius: number = 16,
+        padding: number = 16,
         baseline: ToastBaseline = ToastBaseline.BOTTOM,
-        duration: number = 300
+        duration: number = 300,
+        background: string = 'rgba(240, 240, 240, 0.5)'
     ) {
         this._core = core
+        this._ctx = core.requireCache('__toast__', Size.zero())
         this.text = text
         this._innerAnchor = anchor
+        this._radius = radius
         this._padding = padding
         this._baseline = baseline
         this._calcOuterAnchor()
-        this._animeDuration = duration
-        this._ctx = core.requireCache('__toast__', Size.zero())
+        this._duration = duration
+        this._background = background
+        this._rect.center = this._hidden ? this._outerAnchor : this._innerAnchor
     }
 
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {
         const { left, top, width, height } = rect
         const radius = this._radius
         ctx.save()
-        ctx.fillStyle = "rgba(0, 0, 0, 0.5)"
+        ctx.fillStyle = this._background
         ctx.beginPath()
         ctx.moveTo(left + radius, top)
         ctx.lineTo(left + width - radius, top)
@@ -163,32 +185,77 @@ export default class Toast implements IRenderable {
 
         this._text.renderAt(ctx, rect.center)
 
+        // draw progress line
+
+        ctx.save()
+        const progressWidth = (width - radius * 2) * Curves.easeInOut.transform(this._progress)
+        ctx.strokeStyle = 'rgba(100, 100, 100, 0.5)'
+        ctx.lineWidth = 2
+        ctx.lineCap = 'round'
+        ctx.beginPath()
+        ctx.moveTo(left + radius, top + height)
+        ctx.lineTo(left + radius + progressWidth, top + height)
+        ctx.stroke()
+        ctx.restore()
+
         return rect
     }
 
     public renderOn(ctx: CanvasRenderingContext2D): void {
-        if (this._hidden) {
-            return
-        }
         this.renderAt(ctx, this._rect)
     }
 
-    public show(duration: number | null = null, text: string | null): void {
+    public show(text: string | null, duration: number | null = null): void {
         if (text) {
             this.text = text
         }
         if (!this._hidden) {
+            if (duration !== null) {
+                this._timer.reset(duration)
+            }
             return
         }
+        // cancel the previous animation first if any
+        this._hideAnime?.cancel()
         const source = this._rect.clone()
-        const target = Rect.moveCenterTo(this._rect, this._innerAnchor)
-        const anime = new Animation(
+        const target = Rect.setCenter(this._rect, this._innerAnchor)
+        this._showAnime = new Animation(
             (t: number) => {
-                // this._rect = Rect.lerp(source, target, t)
+                this._rect = Rect.lerp(source, target, t)
                 this._core.render()
             },
-            this._animeDuration,
-            Curves.easeIn
-        )
+            this._duration,
+            Curves.easeIn,
+            () => {
+                this._hidden = false
+            },
+            () => {
+                this._core.render()
+                if (duration !== null) {
+                    this._timer.reset(duration).start()
+                }
+            }
+        ).start()
+    }
+
+    public hide(): void {
+        if (this._hidden) {
+            return
+        }
+        // cancel the previous animation first if any
+        this._showAnime?.cancel()
+        const source = this._rect.clone()
+        const target = Rect.setCenter(this._rect, this._outerAnchor)
+        this._hideAnime = new Animation(
+            (t: number) => {
+                this._rect = Rect.lerp(source, target, t)
+                this._core.render()
+            },
+            this._duration,
+            Curves.easeOut,
+            () => {
+                this._hidden = true
+            }
+        ).start()
     }
 }

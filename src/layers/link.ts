@@ -122,6 +122,7 @@ export default class LinkLayer extends LogicLayer {
                 if (!crd) return
                 this._route = new LinkRoute(crd)
                 this._route.addWayPoint(crd, Direction.RIGHT)
+                this.core?.fire('toast.show', 'Hold down SHIFT to lock the direction of the link.')
             } else {
                 const pos = new Point(e.offsetX, e.offsetY)
                 const crd = this.core?.pos2crd(pos)

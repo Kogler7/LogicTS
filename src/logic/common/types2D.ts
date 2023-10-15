@@ -830,7 +830,7 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 		return true
 	}
 
-	static moveCenterTo(r: Rect, t: Point): Rect {
+	static setCenter(r: Rect, t: Point): Rect {
 		return new Rect(
 			new Point(t.x - r.width / 2, t.y - r.height / 2),
 			r.size.clone()

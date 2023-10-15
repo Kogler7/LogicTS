@@ -17,24 +17,41 @@
 
 export default class Timer {
     private _count: number
-    private _callback: Function
     private _initial: number
     private _interval: number
+    private _finished: boolean = true
+    private _onFinished: Function
+    private _onStep: Function | null = null
 
-    constructor(callback: Function, initial: number = 24, interval: number = 16.7) {
-        this._callback = callback
+    public get finished(): boolean {
+        return this._finished
+    }
+
+    public get progress(): number {
+        return (this._initial - this._count) / this._initial
+    }
+
+    constructor(
+        onFinished: Function,
+        initial: number = 30,
+        interval: number = 10,
+        onStep: Function | null = null
+    ) {
         this._initial = initial
         this._interval = interval
-        this._count = initial
-        setTimeout(() => {
-            this._update()
-        }, interval)
+        this._count = this._initial
+        this._onFinished = onFinished
+        this._onStep = onStep
     }
 
     private _update() {
         this._count -= 1
+        if (this._onStep) {
+            this._onStep()
+        }
         if (this._count <= 0) {
-            this._callback()
+            this._finished = true
+            this._onFinished()
         } else {
             setTimeout(() => {
                 this._update()
@@ -42,7 +59,30 @@ export default class Timer {
         }
     }
 
-    public reset() {
+    public start() {
+        if (this._finished) {
+            this._finished = false
+            if (this._onStep) {
+                this._onStep()
+            }
+            setTimeout(() => {
+                this._update()
+            }, this._interval)
+        }
+    }
+
+    public cancel() {
+        this._count = 0
+    }
+
+    public reset(initial: number | null = null, interval: number | null = null): Timer {
+        if (initial !== null) {
+            this._initial = initial
+        }
+        if (interval !== null) {
+            this._interval = interval
+        }
         this._count = this._initial
+        return this
     }
 }
