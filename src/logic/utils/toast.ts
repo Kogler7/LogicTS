@@ -166,7 +166,7 @@ export default class Toast implements IRenderable {
         padding: number = 16,
         baseline: ToastBaseline = ToastBaseline.BOTTOM,
         duration: number = 300,
-        background: string = 'rgba(250, 250, 250, 1)'
+        background: string = 'rgba(250, 250, 250, 0.9)'
     ) {
         this._core = core
         this._ctx = core.requireCache('__toast__', Size.zero())

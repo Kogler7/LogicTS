@@ -45,7 +45,7 @@ export default class ToastLayer extends LogicLayer {
                 this._toast.anchor = this._calcAnchor()
             }
         })
-        core.on('toast.show', (text: string, duration: number = 300) => {
+        core.on('toast.show', (text: string, duration: number = 150) => {
             if (this._toast) {
                 this._toast.anchor = this._calcAnchor()
             }

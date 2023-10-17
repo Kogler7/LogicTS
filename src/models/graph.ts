@@ -18,7 +18,7 @@
 import { Rect, Point } from "@/logic/common/types2D"
 import { HashSet, HashMap } from "@/logic/common/types"
 import { uid, uid_rt } from "@/logic/common/uid"
-import { RenderNode, RenderPair, RenderPortDirection } from "./node"
+import { RenderNode, RenderPair, PortType } from "./node"
 import { RenderLink } from "./link"
 import { RenderPath } from "./path"
 

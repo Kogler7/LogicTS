@@ -22,6 +22,7 @@ const SHOW_CTRL_POINTS = true
 
 export class WayPoint extends Point {
     public direction: Direction = Direction.RIGHT
+
     constructor(x: number, y: number, direction: Direction) {
         super(x, y)
         this.direction = direction

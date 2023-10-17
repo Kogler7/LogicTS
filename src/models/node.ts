@@ -19,12 +19,12 @@ import { Point, Rect } from "@/logic/common/types2D"
 import { IHashable, IComparable } from "@/logic/common/types"
 import { uid } from "@/logic/common/uid"
 
-export enum RenderPortDirection {
+export enum PortType {
     IN = 0,
     OUT = 1
 }
 
-export enum RenderPortAspect {
+export enum PortAspect {
     LEFT = 0,
     RIGHT = 1,
     TOP = 2,
@@ -33,36 +33,33 @@ export enum RenderPortAspect {
 
 export class RenderPort implements IComparable {
     public id: number
-    // port type, in or out
-    public dir: RenderPortDirection
     // port location, indicate the logical bias of the port
     // from the top-left point of the element node
     public loc: number
+    // port type, in or out
+    public typ: PortType
     // which aspect is the port located at
-    public aspect: RenderPortAspect
+    public asp: PortAspect
     public connected = false
 
     constructor(
-        dir: RenderPortDirection,
-        loc: number,
-        aspect: RenderPortAspect,
         id: number,
+        loc: number,
+        typ: PortType,
+        asp: PortAspect,
         connected = false
     ) {
-        if (loc < 0 || loc > 10) {
-            throw new Error('loc must be between 0 and 10')
-        }
         this.id = id
-        this.dir = dir
         this.loc = loc
-        this.aspect = aspect
+        this.typ = typ
+        this.asp = asp
         this.connected = connected
     }
 
     equals(other: RenderPort) {
-        return this.dir === other.dir &&
+        return this.typ === other.typ &&
             this.loc === other.loc &&
-            this.aspect === other.aspect
+            this.asp === other.asp
     }
 
     static fromObject(obj: any) {
@@ -78,21 +75,17 @@ export class RenderPort implements IComparable {
 export class RenderNode implements IHashable {
     public id: uid
     public rect: Rect
-    public grid: number
-    public selected: boolean
-    public iconName = ''
     public name = ''
-    public description = ''
+    public icon = ''
+    public desc = ''
     public ports: Array<RenderPort>
 
-    constructor(id: uid, rect: Rect, ports: Array<RenderPort>, icon = '', name = '', description = '') {
+    constructor(id: uid, rect: Rect, ports: Array<RenderPort>, name = '', icon = '', desc = '') {
         this.id = id
         this.rect = rect
-        this.grid = 15
-        this.selected = false
-        this.iconName = icon
         this.name = name
-        this.description = description
+        this.icon = icon
+        this.desc = desc
         this.ports = ports
     }
 
@@ -107,23 +100,22 @@ export class RenderNode implements IHashable {
         return this.ports[id]
     }
 
-    public calcPortRelativeLoc(port: RenderPort, padding = 0): Point {
+    public calcRelativePortLoc(port: RenderPort, padding = 0): Point {
         const { width, height } = this.rect.size
-        const { loc, aspect } = port
-        const offset = loc * this.grid
-        if (aspect === RenderPortAspect.LEFT)
-            return new Point(-padding, offset)
-        if (aspect === RenderPortAspect.RIGHT)
-            return new Point(width + padding, offset)
-        if (aspect === RenderPortAspect.TOP)
-            return new Point(offset, -padding)
-        if (aspect === RenderPortAspect.BOTTOM)
-            return new Point(offset, height + padding)
+        const { loc, asp } = port
+        if (asp === PortAspect.LEFT)
+            return new Point(-padding, loc)
+        if (asp === PortAspect.RIGHT)
+            return new Point(width + padding, loc)
+        if (asp === PortAspect.TOP)
+            return new Point(loc, -padding)
+        if (asp === PortAspect.BOTTOM)
+            return new Point(loc, height + padding)
         return Point.zero()
     }
 
     public calcPortLoc(port: RenderPort, padding = 0): Point {
-        return this.rect.pos.plus(this.calcPortRelativeLoc(port, padding))
+        return Point.plus(this.rect.pos, this.calcRelativePortLoc(port, padding))
     }
 }
 
@@ -150,11 +142,11 @@ export class RenderPair implements IHashable, IComparable {
     }
 
     public relativeLoc(padding = 0): Point {
-        return this.node.calcPortRelativeLoc(this.port, padding)
+        return this.node.calcRelativePortLoc(this.port, padding)
     }
 
     public compatible(other: RenderPair): boolean {
-        return this.nodeId !== other.nodeId && this.dir !== other.dir
+        return this.nodeId !== other.nodeId && this.typ !== other.typ
     }
 
     public equals(other: RenderPair): boolean {
@@ -175,18 +167,18 @@ export class RenderPair implements IHashable, IComparable {
     }
 
     get hash() {
-        return `${this.node.id}:${this.port.dir}:${this.port.loc}:${this.port.aspect}`
-    }
-
-    get dir() {
-        return this.port.dir
+        return `${this.node.id}:${this.port.typ}:${this.port.loc}:${this.port.asp}`
     }
 
     get loc() {
         return this.port.loc
     }
 
-    get aspect() {
-        return this.port.aspect
+    get typ() {
+        return this.port.typ
+    }
+
+    get asp() {
+        return this.port.asp
     }
 }
