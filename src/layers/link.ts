@@ -19,84 +19,11 @@ import { uid } from "@/logic/common/uid"
 import LogicCore from "@/logic/core"
 import LogicLayer from "../logic/layer"
 import { Point, Vector, Direction } from "@/logic/common/types2D"
-
-class WayPoint extends Point {
-    public direction: Direction = Direction.RIGHT
-    constructor(x: number, y: number, direction: Direction) {
-        super(x, y)
-        this.direction = direction
-    }
-
-    public static fromPoint(point: Point, direction: Direction): WayPoint {
-        return new WayPoint(point.x, point.y, direction)
-    }
-}
-
-export class LinkRoute {
-    private _wayPoints: WayPoint[] = []
-
-    constructor(initPoint: Point, dir: Direction = Direction.RIGHT) {
-        this._wayPoints.push(WayPoint.fromPoint(initPoint, dir))
-    }
-
-    public get wayPoints(): WayPoint[] {
-        return this._wayPoints
-    }
-
-    public get length(): number {
-        return this._wayPoints.length
-    }
-
-    private _getCtrlPoint(p: WayPoint, length: number, isSrc: boolean): Point {
-        if (!isSrc) {
-            // reverse the length if it is the destination
-            length = -length
-        }
-        switch (p.direction) {
-            case Direction.LEFT:
-                return new Point(p.x - length, p.y)
-            case Direction.RIGHT:
-                return new Point(p.x + length, p.y)
-            case Direction.UP:
-                return new Point(p.x, p.y - length)
-            case Direction.DOWN:
-                return new Point(p.x, p.y + length)
-        }
-    }
-
-    private _getCtrlPair(src: WayPoint, dst: WayPoint): [Point, Point] {
-        const length = Vector.fromPoints(src, dst).length / 2
-        const ctrl1 = this._getCtrlPoint(src, length, true)
-        const ctrl2 = this._getCtrlPoint(dst, length, false)
-        return [ctrl1, ctrl2]
-    }
-
-    public addWayPoint(point: Point, direction: Direction): void {
-        this._wayPoints.push(WayPoint.fromPoint(point, direction))
-    }
-
-    public setLastWayPoint(point: Point, direction: Direction): void {
-        this._wayPoints[this._wayPoints.length - 1] = WayPoint.fromPoint(point, direction)
-    }
-
-    public renderOn(ctx: CanvasRenderingContext2D, core: LogicCore) {
-        const crd2pos = core.crd2pos.bind(core)
-        const start = this._wayPoints[0]
-        ctx.beginPath()
-        ctx.moveTo(...crd2pos(start).values)
-        for (let i = 1; i < this._wayPoints.length; i++) {
-            const crd = this._wayPoints[i]
-            const [ctrl1, ctrl2] = this._getCtrlPair(this._wayPoints[i - 1], crd)
-            ctx.bezierCurveTo(...crd2pos(ctrl1).values, ...crd2pos(ctrl2).values, ...crd2pos(crd).values)
-        }
-        ctx.stroke()
-    }
-}
-
+import { RenderPath } from "@/models/path"
 
 export default class LinkLayer extends LogicLayer {
     private _objectIds: Set<uid> = new Set()
-    private _route: LinkRoute = new LinkRoute(Point.zero())
+    private _path: RenderPath = new RenderPath(Point.zero())
     private _linking: boolean = false
     private _lastPos: Point = Point.zero()
     private _dirLocked: boolean = false
@@ -112,7 +39,22 @@ export default class LinkLayer extends LogicLayer {
         core.on('keydown.shift', () => {
             if (this._dirLocked) return
             this._dirLocked = true
-            this.core?.fire('toast.show', 'Direction of the link is LOCKED.')
+            let dir: string
+            switch (this._currDir) {
+                case Direction.LEFT:
+                    dir = 'LEFT'
+                    break
+                case Direction.RIGHT:
+                    dir = 'RIGHT'
+                    break
+                case Direction.UP:
+                    dir = 'UP'
+                    break
+                case Direction.DOWN:
+                    dir = 'DOWN'
+                    break
+            }
+            this.core?.fire('toast.show', `Direction of the link is LOCKED to ${dir}.`)
         })
         core.on('keyup.shift', () => {
             this._dirLocked = false
@@ -127,15 +69,15 @@ export default class LinkLayer extends LogicLayer {
                 const pos = new Point(e.offsetX, e.offsetY)
                 const crd = this.core?.pos2crd(pos)
                 if (!crd) return
-                this._route = new LinkRoute(crd)
-                this._route.addWayPoint(crd, Direction.RIGHT)
+                this._path = new RenderPath(crd)
+                this._path.addWayPoint(crd, Direction.RIGHT)
                 this.core?.fire('toast.show', 'Hold down SHIFT to lock the direction of the link.')
             } else {
                 const pos = new Point(e.offsetX, e.offsetY)
                 const crd = this.core?.pos2crd(pos)
                 if (!crd) return
                 const dir = pos.minus(this._lastPos).normalDir
-                this._route.addWayPoint(crd, dir)
+                this._path.addWayPoint(crd, dir)
             }
         } else if (e.button === 2) {
             if (this._linking) {
@@ -155,10 +97,10 @@ export default class LinkLayer extends LogicLayer {
                 const dir = Point.minus(pos, this._lastPos).normalDir
                 this._currDir = dir
             }
-            this._route.setLastWayPoint(crd, this._currDir)
+            this._path.setLastWayPoint(crd, this._currDir)
         }
         // smooth the last position
-        this._lastPos.times(0.99).plus(pos.times(0.01))
+        this._lastPos.times(0.9).plus(pos.times(0.1))
     }
 
     public onCache(ctx: CanvasRenderingContext2D): boolean {
@@ -168,7 +110,7 @@ export default class LinkLayer extends LogicLayer {
     public onPaint(ctx: CanvasRenderingContext2D): boolean {
         ctx.strokeStyle = 'black'
         ctx.lineWidth = 2
-        this._route.renderOn(ctx, this.core!)
+        this._path.strokeOn(ctx, this.core!)
         return true
     }
 }

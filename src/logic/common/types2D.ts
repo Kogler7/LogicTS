@@ -920,9 +920,14 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 	 * @return the expanded rect.
 	 */
 	public expandToInclude(p: Point): Rect {
-		const r = Rect.expandToInclude(this, p)
-		this.pos = r.pos
-		this.size = r.size
+		const left = Math.min(this.left, p.x)
+		const top = Math.min(this.top, p.y)
+		const right = Math.max(this.right, p.x)
+		const bottom = Math.max(this.bottom, p.y)
+		this.pos.x = left
+		this.pos.y = top
+		this.size.width = right - left
+		this.size.height = bottom - top
 		return this
 	}
 

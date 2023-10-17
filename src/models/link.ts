@@ -14,3 +14,47 @@
 * Created: Oct. 13, 2023
 * Supported by: National Key Research and Development Program of China
 */
+
+import { RenderPair } from "./node"
+import { IHashable, hash } from "@/logic/common/types"
+
+export class RenderLink  implements IHashable {
+    public id: number
+    public srcPair: RenderPair
+    public dstPair: RenderPair
+
+    constructor(id: number, srcPair: RenderPair, dstPair: RenderPair) {
+        this.id = id
+        this.srcPair = srcPair
+        this.dstPair = dstPair
+    }
+    get hash(): hash {
+        return this.srcPair.hash + this.dstPair.hash
+    }
+
+    public get srcNodeId(): number {
+        return this.srcPair.node.id
+    }
+
+    public get dstNodeId(): number {
+        return this.dstPair.node.id
+    }
+
+    public get srcPortId(): number {
+        return this.srcPair.port.id
+    }
+
+    public get dstPortId(): number {
+        return this.dstPair.port.id
+    }
+
+    public get object() {
+        return {
+            linkId: this.id,
+            srcNodeId: this.srcNodeId,
+            srcPortId: this.srcPortId,
+            dstNodeId: this.dstNodeId,
+            dstPortId: this.dstPortId
+        }
+    }
+}

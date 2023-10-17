@@ -75,7 +75,7 @@ onMounted(() => {
     const moveLayer = new MoveObjectLayer('move', 3)
     const resizeLayer = new ResizeObjectLayer('resize', 3)
     const compLayer = new CompLayer('comp', 0)
-    const linkLayer = new LinkLayer('link', -1)
+    const linkLayer = new LinkLayer('link', 0.5)
     const toastLayer = new ToastLayer('toast', 5)
 
     const c1 = new Component(new Point(10, 5))

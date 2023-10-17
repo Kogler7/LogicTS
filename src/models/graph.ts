@@ -15,57 +15,32 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-// import { Rect, Point } from "@/logic/common/types2D"
-// import { HashSet, HashMap } from "@/logic/common/types"
-// import { uid, uid_rt } from "@/logic/common/uid"
-// import { RenderNode, RenderPair, RenderPortDirection } from "./node"
-// import { RenderLink } from "./link"
-// import { RenderRoute, Navigator } from "./navigation/route"
-// import { graphManager } from '@/services/phot_client/graph'
+import { Rect, Point } from "@/logic/common/types2D"
+import { HashSet, HashMap } from "@/logic/common/types"
+import { uid, uid_rt } from "@/logic/common/uid"
+import { RenderNode, RenderPair, RenderPortDirection } from "./node"
+import { RenderLink } from "./link"
+import { RenderPath } from "./path"
 
 // export class RenderGraph {
 //     private _id: uid
 //     private _graph: HashMap<RenderNode, HashSet<RenderNode>>
 //     private _nodes: Map<uid, RenderNode>
 //     private _links: HashMap<RenderPair, RenderLink>
-//     private _routes: HashMap<RenderPair, RenderRoute>
+//     private _routes: HashMap<RenderPair, RenderPath>
 //     private _padding: number
 
-//     // for auto update
-//     private _bindInstance: ComponentInternalInstance | null = null
-
-//     constructor(id: uid, arena: Arena, padding: number) {
+//     constructor(id: uid, padding: number) {
 //         this._id = id
-//         this._arena = arena
 //         this._padding = padding
-//         this._navi = new Navigator(arena, padding)
 //         this._graph = new HashMap()
 //         this._nodes = new Map()
 //         this._links = new HashMap()
 //         this._routes = new HashMap()
 //     }
 
-//     private _update() {
-//         if (this._bindInstance) {
-//             console.log('graph updated')
-//             this._bindInstance.update()
-//         }
-//     }
-
-//     public bind(instance: ComponentInternalInstance | null) {
-//         this._bindInstance = instance
-//     }
-
 //     public get id(): uid {
 //         return this._id
-//     }
-
-//     public get arena(): Arena {
-//         return this._arena
-//     }
-
-//     public get navi(): Navigator {
-//         return this._navi
 //     }
 
 //     public get nodes(): Array<RenderNode> {
@@ -76,15 +51,13 @@
 //         return this._nodes
 //     }
 
-//     public get routes(): RenderRoute[] {
+//     public get routes(): RenderPath[] {
 //         return this._routes.uniqueValues
 //     }
 
 //     public addNode(node: RenderNode) {
 //         this._graph.set(node, new HashSet<RenderNode>())
 //         this._nodes.set(node.id, node)
-//         this._arena.addNode(node)
-//         this._update()
 //         return this
 //     }
 
@@ -116,12 +89,10 @@
 //         }
 //         this._graph.delete(node)
 //         this._nodes.delete(node.id)
-//         this._arena.delNode(node.id)
-//         this._update()
 //         return this
 //     }
 
-//     public getRoute(pair: RenderPair): RenderRoute | null {
+//     public getRoute(pair: RenderPair): RenderPath | null {
 //         return this._routes.get(pair)
 //     }
 
@@ -132,7 +103,7 @@
 //     public addLink(
 //         from: RenderPair,
 //         to: RenderPair,
-//         route: RenderRoute | null = null,
+//         route: RenderPath | null = null,
 //         linkId: uid | null = null
 //     ): boolean {
 //         // make sure from and to are in different nodes
@@ -164,11 +135,10 @@
 //         this._graph.get(from.node)?.add(to.node)
 //         this._graph.get(to.node)?.add(from.node)
 //         if (route === null) {
-//             route = this._navi.startAt(from).endAt(to).generateRoute()
+//             // route = this._navi.startAt(from).endAt(to).generateRoute()
 //         }
 //         route.linkId = link.id
 //         this._routes.set(from, route).set(to, route)
-//         this._update()
 //         return true
 //     }
 
@@ -181,7 +151,6 @@
 //         this._graph.get(to.node)?.delete(from.node)
 //         this._links.delete(from).delete(to)
 //         this._routes.delete(from).delete(to)
-//         this._update()
 //         return link
 //     }
 
@@ -190,7 +159,7 @@
 //             return
 //         }
 //         const newRect = new Rect(pos, node.rect.size)
-//         this._arena.setNode(node.id, newRect)
+//         // this._arena.setNode(node.id, newRect)
 //         node.ports.forEach((port) => {
 //             const pair = new RenderPair(node, port)
 //             const route = this._routes.get(pair)
@@ -201,7 +170,7 @@
 //             }
 //         })
 //         // save to server
-//         graphManager.moveNodeTo(node.id, pos)
+//         // graphManager.moveNodeTo(node.id, pos)
 //     }
 
 //     public deserialize(data: object) {
