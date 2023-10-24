@@ -16,7 +16,8 @@
 */
 
 import LogicCore from "../core"
-import { IObjectArena, QueryObjectArena } from "../arena/arena"
+import IObjectArena from "../arena/arena"
+import QueryRectArena from "../arena/query-rect"
 import { Point, Rect } from "../common/types2D"
 import { ISelectable } from "../mixins/selectable"
 import { IMovable } from "../mixins/movable"
@@ -34,8 +35,8 @@ export interface IObject {
 
 export class ObjectHandler {
     private _core: LogicCore
-    private _logicArena: IObjectArena = new QueryObjectArena()
-    private _arenas: Map<uid, IObjectArena> = new Map(
+    private _logicArena: IObjectArena<Rect> = new QueryRectArena()
+    private _arenas: Map<uid, IObjectArena<Rect>> = new Map(
         [[0, this._logicArena]]
     )
     private _objects: Map<uid, IObject> = new Map()
@@ -164,12 +165,12 @@ export class ObjectHandler {
         })
     }
 
-    public get logicArena(): IObjectArena {
+    public get logicArena(): IObjectArena<Rect> {
         return this._logicArena
     }
 
     public get logicObjectIds(): Set<uid> {
-        return this._logicArena.getObjects()
+        return new Set(this._objects.keys())
     }
 
     public get selectedLogicObjects(): Set<ISelectable> {
@@ -361,7 +362,7 @@ export class ObjectHandler {
         if (!this._arenas.has(level)) {
             // if the object is in a new level, create a new arena for it
             // and register callback event listener for that level to the core
-            const arena = new QueryObjectArena()
+            const arena = new QueryRectArena()
             this._arenas.set(level, arena)
             // register callback event listener to the core
             const cbk = (e: MouseEvent) => {
@@ -607,11 +608,11 @@ export class ObjectHandler {
         this._core.popCursor('move')
     }
 
-    public getArena(level: number): IObjectArena {
+    public getArena(level: number): IObjectArena<Rect> {
         if (!this._arenas.has(level)) {
             this._addSelectSupportForNonLogicLevel(level)
         }
-        return this._arenas.get(level) as IObjectArena
+        return this._arenas.get(level) as IObjectArena<Rect>
     }
 
     public addObject(obj: IObject): boolean {

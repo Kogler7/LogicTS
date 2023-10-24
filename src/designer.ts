@@ -16,7 +16,6 @@
 */
 
 import LogicCore from "./logic/core"
-import { Point, Rect } from "@/logic/common/types2D"
 import FrameLayer from "@/layers/frame"
 import ScalarLayer from "@/layers/scalar"
 import MeshLayer from "@/layers/mesh"

@@ -193,6 +193,10 @@ export class Point implements IComparable, IHashable, IPrintable, ICloneable<Poi
 		)
 	}
 
+	static distance(p1: Point, p2: Point): number {
+		return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2)
+	}
+
 	public moveTo(p: Point) {
 		this.x = p.x
 		this.y = p.y
@@ -703,6 +707,10 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 		return new Rect(new Point(left, top), new Size(width, height))
 	}
 
+	static fromCenter(center: Point, size: Size): Rect {
+		return new Rect(new Point(center.x - size.width / 2, center.y - size.height / 2), size)
+	}
+
 	/**
 	 * Create a rect from two points.
 	 * @param p1 the first point.
@@ -1086,15 +1094,15 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 
 	/**
 	 * Get the intersection of the current rect and the another rect.
-	 * @param rect the another rect.
+	 * @param r2 the another rect.
 	 * @returns the intersection element.
 	 */
-	public intersection(rect: Rect): Element {
-		const left = Math.max(this.left, rect.left)
-		const right = Math.min(this.right, rect.right)
+	static intersection(r1: Rect, r2: Rect): Element {
+		const left = Math.max(r1.left, r2.left)
+		const right = Math.min(r1.right, r2.right)
 		if (left > right) return null // No intersection.
-		const top = Math.max(this.top, rect.top)
-		const bottom = Math.min(this.bottom, rect.bottom)
+		const top = Math.max(r1.top, r2.top)
+		const bottom = Math.min(r1.bottom, r2.bottom)
 		if (top > bottom) return null // No intersection.
 		if (left === right && top === bottom) return new Point(left, top)
 		if (left === right) return new Line(new Point(left, top), new Point(left, bottom))
@@ -1148,7 +1156,7 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 	   */
 	public relativeAspectTo(rect: Rect): string {
 		let res = ''
-		const inter = this.intersection(rect)
+		const inter = Rect.intersection(this, rect)
 		if (inter && inter instanceof Rect) {
 			if (inter.equals(rect) || inter.equals(this)) return 'c'
 			res += this.left > rect.left ? 'r' : 'l'

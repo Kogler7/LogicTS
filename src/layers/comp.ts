@@ -18,12 +18,17 @@
 import LogicCore from "@/logic/core"
 import LogicLayer from "@/logic/layer"
 import IRenderable from "@/logic/mixins/renderable"
+import IObjectArena from "@/logic/arena/arena"
+import QueryPointArena from "@/logic/arena/query-point"
+import Component from "@/objects/comp"
+import { Point, Rect, Size } from "@/logic/common/types2D"
 
 export default class CompLayer extends LogicLayer {
     private _comps: Set<IRenderable> = new Set()
+    private _portsArena: IObjectArena<Point> = new QueryPointArena()
 
     public onMounted(core: LogicCore): void {
-        core.malloc('comps', this, { _comps: 1 })
+        core.malloc('comps', this, { _comps: 1, _portsArena: 3 })
     }
 
     public addComponent(comp: IRenderable): CompLayer {
@@ -31,6 +36,16 @@ export default class CompLayer extends LogicLayer {
             console.warn('Components should be added after the layer is mounted.')
         }
         this._comps.add(comp)
+        // add ports to the arena
+        if (comp instanceof Component) {
+            const node = comp.node
+            for (const port of node.ports) {
+                const rect = Rect.fromCenter(
+                    node.calcPortPos(port),
+                    new Size(10, 10)
+                )
+            }
+        }
         return this
     }
 

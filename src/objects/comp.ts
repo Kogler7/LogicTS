@@ -16,22 +16,32 @@
 */
 
 import { Point, Rect } from "@/logic/common/types2D"
-import { uid2hex } from "@/logic/common/uid"
+import path from "path"
 import IRenderable from "@/logic/mixins/renderable"
 import LogicCore from "@/logic/core"
-import { IObjectArena } from "@/logic/arena/arena"
+import IObjectArena from "@/logic/arena/arena"
 import { Movable } from "@/logic/mixins/movable"
 import RenderNode from "@/models/node"
+import { PortType } from "@/models/port"
+
+const prjRoot = 'D:\\CodeBase\\ElectronPrjs\\LogicTS\\assets\\icons'
 
 export default class Component extends Movable implements IRenderable {
     private _moving: boolean = false
     private _resizing: boolean = false
-    private _arena: IObjectArena | null = null
+    private _arena: IObjectArena<Rect> | null = null
     private _node: RenderNode
+    private _icon: HTMLImageElement = new Image()
+    private _iconReady: boolean = false
 
     constructor(node: RenderNode) {
         super(node.id, 0, node.rect)
         this._node = node
+        this._icon.src = path.join(prjRoot, node.icon + '.svg')
+        this._icon.onload = () => {
+            this._iconReady = true
+            this.core?.renderAll()
+        }
     }
 
     public get node() {
@@ -45,14 +55,41 @@ export default class Component extends Movable implements IRenderable {
     }
 
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {
-        const color = uid2hex(this.id)
-        if (!this._moving) {
+        // if (!this._moving) {
+        //     ctx.strokeStyle = "#000000"
+        //     ctx.lineWidth = 1
+        //     ctx.strokeRect(...rect.ltwh)
+        // }
+        // draw icon
+        if (this._iconReady) {
+            ctx.drawImage(this._icon, ...rect.ltwh)
+        } else {
+            // render a placeholder (a white rect with a cross inside)
+            ctx.fillStyle = "#ffffff"
+            ctx.fillRect(...rect.ltwh)
             ctx.strokeStyle = "#000000"
             ctx.lineWidth = 1
-            ctx.strokeRect(...rect.ltwh)
+            ctx.beginPath()
+            ctx.moveTo(rect.left, rect.top)
+            ctx.lineTo(rect.left + rect.width, rect.top + rect.height)
+            ctx.moveTo(rect.left + rect.width, rect.top)
+            ctx.lineTo(rect.left, rect.top + rect.height)
+            ctx.stroke()
         }
-        ctx.fillStyle = color
-        ctx.fillRect(...rect.ltwh)
+        // draw ports
+        const ports = this._node.ports
+        for (const port of ports) {
+            const crd = this._node.calcPortPos(port)
+            const pos = this.core!.crd2pos(crd)
+            if (port.typ === PortType.OUT) {
+                ctx.fillStyle = "#ff0000"
+            } else {
+                ctx.fillStyle = "#0000ff"
+            }
+            ctx.beginPath()
+            ctx.arc(pos.x, pos.y, 4, 0, 2 * Math.PI)
+            ctx.fill()
+        }
         return rect
     }
 
@@ -74,6 +111,7 @@ export default class Component extends Movable implements IRenderable {
         const success = this._arena!.setObject(this.id, this.target)
         if (success) {
             this.rect = this.target
+            this.node.rect = this.target
         }
     }
 

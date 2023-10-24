@@ -47,7 +47,9 @@ onMounted(() => {
             [
                 new RenderPort(2, PortType.IN, PortAspect.LEFT),
                 new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
-            ]
+            ],
+            '',
+            'ring'
         )
     )
     const c2 = new Component(
@@ -56,8 +58,11 @@ onMounted(() => {
             new Rect(new Point(25, 10), new Size(4, 4)),
             [
                 new RenderPort(2, PortType.IN, PortAspect.LEFT),
-                new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
-            ]
+                new RenderPort(1, PortType.OUT, PortAspect.RIGHT),
+                new RenderPort(3, PortType.OUT, PortAspect.RIGHT),
+            ],
+            '',
+            'ring'
         )
     )
     const c3 = new Component(
@@ -65,9 +70,12 @@ onMounted(() => {
             uid_rt(),
             new Rect(new Point(5, 20), new Size(4, 4)),
             [
-                new RenderPort(2, PortType.IN, PortAspect.LEFT),
+                new RenderPort(1, PortType.IN, PortAspect.LEFT),
+                new RenderPort(3, PortType.IN, PortAspect.LEFT),
                 new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
-            ]
+            ],
+            '',
+            'ring'
         )
     )
     const c4 = new Component(
@@ -77,7 +85,9 @@ onMounted(() => {
             [
                 new RenderPort(2, PortType.IN, PortAspect.LEFT),
                 new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
-            ]
+            ],
+            '',
+            'ring'
         )
     )
     const c5 = new Component(
@@ -87,7 +97,9 @@ onMounted(() => {
             [
                 new RenderPort(2, PortType.IN, PortAspect.LEFT),
                 new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
-            ]
+            ],
+            '',
+            'ring'
         )
     )
     const t1 = new TextArea(Rect.fromLTWH(30, 20, 16, 8), testStr, {
@@ -118,6 +130,8 @@ onMounted(() => {
     core.on('keydown.tab', () => {
         core.switchMemoryToNext()
     })
+
+    core.focus()
 })
 
 </script>

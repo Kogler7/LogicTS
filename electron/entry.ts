@@ -7,6 +7,7 @@ const createWindow = () => {
 			contextIsolation: false, // 是否开启隔离上下文
 			nodeIntegration: true, // 渲染进程使用Node API
 			preload: path.join(__dirname, "../electron/preload.js"), // 需要引用js文件
+			webSecurity: false, // 禁用同源策略
 		},
 	});
 
