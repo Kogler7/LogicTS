@@ -78,7 +78,7 @@ export default class Component extends Movable implements IRenderable {
         }
         // draw ports
         const ports = this._node.ports
-        for (const port of ports) {
+        for (const [id, port] of ports) {
             const crd = this._node.calcPortPos(port)
             const pos = this.core!.crd2pos(crd)
             if (port.typ === PortType.OUT) {

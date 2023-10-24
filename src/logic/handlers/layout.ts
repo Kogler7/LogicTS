@@ -95,6 +95,11 @@ export default class LayoutHandler {
         })
     }
 
+    public get logicRect(): Rect {
+        const stageRect = this._core.stageRect
+        return this.pos2crdRect(stageRect)
+    }
+
     public crd2pos(crd: Point): Point {
         const { originBias: origin, logicWidth: length } = this
         return Point.plus(crd, origin).times(length)

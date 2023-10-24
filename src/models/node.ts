@@ -26,7 +26,7 @@ export default class RenderNode implements IHashable {
     public name = ''
     public icon = ''
     public desc = ''
-    public ports: Array<RenderPort>
+    public ports: Map<uid, RenderPort>
 
     constructor(id: uid, rect: Rect, ports: Array<RenderPort>, name = '', icon = '', desc = '') {
         this.id = id
@@ -34,10 +34,10 @@ export default class RenderNode implements IHashable {
         this.name = name
         this.icon = icon
         this.desc = desc
-        this.ports = ports
-        this.ports.forEach((port, idx) => {
-            port.id = idx // assign port id
-        })
+        this.ports = new Map()
+        for (const port of ports) {
+            this.ports.set(port.id, port)
+        }
     }
 
     get hash() {
@@ -45,10 +45,11 @@ export default class RenderNode implements IHashable {
     }
 
     public getPort(id: number): RenderPort {
-        if (id < 0 || id >= this.ports.length) {
-            throw new Error('invalid port id')
+        if (this.ports.has(id)) {
+            return this.ports.get(id)!
+        } else {
+            throw new Error(`Port ${id} not found.`)
         }
-        return this.ports[id]
     }
 
     public calcRelativePortPos(port: RenderPort, padding = 0): Point {

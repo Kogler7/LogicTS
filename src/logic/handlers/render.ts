@@ -15,7 +15,7 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import { Size } from "../common/types2D"
+import { Point, Rect, Size } from "../common/types2D"
 import LogicCore from "../core"
 import LogicLayer from "../layer"
 import XPSChecker from "../utils/xps"
@@ -56,6 +56,10 @@ export default class RenderHandler {
 
     public get stageHeight(): number {
         return this._stageHeight
+    }
+
+    public get stageRect(): Rect {
+        return new Rect(Point.zero(), new Size(this._stageWidth, this._stageHeight))
     }
 
     public get dpr(): number {

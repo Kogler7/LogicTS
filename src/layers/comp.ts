@@ -22,13 +22,43 @@ import IObjectArena from "@/logic/arena/arena"
 import QueryPointArena from "@/logic/arena/query-point"
 import Component from "@/objects/comp"
 import { Point, Rect, Size } from "@/logic/common/types2D"
+import RenderPort from "@/models/port"
+import RenderPair from "@/models/pair"
+import { uid } from "@/logic/common/uid"
 
 export default class CompLayer extends LogicLayer {
     private _comps: Set<IRenderable> = new Set()
     private _portsArena: IObjectArena<Point> = new QueryPointArena()
+    private _portPairMap: Map<number, RenderPair> = new Map()
+    private _selectedPortId: uid | null = null
 
     public onMounted(core: LogicCore): void {
-        core.malloc('comps', this, { _comps: 1, _portsArena: 3 })
+        core.malloc('comps', this, { _comps: 1, _portsArena: 2, _portPairMap: 1 })
+        core.on('mousemove', this._onMouseMove.bind(this), 0)
+        core.on('zoom.end', () => {
+            this._portsArena.cropRect = core.logicRect
+            this._portsArena.tolerance = 10 / core.logicWidth
+        })
+        core.on('memory.switch.after', () => {
+            this._portsArena.cropRect = core.logicRect
+            this._portsArena.tolerance = 10 / core.logicWidth
+        })
+        this._portsArena.cropRect = core.logicRect
+        this._portsArena.tolerance = 10 / core.logicWidth
+    }
+
+    private _onMouseMove(e: MouseEvent) {
+        const pos = new Point(e.offsetX, e.offsetY)
+        const crd = this.core?.pos2crd(pos)
+        if (crd) {
+            const portId = this._portsArena.posOccupied(crd)
+            if (portId) {
+                console.log(portId)
+                this.core?.setCursor('pointer')
+            } else {
+                this.core?.popCursor('pointer')
+            }
+        }
     }
 
     public addComponent(comp: IRenderable): CompLayer {
@@ -39,11 +69,9 @@ export default class CompLayer extends LogicLayer {
         // add ports to the arena
         if (comp instanceof Component) {
             const node = comp.node
-            for (const port of node.ports) {
-                const rect = Rect.fromCenter(
-                    node.calcPortPos(port),
-                    new Size(10, 10)
-                )
+            for (const [id, port] of node.ports) {
+                this._portsArena.addObject(id, node.calcPortPos(port))
+                this._portPairMap.set(id, new RenderPair(node, port))
             }
         }
         return this

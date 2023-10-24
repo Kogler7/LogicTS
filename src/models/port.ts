@@ -17,6 +17,7 @@
 
 import { Direction } from "@/logic/common/types2D"
 import { IComparable } from "@/logic/common/types"
+import { uid_rt } from "@/logic/common/uid"
 
 export enum PortType {
     IN = 0,
@@ -31,7 +32,7 @@ export enum PortAspect {
 }
 
 export default class RenderPort implements IComparable {
-    public id: number = 0
+    public id: number
     // port location, indicate the logical bias of the port
     // from the top-left point of the element node
     public loc: number
@@ -58,12 +59,14 @@ export default class RenderPort implements IComparable {
         loc: number,
         typ: PortType,
         asp: PortAspect,
+        id: number | null = null,
         connected = false
     ) {
         this.loc = loc
         this.typ = typ
         this.asp = asp
         this.connected = connected
+        this.id = id || uid_rt()
     }
 
     equals(other: RenderPort) {

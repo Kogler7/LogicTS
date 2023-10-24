@@ -25,7 +25,7 @@ import ScopedEventNotifier from "./notifiers/scoped"
 import StackedEventNotifier from "./notifiers/stacked"
 import { ISelectable } from "./mixins/selectable"
 import { IMovable } from "./mixins/movable"
-import { IObjectArena } from "./arena/arena"
+import IObjectArena from "./arena/arena"
 import { uid } from "./common/uid"
 import { IResizable } from "./mixins/resizable"
 import { MemoryHandler } from "./handlers/memory"
@@ -75,6 +75,10 @@ export default class LogicCore {
         return this._renderHandler.stageHeight
     }
 
+    public get stageRect(): Rect {
+        return this._renderHandler.stageRect
+    }
+
     public get dpr(): number {
         return this._renderHandler.dpr
     }
@@ -93,6 +97,10 @@ export default class LogicCore {
 
     public get logicWidth(): number {
         return this._layoutHandler.logicWidth
+    }
+
+    public get logicRect(): Rect {
+        return this._layoutHandler.logicRect
     }
 
     public get anchorPos(): Point {
@@ -123,7 +131,7 @@ export default class LogicCore {
         return this._layoutHandler.gridWidth
     }
 
-    public get logicArena(): IObjectArena {
+    public get logicArena(): IObjectArena<Rect> {
         return this._objectHandler.logicArena
     }
 
