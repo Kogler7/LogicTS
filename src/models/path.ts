@@ -33,7 +33,7 @@ export class WayPoint extends Point {
     }
 }
 
-export class RenderPath {
+export default class RenderPath {
     private _area: Rect
     private _dirty: boolean = false
     private _wayPoints: WayPoint[] = []
@@ -45,6 +45,15 @@ export class RenderPath {
     constructor(initPoint: Point, dir: Direction = Direction.RIGHT) {
         this._wayPoints.push(WayPoint.fromPoint(initPoint, dir))
         this._area = Rect.fromLTWH(initPoint.x, initPoint.y, 0, 0)
+    }
+
+    static fromPoints(points: Array<[Point, Direction]>): RenderPath {
+        const path = new RenderPath(points[0][0], points[0][1])
+        for (let i = 1; i < points.length; i++) {
+            const [point, dir] = points[i]
+            path.addWayPoint(point, dir)
+        }
+        return path
     }
 
     public get area(): Rect {

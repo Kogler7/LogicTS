@@ -15,10 +15,10 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import { RenderPair } from "./node"
+import RenderPair from "./pair"
 import { IHashable, hash } from "@/logic/common/types"
 
-export class RenderLink  implements IHashable {
+export default class RenderLink  implements IHashable {
     public id: number
     public srcPair: RenderPair
     public dstPair: RenderPair

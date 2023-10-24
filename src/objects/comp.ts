@@ -15,20 +15,27 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import { Point, Rect, Size } from "@/logic/common/types2D"
-import { uid_rt, uid2hex } from "@/logic/common/uid"
+import { Point, Rect } from "@/logic/common/types2D"
+import { uid2hex } from "@/logic/common/uid"
 import IRenderable from "@/logic/mixins/renderable"
 import LogicCore from "@/logic/core"
 import { IObjectArena } from "@/logic/arena/arena"
 import { Movable } from "@/logic/mixins/movable"
+import RenderNode from "@/models/node"
 
 export default class Component extends Movable implements IRenderable {
     private _moving: boolean = false
     private _resizing: boolean = false
     private _arena: IObjectArena | null = null
+    private _node: RenderNode
 
-    constructor(pos: Point = Point.zero()) {
-        super(uid_rt(), 0, new Rect(pos, new Size(4, 4)))
+    constructor(node: RenderNode) {
+        super(node.id, 0, node.rect)
+        this._node = node
+    }
+
+    public get node() {
+        return this._node
     }
 
     public onRegistered(core: LogicCore): void {

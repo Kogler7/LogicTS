@@ -18,8 +18,8 @@
 import { uid } from "@/logic/common/uid"
 import LogicCore from "@/logic/core"
 import LogicLayer from "../logic/layer"
-import { Point, Vector, Direction } from "@/logic/common/types2D"
-import { RenderPath } from "@/models/path"
+import { Point, Direction } from "@/logic/common/types2D"
+import RenderPath from "@/models/path"
 
 export default class LinkLayer extends LogicLayer {
     private _objectIds: Set<uid> = new Set()
