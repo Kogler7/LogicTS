@@ -37,6 +37,10 @@ export default class CompLayer extends LogicLayer {
     private _focusOpacity: number = 0
     private _focusAnime: Animation | null = null
 
+    private _linking: boolean = false
+    private _startPair: RenderPair | null = null
+    private _acceptClick: boolean = true
+
     public onMounted(core: LogicCore): void {
         core.malloc('comps', this, {
             _comps: 1,
@@ -48,6 +52,9 @@ export default class CompLayer extends LogicLayer {
             this._focusOpacity = 0
             this._focusAnime?.cancel()
             this._focusAnime = null
+            this._acceptClick = true
+            this._startPair = null
+            this._linking = false
         })
         core.on('mousemove', this._onMouseMove.bind(this), 0)
         core.on('mousedown', this._onMouseDown.bind(this), 0)
@@ -59,6 +66,15 @@ export default class CompLayer extends LogicLayer {
             for (const [id, port] of node.ports) {
                 this._portsArena.setObject(id, node.calcPortPos(port))
             }
+        })
+        core.on('link.begin', (pair: RenderPair) => {
+            this._linking = true
+            this._startPair = pair
+        })
+        core.on('link.end', () => {
+            this._linking = false
+            this._startPair = null
+            this._acceptClick = true
         })
         this._updateArena()
     }
@@ -72,6 +88,12 @@ export default class CompLayer extends LogicLayer {
     }
 
     private _onHoverPort(portId: uid) {
+        if (this._linking) {
+            this._acceptClick = this._startPair?.compatibleWith(this._selectedPair!) || false
+        } else {
+            // only accept OUT port
+            this._acceptClick = this._selectedPair?.typ === PortType.OUT
+        }
         const opacity = this._focusOpacity
         const anime = new Animation(
             (t: number) => {
@@ -114,9 +136,9 @@ export default class CompLayer extends LogicLayer {
             const portId = this._portsArena.posOccupied(crd)
             if (portId) {
                 if (this._selectedPortId !== portId) {
-                    this._onHoverPort(portId)
                     this._selectedPortId = portId
                     this._selectedPair = this._portPairMap.get(portId)!
+                    this._onHoverPort(portId)
                     this.core?.setCursor('pointer')
                 }
             } else {
@@ -190,7 +212,7 @@ export default class CompLayer extends LogicLayer {
             const pos = core.crd2pos(this._selectedPair!.pos)
             const radius = 10
             const opacity = this._focusOpacity
-            ctx.fillStyle = `rgba(200, 200, 200, ${opacity})`
+            ctx.fillStyle = `rgba(${this._acceptClick ? 0 : 200}, ${this._acceptClick ? 200 : 0}, 0, ${opacity})`
             ctx.beginPath()
             ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI)
             ctx.fill()

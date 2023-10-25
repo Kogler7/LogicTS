@@ -21,6 +21,7 @@ import { Point, Direction } from "@/logic/common/types2D"
 import RenderPath from "@/models/path"
 import RenderPair from "@/models/pair"
 import { graphManager } from "@/plugins/graph"
+import { PortType } from "@/models/port"
 
 export default class LinkLayer extends LogicLayer {
     private _linking: boolean = false
@@ -77,10 +78,14 @@ export default class LinkLayer extends LogicLayer {
 
     private _onPairClicked(pair: RenderPair) {
         if (!this._linking) {
+            if (pair.typ === PortType.IN) {
+                return // cannot start from an input port
+            }
             this._startPair = pair
             this._linking = true
             this._currPath = new RenderPath(pair.position())
             this._currPath.addWayPoint(pair.position(), pair.dir)
+            this.core?.fire('link.begin', pair)
             this.core?.fire('toast.show', 'Hold down SHIFT to lock the direction of the link.')
         } else if (this._startPair?.compatibleWith(pair)) {
             this._currPath?.setLastWayPoint(pair.position(), pair.dir)
@@ -88,6 +93,7 @@ export default class LinkLayer extends LogicLayer {
             this.core?.renderAll()
             this._linking = false
             this._startPair = null
+            this.core?.fire('link.end')
         }
     }
 

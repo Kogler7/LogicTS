@@ -49,7 +49,7 @@ onMounted(() => {
                 new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
             ],
             '',
-            'ring'
+            'arc'
         )
     )
     const c2 = new Component(
@@ -75,7 +75,7 @@ onMounted(() => {
                 new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
             ],
             '',
-            'ring'
+            'fiber'
         )
     )
     const c4 = new Component(
@@ -87,7 +87,7 @@ onMounted(() => {
                 new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
             ],
             '',
-            'ring'
+            'Mzi'
         )
     )
     const c5 = new Component(
@@ -99,7 +99,7 @@ onMounted(() => {
                 new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
             ],
             '',
-            'ring'
+            'sbend'
         )
     )
     const t1 = new TextArea(Rect.fromLTWH(30, 20, 16, 8), testStr, {
