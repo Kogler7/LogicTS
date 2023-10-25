@@ -189,11 +189,11 @@ export default class LogicCore {
     }
 
     public listAllScopedEvents(): string[] {
-        return this._scopedNotifier.listAll()
+        return this._scopedNotifier.listAllRegisteredEvents()
     }
 
     public listAllStackedEvents(): string[] {
-        return this._stackedNotifier.listAll()
+        return this._stackedNotifier.listAllRegisteredEvents()
     }
 
     public focus() {

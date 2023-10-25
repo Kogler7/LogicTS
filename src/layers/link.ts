@@ -22,9 +22,9 @@ import { Point, Direction } from "@/logic/common/types2D"
 import RenderPath from "@/models/path"
 import RenderPair from "@/models/pair"
 import RenderGraph from "@/models/graph"
+import { graphManager } from "@/plugins/graph"
 
 export default class LinkLayer extends LogicLayer {
-    private _graph: RenderGraph | null = null
     private _linking: boolean = false
     private _lastPos: Point = Point.zero()
     private _dirLocked: boolean = false
@@ -87,6 +87,7 @@ export default class LinkLayer extends LogicLayer {
         } else if (this._startPair?.compatibleWith(pair)) {
             this._currPath?.setLastWayPoint(pair.position(), pair.dir)
             this.core?.fire('link.add', this._startPair, pair, this._currPath)
+            this.core?.renderAll()
             this._linking = false
             this._startPair = null
         }
@@ -128,10 +129,17 @@ export default class LinkLayer extends LogicLayer {
     }
 
     public onCache(ctx: CanvasRenderingContext2D): boolean {
+        const paths = graphManager.graph.paths
+        ctx.strokeStyle = 'black'
+        ctx.lineWidth = 2
+        for (const [id, path] of paths) {
+            path.strokeOn(ctx, this.core!)
+        }
         return true
     }
 
     public onPaint(ctx: CanvasRenderingContext2D): boolean {
+        if (!this._linking) return false
         ctx.strokeStyle = 'black'
         ctx.lineWidth = 2
         this._currPath?.strokeOn(ctx, this.core!)

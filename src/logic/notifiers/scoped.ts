@@ -97,11 +97,11 @@ export default class ScopedEventNotifier {
         return true
     }
 
-    public listAll(): string[] {
+    public listAllRegisteredEvents(): string[] {
         const res: string[] = []
         for (const [key, child] of this._children) {
             res.push(key)
-            const children = child.listAll()
+            const children = child.listAllRegisteredEvents()
             for (const c of children) {
                 res.push(`${key}.${c}`)
             }

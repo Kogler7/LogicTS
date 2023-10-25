@@ -17,6 +17,10 @@
 
 import RenderGraph from "@/models/graph"
 import LogicCore, { ILogicPlugin } from "@/logic/core"
+import Component from "@/objects/comp"
+import RenderPair from "@/models/pair"
+import RenderPath from "@/models/path"
+import RenderNode from "@/models/node"
 
 export const graphManager = new class GraphManager implements ILogicPlugin {
     private _core: LogicCore | null = null
@@ -34,6 +38,12 @@ export const graphManager = new class GraphManager implements ILogicPlugin {
         this._core = core
         core.malloc('graph', this, {
             _graph: 2,
+        })
+        core.on('node.add', (node: RenderNode) => {
+            this._graph.addNode(node)
+        })
+        core.on('link.add', (srcPair: RenderPair, dstPair: RenderPair, path: RenderPath) => {
+            this._graph.addLink(srcPair, dstPair, path)
         })
     }
 

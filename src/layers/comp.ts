@@ -144,7 +144,7 @@ export default class CompLayer extends LogicLayer {
         this._comps.add(comp)
         // add ports to the arena
         if (comp instanceof Component) {
-            this.core?.fire('comp.add', comp)
+            this.core?.fire('node.add', comp.node)
             const node = comp.node
             for (const [id, port] of node.ports) {
                 this._portsArena.addObject(id, node.calcPortPos(port))
