@@ -132,6 +132,9 @@ onMounted(() => {
     })
 
     core.focus()
+
+    console.log(core.listAllScopedEvents())
+    console.log(core.listAllStackedEvents())
 })
 
 </script>

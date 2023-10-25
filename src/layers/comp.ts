@@ -27,6 +27,7 @@ import RenderPair from "@/models/pair"
 import { uid } from "@/logic/common/uid"
 import { Animation } from "@/logic/utils/anime"
 import { Curves } from "@/logic/utils/curve"
+import { graphManager } from "@/plugins/graph"
 
 export default class CompLayer extends LogicLayer {
     private _comps: Set<IRenderable> = new Set()
@@ -50,9 +51,16 @@ export default class CompLayer extends LogicLayer {
             this._focusAnime = null
         })
         core.on('mousemove', this._onMouseMove.bind(this), 0)
+        core.on('mousedown', this._onMouseDown.bind(this), 0)
         core.on('zoom.end', () => { this._updateArena() })
         core.on('memory.switch.after', () => { this._updateArena() })
         core.on('pan.end', () => { this._updateArena() })
+        core.on('comp.move', (compId: uid) => {
+            const node = (core.getObject(compId) as Component).node
+            for (const [id, port] of node.ports) {
+                this._portsArena.setObject(id, node.calcPortPos(port))
+            }
+        })
         this._updateArena()
     }
 
@@ -79,6 +87,7 @@ export default class CompLayer extends LogicLayer {
         }
         this._focusAnime = anime
         anime.start()
+        this.core?.fire('pair.hover', this._portPairMap.get(portId)!)
     }
 
     private _onLeavePort(portId: uid) {
@@ -96,6 +105,7 @@ export default class CompLayer extends LogicLayer {
         }
         this._focusAnime = anime
         anime.start()
+        this.core?.fire('pair.leave', this._portPairMap.get(portId)!)
     }
 
     private _onMouseMove(e: MouseEvent) {
@@ -120,6 +130,13 @@ export default class CompLayer extends LogicLayer {
         }
     }
 
+    private _onMouseDown(e: MouseEvent) {
+        if (this._selectedPortId) {
+            this.core?.fire('pair.click', this._selectedPair!)
+            return false // stop propagation
+        }
+    }
+
     public addComponent(comp: IRenderable): CompLayer {
         if (!this.core) {
             console.warn('Components should be added after the layer is mounted.')
@@ -127,6 +144,7 @@ export default class CompLayer extends LogicLayer {
         this._comps.add(comp)
         // add ports to the arena
         if (comp instanceof Component) {
+            this.core?.fire('comp.add', comp)
             const node = comp.node
             for (const [id, port] of node.ports) {
                 this._portsArena.addObject(id, node.calcPortPos(port))
@@ -137,6 +155,9 @@ export default class CompLayer extends LogicLayer {
     }
 
     private _renderPorts(ctx: CanvasRenderingContext2D) {
+        if (this.core!.logicWidth < 10) {
+            return // too small to render
+        }
         // render comp ports
         for (const [id, pair] of this._portPairMap) {
             const crd = pair.pos

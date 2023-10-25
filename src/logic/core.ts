@@ -30,6 +30,11 @@ import { uid } from "./common/uid"
 import { IResizable } from "./mixins/resizable"
 import { MemoryHandler } from "./handlers/memory"
 
+export interface ILogicPlugin {
+    install(core: LogicCore): void
+    uninstall(core: LogicCore): void
+}
+
 export default class LogicCore {
     private _stage: HTMLCanvasElement | null = null
     private _scopedNotifier = new ScopedEventNotifier()
@@ -183,6 +188,14 @@ export default class LogicCore {
         }
     }
 
+    public listAllScopedEvents(): string[] {
+        return this._scopedNotifier.listAll()
+    }
+
+    public listAllStackedEvents(): string[] {
+        return this._stackedNotifier.listAll()
+    }
+
     public focus() {
         this._stage?.focus()
     }
@@ -210,12 +223,12 @@ export default class LogicCore {
         this._renderHandler.disconnect()
     }
 
-    public attach() {
-        console.log('attach')
+    public attach(plugin: ILogicPlugin) {
+        plugin.install(this)
     }
 
-    public detach() {
-        console.log('detach')
+    public detach(plugin: ILogicPlugin) {
+        plugin.uninstall(this)
     }
 
     public reset() {

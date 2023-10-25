@@ -43,15 +43,28 @@ export default class RenderPort implements IComparable {
     public connected = false
 
     public get dir() {
-        switch (this.asp) {
-            case PortAspect.LEFT:
-                return Direction.LEFT
-            case PortAspect.RIGHT:
-                return Direction.RIGHT
-            case PortAspect.TOP:
-                return Direction.UP
-            case PortAspect.BOTTOM:
-                return Direction.DOWN
+        if (this.typ === PortType.OUT) {
+            switch (this.asp) {
+                case PortAspect.LEFT:
+                    return Direction.LEFT
+                case PortAspect.RIGHT:
+                    return Direction.RIGHT
+                case PortAspect.TOP:
+                    return Direction.UP
+                case PortAspect.BOTTOM:
+                    return Direction.DOWN
+            }
+        } else {
+            switch (this.asp) {
+                case PortAspect.LEFT:
+                    return Direction.RIGHT
+                case PortAspect.RIGHT:
+                    return Direction.LEFT
+                case PortAspect.TOP:
+                    return Direction.DOWN
+                case PortAspect.BOTTOM:
+                    return Direction.UP
+            }
         }
     }
 

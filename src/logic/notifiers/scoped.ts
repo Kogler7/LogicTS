@@ -96,4 +96,16 @@ export default class ScopedEventNotifier {
         }
         return true
     }
+
+    public listAll(): string[] {
+        const res: string[] = []
+        for (const [key, child] of this._children) {
+            res.push(key)
+            const children = child.listAll()
+            for (const c of children) {
+                res.push(`${key}.${c}`)
+            }
+        }
+        return res
+    }
 }

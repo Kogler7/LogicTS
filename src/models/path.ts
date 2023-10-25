@@ -18,7 +18,7 @@
 import LogicCore from "@/logic/core"
 import { Point, Vector, Direction, Rect } from "@/logic/common/types2D"
 
-const SHOW_CTRL_POINTS = true
+const SHOW_CTRL_POINTS = false
 
 export class WayPoint extends Point {
     public direction: Direction = Direction.RIGHT

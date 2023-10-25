@@ -60,4 +60,8 @@ export default class StackedEventNotifier {
         }
         return true
     }
+
+    public listAll(): string[] {
+        return Array.from(this._callbacks.keys())
+    }
 }

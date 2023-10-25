@@ -98,6 +98,7 @@ export default class Component extends Movable implements IRenderable {
         if (success) {
             this.rect = this.target
             this.node.rect = this.target
+            this.core?.fire('comp.move', this.id)
         }
     }
 

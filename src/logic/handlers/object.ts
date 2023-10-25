@@ -134,20 +134,19 @@ export class ObjectHandler {
             this._oldFramedLogicObjectIds = new Set()
             this._boundRectPressed = false
         })
-        // register mouse down event listener to the bottom of the event stack
+        // register level 0 arena callback event listener to the core
+        core.on('mousedown', this._onMousePressedLogicLevel.bind(this), -Infinity)
+        // register mouse down event listener to the top of the event stack
+        core.on('mousedown', this._checkIfMousePressedBoundRect.bind(this), -Infinity)
         // if this callback is fired, it means that no object is selected
         core.on('mousedown', this._onMousePressedBackground.bind(this), -Infinity)
-        // register mouse down event listener to the top of the event stack
-        core.on('mousedown', this._checkIfMousePressedBoundRect.bind(this), Infinity)
         // listen to mouse up event to stop moving objects
         core.on('mouseup', this._onMouseUp.bind(this), Infinity)
         // listen to mouse move event to move objects
         core.on('mousemove', this._onMouseMove.bind(this), Infinity)
-        // register level 0 arena callback event listener to the core
-        core.on('mousedown', this._onMousePressedLogicLevel.bind(this), 0)
         // register ctrl key event listener to the core(level 0)
-        core.on('keydown.Control', () => { this._ctrlDown = true })
-        core.on('keyup.Control', () => { this._ctrlDown = false })
+        core.on('keydown.control', () => { this._ctrlDown = true })
+        core.on('keyup.control', () => { this._ctrlDown = false })
         // register frame begin event listener to the core
         core.on('frame.begin', (e: MouseEvent) => {
             // clear all selected objects

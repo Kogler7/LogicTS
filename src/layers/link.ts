@@ -20,20 +20,21 @@ import LogicCore from "@/logic/core"
 import LogicLayer from "../logic/layer"
 import { Point, Direction } from "@/logic/common/types2D"
 import RenderPath from "@/models/path"
+import RenderPair from "@/models/pair"
+import RenderGraph from "@/models/graph"
 
 export default class LinkLayer extends LogicLayer {
-    private _objectIds: Set<uid> = new Set()
-    private _path: RenderPath = new RenderPath(Point.zero())
+    private _graph: RenderGraph | null = null
     private _linking: boolean = false
     private _lastPos: Point = Point.zero()
     private _dirLocked: boolean = false
+    private _dirHovered: boolean = false
     private _currDir: Direction = Direction.RIGHT
+    private _currPath: RenderPath | null = null
+
+    private _startPair: RenderPair | null = null
 
     public onMounted(core: LogicCore): void {
-        this._objectIds = core.logicObjectIds
-        core.on('memory.switch.after', () => {
-            this._objectIds = core.logicObjectIds
-        })
         core.on('mousedown', this._onMouseDown.bind(this), -1)
         core.on('mousemove', this._onMouseMove.bind(this), -1)
         core.on('keydown.shift', () => {
@@ -60,47 +61,70 @@ export default class LinkLayer extends LogicLayer {
             this._dirLocked = false
             this.core?.fire('toast.show', 'Direction of the link is UNLOCKED.')
         })
+        core.on('pair.click', this._onPairClicked.bind(this))
+        core.on('pair.hover', (pair: RenderPair) => {
+            if (this._linking && !this._dirLocked) {
+                const crd = pair.position()
+                this._dirHovered = true
+                this._currDir = pair.dir
+                this._currPath!.setLastWayPoint(crd, this._currDir)
+            }
+        })
+        core.on('pair.leave', () => {
+            if (this._linking) {
+                this._dirHovered = false
+            }
+        })
+    }
+
+    private _onPairClicked(pair: RenderPair) {
+        if (!this._linking) {
+            this._startPair = pair
+            this._linking = true
+            this._currPath = new RenderPath(pair.position())
+            this._currPath.addWayPoint(pair.position(), pair.dir)
+            this.core?.fire('toast.show', 'Hold down SHIFT to lock the direction of the link.')
+        } else if (this._startPair?.compatibleWith(pair)) {
+            this._currPath?.setLastWayPoint(pair.position(), pair.dir)
+            this.core?.fire('link.add', this._startPair, pair, this._currPath)
+            this._linking = false
+            this._startPair = null
+        }
     }
 
     private _onMouseDown(e: MouseEvent) {
         if (e.button === 0) {
-            if (!this._linking) {
-                this._linking = true
-                const pos = new Point(e.offsetX, e.offsetY)
-                const crd = this.core?.pos2crd(pos)
-                if (!crd) return
-                this._path = new RenderPath(crd)
-                this._path.addWayPoint(crd, Direction.RIGHT)
-                this.core?.fire('toast.show', 'Hold down SHIFT to lock the direction of the link.')
-            } else {
+            if (this._linking) {
                 const pos = new Point(e.offsetX, e.offsetY)
                 const crd = this.core?.pos2crd(pos)
                 if (!crd) return
                 const dir = pos.minus(this._lastPos).normalDir
-                this._path.addWayPoint(crd, dir)
+                this._currPath!.addWayPoint(crd, dir)
+                return false // stop propagation
             }
         } else if (e.button === 2) {
             if (this._linking) {
                 this._linking = false
-                return false
+                this._startPair = null
+                this._currPath = null
+                return false // stop propagation
             }
         }
 
     }
 
     private _onMouseMove(e: MouseEvent) {
-        const pos = new Point(e.offsetX, e.offsetY)
-        const crd = this.core?.pos2crd(pos)
-        if (!crd) return
         if (this._linking) {
-            if (!this._dirLocked) {
+            const pos = new Point(e.offsetX, e.offsetY)
+            const crd = this.core?.pos2crd(pos)!
+            if (!this._dirLocked && !this._dirHovered) {
                 const dir = Point.minus(pos, this._lastPos).normalDir
                 this._currDir = dir
             }
-            this._path.setLastWayPoint(crd, this._currDir)
+            this._currPath!.setLastWayPoint(crd, this._currDir)
+            // smooth the last position
+            this._lastPos.times(0.9).plus(pos.times(0.1))
         }
-        // smooth the last position
-        this._lastPos.times(0.9).plus(pos.times(0.1))
     }
 
     public onCache(ctx: CanvasRenderingContext2D): boolean {
@@ -110,7 +134,7 @@ export default class LinkLayer extends LogicLayer {
     public onPaint(ctx: CanvasRenderingContext2D): boolean {
         ctx.strokeStyle = 'black'
         ctx.lineWidth = 2
-        this._path.strokeOn(ctx, this.core!)
+        this._currPath?.strokeOn(ctx, this.core!)
         return true
     }
 }

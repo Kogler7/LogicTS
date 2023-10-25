@@ -29,6 +29,7 @@ import TextArea from "@/objects/text"
 import CompLayer from "./layers/comp"
 import IRenderable from "./logic/mixins/renderable"
 import { IObject } from "./logic/handlers/object"
+import { graphManager } from "./plugins/graph"
 
 export default class Designer {
     private _core: LogicCore
@@ -47,8 +48,8 @@ export default class Designer {
         const selectLayer = new SelectLayer('select', 1)
         const moveLayer = new MoveObjectLayer('move', 3)
         const resizeLayer = new ResizeObjectLayer('resize', 3)
+        const linkLayer = new LinkLayer('link', -1)
         const compLayer = new CompLayer('comp', 0)
-        const linkLayer = new LinkLayer('link', 0.5)
         const toastLayer = new ToastLayer('toast', 5)
 
         this._compLayer = compLayer
@@ -64,6 +65,8 @@ export default class Designer {
         core.mount(compLayer)
         core.mount(linkLayer)
         core.mount(toastLayer)
+
+        core.attach(graphManager)
     }
 
     public addComponent(comp: IObject) {
