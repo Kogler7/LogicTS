@@ -76,20 +76,6 @@ export default class Component extends Movable implements IRenderable {
             ctx.lineTo(rect.left, rect.top + rect.height)
             ctx.stroke()
         }
-        // draw ports
-        const ports = this._node.ports
-        for (const [id, port] of ports) {
-            const crd = this._node.calcPortPos(port)
-            const pos = this.core!.crd2pos(crd)
-            if (port.typ === PortType.OUT) {
-                ctx.fillStyle = "#ff0000"
-            } else {
-                ctx.fillStyle = "#0000ff"
-            }
-            ctx.beginPath()
-            ctx.arc(pos.x, pos.y, 4, 0, 2 * Math.PI)
-            ctx.fill()
-        }
         return rect
     }
 

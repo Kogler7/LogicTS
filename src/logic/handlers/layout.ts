@@ -31,6 +31,8 @@ export default class LayoutHandler {
     public logicWidthMin: number = this._config.logicWidthMin // 1 pixel per logic unit at least
     public logicWidthMax: number = this._config.logicWidthMax // 100 pixels per logic unit at most
 
+    public logicRect: Rect = Rect.zero() // logic rect, in logic unit
+
     public zoomSpeed: number = this._config.zoomSpeed // logic unit per wheel event (deltaY)
     public zoomLevel: number = this._config.zoomLevel // current zoom level, 0 by default
     public zoomLevelMin: number = this._config.zoomLevelMin // 0 levels at least
@@ -53,14 +55,17 @@ export default class LayoutHandler {
         }, null, () => {
             this.gridWidthFactor = this.levelUpFactor ** this.zoomLevel
             this.gridWidth = this.logicWidth * this.gridWidthFactor
+            this._updateLogicRect()
         })
         core.on('pan.ing', () => {
             const { lastPos, focusPos } = this._core
             this._panTo(Vector.fromPoints(lastPos, focusPos))
+            this._updateLogicRect()
         })
         core.on('zoom.ing', (e: WheelEvent) => {
             const { focusPos } = this._core
             this._zoomAt(e.deltaY, focusPos)
+            this._updateLogicRect()
         })
         core.on('slide.ing', () => {
             const vec = Vector.fromPoints(
@@ -95,9 +100,9 @@ export default class LayoutHandler {
         })
     }
 
-    public get logicRect(): Rect {
+    private _updateLogicRect() {
         const stageRect = this._core.stageRect
-        return this.pos2crdRect(stageRect)
+        this.logicRect = this.pos2crdRect(stageRect)
     }
 
     public crd2pos(crd: Point): Point {
@@ -165,6 +170,7 @@ export default class LayoutHandler {
             return
         }
         this.originBias.shift(this._slideVector)
+        this._updateLogicRect()
         this._core.fire('reloc.ing')
         requestAnimationFrame(this._trySlide.bind(this))
     }
