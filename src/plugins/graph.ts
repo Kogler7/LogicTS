@@ -21,6 +21,9 @@ import Component from "@/objects/comp"
 import RenderPair from "@/models/pair"
 import RenderPath from "@/models/path"
 import RenderNode from "@/models/node"
+import { uid } from "@/logic/common/uid"
+import { Point } from "@/logic/common/types2D"
+import { IObject } from "@/logic/handlers/object"
 
 export const graphManager = new class GraphManager implements ILogicPlugin {
     private _core: LogicCore | null = null
@@ -45,6 +48,14 @@ export const graphManager = new class GraphManager implements ILogicPlugin {
         core.on('link.add', (srcPair: RenderPair, dstPair: RenderPair, path: RenderPath) => {
             this._graph.addLink(srcPair, dstPair, path)
         })
+        core.on('comp.move', (compId: uid, pos: Point) => {
+            this._graph.moveNodeTo(compId, pos)
+        })
+        // core.on('movobj.logic.step', (obj: IObject, oldPos: Point, newPos: Point) => {
+        //     if (obj instanceof Component && this._graph.hasNode(obj.id)) {
+        //         this._graph.moveNodeTo(obj.id, newPos)
+        //     }
+        // })
     }
 
     public uninstall(core: LogicCore) {

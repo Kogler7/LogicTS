@@ -21,13 +21,12 @@ import IRenderable from "@/logic/mixins/renderable"
 import IObjectArena from "@/logic/arena/arena"
 import QueryPointArena from "@/logic/arena/query-point"
 import Component from "@/objects/comp"
-import { Point, Rect, Size } from "@/logic/common/types2D"
-import RenderPort, { PortType } from "@/models/port"
+import { Point } from "@/logic/common/types2D"
+import { PortType } from "@/models/port"
 import RenderPair from "@/models/pair"
 import { uid } from "@/logic/common/uid"
 import { Animation } from "@/logic/utils/anime"
 import { Curves } from "@/logic/utils/curve"
-import { graphManager } from "@/plugins/graph"
 
 export default class CompLayer extends LogicLayer {
     private _comps: Set<IRenderable> = new Set()
@@ -55,7 +54,7 @@ export default class CompLayer extends LogicLayer {
         core.on('zoom.end', () => { this._updateArena() })
         core.on('memory.switch.after', () => { this._updateArena() })
         core.on('pan.end', () => { this._updateArena() })
-        core.on('comp.move', (compId: uid) => {
+        core.on('comp.move.finally', (compId: uid) => {
             const node = (core.getObject(compId) as Component).node
             for (const [id, port] of node.ports) {
                 this._portsArena.setObject(id, node.calcPortPos(port))

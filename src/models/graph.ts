@@ -22,6 +22,7 @@ import RenderPair from "./pair"
 import RenderLink from "./link"
 import RenderPath from "./path"
 import { PortType } from "./port"
+import { Point } from "@/logic/common/types2D"
 
 type node_id = uid
 type link_id = uid
@@ -62,6 +63,10 @@ export default class RenderGraph {
         return this
     }
 
+    public hasNode(id: uid): boolean {
+        return this._nodes.has(id)
+    }
+
     public getNode(id: uid): RenderNode | null {
         return this._nodes.get(id) || null
     }
@@ -72,7 +77,7 @@ export default class RenderGraph {
         }
         // delete all links connected to the node
         const node = this._nodes.get(id)!
-        for (const port of node.ports) {
+        for (const port of node.ports.values()) {
             const pair = new RenderPair(node, port)
             const linkIds = this._graph.get(pair)!
             for (const linkId of linkIds) {
@@ -157,5 +162,28 @@ export default class RenderGraph {
             }
         }
         return null
+    }
+
+    public moveNodeTo(id: node_id, pos: Point) {
+        const node = this._nodes.get(id)
+        if (!node) {
+            console.error('RenderGraph.moveNodeTo: node not found')
+            return
+        }
+        node.rect.pos = pos
+        for (const port of node.ports.values()) {
+            const pair = new RenderPair(node, port)
+            const linkIds = this._graph.get(pair)
+            if (linkIds) {
+                for (const linkId of linkIds) {
+                    const path = this._paths.get(linkId)!
+                    if (pair.typ == PortType.IN) {
+                        path.setLastWayPoint(pair.pos, path.lastDir)
+                    } else {
+                        path.setFirstWayPoint(pair.pos, path.firstDir)
+                    }
+                }
+            }
+        }
     }
 }

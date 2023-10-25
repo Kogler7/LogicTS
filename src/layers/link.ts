@@ -15,13 +15,11 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import { uid } from "@/logic/common/uid"
 import LogicCore from "@/logic/core"
 import LogicLayer from "../logic/layer"
 import { Point, Direction } from "@/logic/common/types2D"
 import RenderPath from "@/models/path"
 import RenderPair from "@/models/pair"
-import RenderGraph from "@/models/graph"
 import { graphManager } from "@/plugins/graph"
 
 export default class LinkLayer extends LogicLayer {

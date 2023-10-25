@@ -22,7 +22,6 @@ import LogicCore from "@/logic/core"
 import IObjectArena from "@/logic/arena/arena"
 import { Movable } from "@/logic/mixins/movable"
 import RenderNode from "@/models/node"
-import { PortType } from "@/models/port"
 
 const prjRoot = 'D:\\CodeBase\\ElectronPrjs\\LogicTS\\assets\\icons'
 
@@ -97,8 +96,7 @@ export default class Component extends Movable implements IRenderable {
         const success = this._arena!.setObject(this.id, this.target)
         if (success) {
             this.rect = this.target
-            this.node.rect = this.target
-            this.core?.fire('comp.move', this.id)
+            this.core?.fire('comp.move', this.id, this.target.pos)
         }
     }
 
@@ -110,6 +108,7 @@ export default class Component extends Movable implements IRenderable {
 
     public onMoving(oldPos: Point, newPos: Point): boolean {
         const occupied = this._arena!.rectOccupied(this.target, this.id, true)
+        // this.core?.fire('comp.move', this.id, this.target.pos)
         return occupied === null
     }
 }

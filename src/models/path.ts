@@ -76,6 +76,14 @@ export default class RenderPath {
         return this._wayPoints.length
     }
 
+    public get firstDir(): Direction {
+        return this._wayPoints[0].direction
+    }
+
+    public get lastDir(): Direction {
+        return this._wayPoints[this._wayPoints.length - 1].direction
+    }
+
     private _getCtrlPoint(p: WayPoint, length: number, isSrc: boolean): Point {
         if (this._ctrlPoints.has(p)) {
             const [len, ctrl1, ctrl2] = this._ctrlPoints.get(p)!
