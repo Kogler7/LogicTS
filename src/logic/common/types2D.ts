@@ -206,6 +206,16 @@ export class Point implements IComparable, IHashable, IPrintable, ICloneable<Poi
 		return this.x === 0 && this.y === 0
 	}
 
+	public reverse(): Point {
+		this.x = -this.x
+		this.y = -this.y
+		return this
+	}
+
+	static reverse(p: Point): Point {
+		return new Point(-p.x, -p.y)
+	}
+
 	public scale(factor: number, center: Point): Point {
 		this.x = center.x + (this.x - center.x) * factor
 		this.y = center.y + (this.y - center.y) * factor

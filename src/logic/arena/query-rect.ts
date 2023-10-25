@@ -77,7 +77,11 @@ export default class QueryRectArena implements IObjectArena<Rect> {
             }
         }
         this._objects.set(id, rect)
-        this._boundRect.union(rect)
+        if (this.boundRect.isZero()) {
+            this._boundRect = rect.clone()
+        } else {
+            this._boundRect.union(rect)
+        }
         this._calcScope()
         return true
     }
@@ -99,7 +103,10 @@ export default class QueryRectArena implements IObjectArena<Rect> {
             }
         }
         this._objects.set(id, rect)
-        this._boundRect.union(rect)
+        this._boundRect = this._objects.values().next().value.clone()
+        for (let [k, v] of this._objects) {
+            this._boundRect.union(v)
+        }
         this._calcScope()
         return true
     }
@@ -110,7 +117,8 @@ export default class QueryRectArena implements IObjectArena<Rect> {
             return false
         }
         this._objects.delete(id)
-        this._boundRect = Rect.zero()
+        this._boundRect = this._objects.size === 0 ? Rect.zero()
+            : this._objects.values().next().value.clone()
         for (let [k, v] of this._objects) {
             this._boundRect.union(v)
         }

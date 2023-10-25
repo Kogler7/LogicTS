@@ -140,6 +140,10 @@ export default class LogicCore {
         return this._objectHandler.logicArena
     }
 
+    public get boundRect(): Rect {
+        return this._objectHandler.boundRect
+    }
+
     public get logicObjectIds(): Set<uid> {
         return this._objectHandler.logicObjectIds
     }

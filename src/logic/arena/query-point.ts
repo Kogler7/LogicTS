@@ -16,7 +16,7 @@
 */
 
 import IObjectArena from "./arena"
-import { Point, Line, Rect } from '../common/types2D'
+import { Point, Line, Rect, Size } from '../common/types2D'
 import { uid } from '../common/uid'
 
 export default class QueryPointArena implements IObjectArena<Point> {
@@ -86,7 +86,11 @@ export default class QueryPointArena implements IObjectArena<Point> {
             }
         }
         this._objects.set(id, obj)
-        this._boundRect.expandToInclude(obj)
+        if (this.boundRect.isZero()) {
+            this._boundRect = new Rect(obj.clone(), new Size(0, 0))
+        } else {
+            this._boundRect.expandToInclude(obj)
+        }
         this._calcScope()
         return true
     }
@@ -108,7 +112,10 @@ export default class QueryPointArena implements IObjectArena<Point> {
             }
         }
         this._objects.set(id, obj)
-        this._boundRect.expandToInclude(obj)
+        this._boundRect = new Rect(this.objects.values().next().value.clone(), new Size(0, 0))
+        for (const [k, v] of this._objects) {
+            this._boundRect.expandToInclude(v)
+        }
         this._calcScope()
         return true
     }
@@ -119,7 +126,8 @@ export default class QueryPointArena implements IObjectArena<Point> {
             return false
         }
         this._objects.delete(id)
-        this._boundRect = Rect.zero()
+        this._boundRect = this._objects.size === 0 ? Rect.zero()
+            : new Rect(this.objects.values().next().value.clone(), new Size(0, 0))
         for (const [k, v] of this._objects) {
             this._boundRect.expandToInclude(v)
         }

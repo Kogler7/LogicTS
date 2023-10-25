@@ -85,10 +85,14 @@ export default class LayoutHandler {
         })
         // double click middle button to reset originBias
         core.on('doubleclick.middle', () => {
+            const origin = Rect.setCenter(
+                this._core.logicRect,
+                this._core.boundRect.center
+            ).topLeft.reverse()
             const bias = this.originBias.clone()
             const anime = new Animation(
-                (value: number) => {
-                    this.originBias = bias.times(1 - value)
+                (t: number) => {
+                    this.originBias = Point.lerp(bias, origin, t)
                     this._core.fire('reloc.ing')
                 },
                 300,

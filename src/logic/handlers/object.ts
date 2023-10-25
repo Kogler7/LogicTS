@@ -168,6 +168,10 @@ export class ObjectHandler {
         return this._logicArena
     }
 
+    public get boundRect(): Rect {
+        return this._logicArena.boundRect
+    }
+
     public get logicObjectIds(): Set<uid> {
         return new Set(this._objects.keys())
     }
