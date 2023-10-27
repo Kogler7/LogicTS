@@ -29,6 +29,20 @@ import IObjectArena from "./arena/arena"
 import { uid } from "./common/uid"
 import { IResizable } from "./mixins/resizable"
 import { MemoryHandler } from "./handlers/memory"
+import {
+    TRACK_FIRED_EVENTS,
+    EVENTS_LOG_FILTER as SCOPED_LOG_FILTER,
+    EVENTS_LOG_EXCEPT as SCOPED_LOG_EXCEPT,
+    EVENTS_BAN_FILTER as SCOPED_BAN_FILTER,
+    EVENTS_BAN_EXCEPT as SCOPED_BAN_EXCEPT
+} from "./notifiers/scoped"
+import {
+    TRACK_EMITTED_EVENTS,
+    EVENTS_LOG_FILTER as STACKED_LOG_FILTER,
+    EVENTS_LOG_EXCEPT as STACKED_LOG_EXCEPT,
+    EVENTS_BAN_FILTER as STACKED_BAN_FILTER,
+    EVENTS_BAN_EXCEPT as STACKED_BAN_EXCEPT
+} from "./notifiers/stacked"
 
 export interface ILogicPlugin {
     install(core: LogicCore): void
@@ -192,6 +206,49 @@ export default class LogicCore {
         }
     }
 
+    public fire(event: string, ...args: any[]): boolean {
+        if (TRACK_FIRED_EVENTS) {
+            const matched = (e: string, list: Array<string>) => {
+                for (const item of list) {
+                    if (e.startsWith(item)) {
+                        return true
+                    }
+                }
+            }
+            const toLog = (!(SCOPED_LOG_FILTER.length === 0) && !(SCOPED_LOG_EXCEPT.length === 0)) ||
+                (SCOPED_LOG_FILTER.length !== 0 && matched(event, SCOPED_LOG_FILTER)) ||
+                (SCOPED_LOG_EXCEPT.length !== 0 && !matched(event, SCOPED_LOG_EXCEPT))
+            if (toLog) {
+                console.log(`[ScopedEventNotifier] Fired event: ${event}`)
+            }
+            const toBan = (SCOPED_BAN_FILTER.length !== 0 && matched(event, SCOPED_BAN_FILTER)) ||
+                (SCOPED_BAN_EXCEPT.length !== 0 && !matched(event, SCOPED_BAN_EXCEPT))
+            if (toBan) {
+                console.log(`[ScopedEventNotifier] Banned event: ${event}`)
+                return false
+            }
+        }
+        return this._scopedNotifier.fire(event, ...args)
+    }
+
+    public emit(event: string, ...args: any[]): boolean {
+        if (TRACK_EMITTED_EVENTS) {
+            const toLog = (!STACKED_LOG_FILTER && !STACKED_LOG_EXCEPT) ||
+                (STACKED_LOG_FILTER && STACKED_LOG_FILTER.includes(event)) ||
+                (STACKED_LOG_EXCEPT && !STACKED_LOG_EXCEPT.includes(event))
+            if (toLog) {
+                console.log(`[StackedEventNotifier] Emitted event: ${event}`)
+            }
+            const toBan = (STACKED_BAN_FILTER && STACKED_BAN_FILTER.includes(event)) ||
+                (STACKED_BAN_EXCEPT && !STACKED_BAN_EXCEPT.includes(event))
+            if (toBan) {
+                console.log(`[StackedEventNotifier] Banned event: ${event}`)
+                return false
+            }
+        }
+        return this._stackedNotifier.emit(event, ...args)
+    }
+
     public listAllScopedEvents(): string[] {
         return this._scopedNotifier.listAllRegisteredEvents()
     }
@@ -239,8 +296,6 @@ export default class LogicCore {
         console.log('reset')
     }
 
-    public fire = this._scopedNotifier.fire.bind(this._scopedNotifier)
-    public emit = this._stackedNotifier.emit.bind(this._stackedNotifier)
     public free = this._memoryHandler.free.bind(this._memoryHandler)
     public createMemory = this._memoryHandler.createMemory.bind(this._memoryHandler)
     public switchMemory = this._memoryHandler.switchMemory.bind(this._memoryHandler)

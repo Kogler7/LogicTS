@@ -15,6 +15,13 @@
 * Supported by: National Key Research and Development Program of China
 */
 
+export const TRACK_EMITTED_EVENTS = false
+
+export const EVENTS_LOG_FILTER: Array<string> = []
+export const EVENTS_LOG_EXCEPT: Array<string> = []
+export const EVENTS_BAN_FILTER: Array<string> = []
+export const EVENTS_BAN_EXCEPT: Array<string> = []
+
 interface StackedEventCallback {
     level: number
     callback: Function
@@ -48,6 +55,9 @@ export default class StackedEventNotifier {
     }
 
     public emit(event: string, ...args: any[]): boolean {
+        if (TRACK_EMITTED_EVENTS) {
+            console.log(`[StackedEventNotifier] Emitted event: ${event}`)
+        }
         const callbacks = this._callbacks.get(event)
         if (!callbacks) {
             return true

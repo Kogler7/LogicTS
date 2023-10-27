@@ -93,7 +93,7 @@ export default class Component extends Movable implements IRenderable {
     }
 
     public onMoveEnd(): void {
-        const success = this._arena!.setObject(this.id, this.target)
+        const success = this._arena!.setObject(this.id, this.target.clone())
         if (success) {
             this.rect = this.target
             this.core?.fire('comp.move', this.id, this.target.pos)
@@ -102,7 +102,7 @@ export default class Component extends Movable implements IRenderable {
 
     public onMoveFinished(): void {
         this._moving = false
-        this.target = this.rect
+        this.target = this.rect.clone()
         this.core!.renderAll()
     }
 

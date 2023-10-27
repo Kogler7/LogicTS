@@ -15,6 +15,13 @@
 * Supported by: National Key Research and Development Program of China
 */
 
+export const TRACK_FIRED_EVENTS = false
+
+export const EVENTS_LOG_FILTER: Array<string> = []
+export const EVENTS_LOG_EXCEPT: Array<string> = []
+export const EVENTS_BAN_FILTER: Array<string> = []
+export const EVENTS_BAN_EXCEPT: Array<string> = []
+
 export default class ScopedEventNotifier {
     private _children: Map<string, ScopedEventNotifier> = new Map()
     private _callbacks: Function[] = []

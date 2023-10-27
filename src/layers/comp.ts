@@ -212,7 +212,9 @@ export default class CompLayer extends LogicLayer {
             const pos = core.crd2pos(this._selectedPair!.pos)
             const radius = 10
             const opacity = this._focusOpacity
-            ctx.fillStyle = `rgba(${this._acceptClick ? 0 : 200}, ${this._acceptClick ? 200 : 0}, 0, ${opacity})`
+            ctx.fillStyle = `rgba(${this._acceptClick ? 100 : 200
+                }, ${this._acceptClick ? 200 : 0
+                }, 0, ${opacity * 0.7})`
             ctx.beginPath()
             ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI)
             ctx.fill()

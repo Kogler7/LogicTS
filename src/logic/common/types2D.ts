@@ -1147,9 +1147,9 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 
 	static unionAll(rects: Rect[]): Rect {
 		if (rects.length === 0) return Rect.zero()
-		let res = rects[0]
+		let res = rects[0].clone()
 		for (let i = 1; i < rects.length; i++) {
-			res = Rect.union(res, rects[i])
+			res.union(rects[i])
 		}
 		return res
 	}
