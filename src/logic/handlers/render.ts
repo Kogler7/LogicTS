@@ -154,6 +154,10 @@ export default class RenderHandler {
 
     private _render() {
         if (!this._checkStage()) return
+        if (!this._core.currentMemoryId) {
+            this.clear()
+            return
+        }
         this._xps.start()
         const { _stageWidth: width, _stageHeight: height } = this
         // clear stage
@@ -200,6 +204,12 @@ export default class RenderHandler {
         this._rps = this._xps.get('rps')
     }
 
+    public clear() {
+        if (!this._checkStage()) return
+        const { _stageWidth: width, _stageHeight: height } = this
+        this._stageCtx.clearRect(0, 0, width, height)
+    }
+
     public render() {
         if (this._renderRequested) {
             return
@@ -229,7 +239,11 @@ export default class RenderHandler {
         this._stageCtx = stageCtx
         this._connected = true
         this._resizeObserver = new ResizeObserver(() => {
-            this._updateSize()
+            // delay to avoid multiple resize events
+            // incase of loop limit exceeded
+            requestAnimationFrame(() => {
+                this._updateSize()
+            })
         })
         this._resizeObserver.observe(stage)
         this._updateSize()

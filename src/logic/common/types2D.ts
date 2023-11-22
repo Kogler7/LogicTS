@@ -992,13 +992,12 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 	public get bottomRight(): Point { return new Point(this.right, this.bottom) }
 
 	public get topCenter(): Point { return new Point(this.centerX, this.top) }
-	public get rightCenter(): Point { return new Point(this.right, this.centerY) }
-	public get bottomCenter(): Point { return new Point(this.centerX, this.bottom) }
-	public get leftCenter(): Point { return new Point(this.left, this.centerY) }
-
 	public set topCenter(p: Point) { this.pos.x = p.x - this.size.width / 2; this.pos.y = p.y }
+	public get rightCenter(): Point { return new Point(this.right, this.centerY) }
 	public set rightCenter(p: Point) { this.pos.x = p.x - this.size.width; this.pos.y = p.y - this.size.height / 2 }
+	public get bottomCenter(): Point { return new Point(this.centerX, this.bottom) }
 	public set bottomCenter(p: Point) { this.pos.x = p.x - this.size.width / 2; this.pos.y = p.y - this.size.height }
+	public get leftCenter(): Point { return new Point(this.left, this.centerY) }
 	public set leftCenter(p: Point) { this.pos.x = p.x; this.pos.y = p.y - this.size.height / 2 }
 
 	public get corners(): Point[] {
@@ -1147,7 +1146,8 @@ export class Rect implements IComparable, IHashable, IPrintable, ICloneable<Rect
 
 	static unionAll(rects: Rect[]): Rect {
 		if (rects.length === 0) return Rect.zero()
-		let res = rects[0].clone()
+		// in case of modifying the first rect unintentionally
+		const res = rects[0].clone()
 		for (let i = 1; i < rects.length; i++) {
 			res.union(rects[i])
 		}

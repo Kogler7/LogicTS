@@ -15,7 +15,7 @@
 * Supported by: National Key Research and Development Program of China
 */
 
-import { uid, uid_rt } from "../common/uid"
+import { uid, uid_chk, uid_rt } from "../common/uid"
 import { deepCopy } from "../utils/copy"
 import LogicCore from "../core"
 
@@ -27,7 +27,7 @@ export class MemoryHandler {
     private _core: LogicCore
     private _defaults: Memory = new Map()
     private _currentMemory: Memory = new Map()
-    private _currentMemoryId: uid = uid_rt()
+    private _currentMemoryId: uid = 0
     private _memories: Map<uid, Memory> = new Map(
         [[this._currentMemoryId, this._currentMemory]]
     )
@@ -102,8 +102,7 @@ export class MemoryHandler {
         this._core.on('memory.switch.before', (id: uid) => {
             if (!this._prototypes.has(name)) {
                 return
-            }
-            // save the current memory
+            }            // save the current memory
             this._currentMemory.set(
                 name,
                 this._fetchDataByProto(this._prototypes.get(name)!, false)
@@ -134,8 +133,12 @@ export class MemoryHandler {
         }
     }
 
-    public createMemory(): uid {
-        const id = uid_rt()
+    public createMemory(memId?: uid): uid {
+        if (memId && !uid_chk(memId)) {
+            console.error(`[MemoryHandler] Cannot create memory "${memId}" because it is not a valid uid.`)
+            return this._currentMemoryId
+        }
+        const id = memId ?? uid_rt()
         console.log(`[MemoryHandler] Creating a new memory "${id}".`)
         const memory = new Map<string, any>()
         for (const [name, proto] of this._prototypes) {
@@ -148,7 +151,7 @@ export class MemoryHandler {
     public switchMemory(id: uid) {
         if (!this._memories.has(id)) {
             console.error(`[MemoryHandler] Memory "${id}" does not exist.`)
-            return
+            return this._currentMemoryId
         }
         this._core.fire('memory.switch.before', this._currentMemoryId)
         this._currentMemoryId = id
@@ -157,9 +160,11 @@ export class MemoryHandler {
         console.group(`[MemoryHandler] Switched to memory "${id}".`)
         console.log(this._memories.get(id))
         console.groupEnd()
+        return id
     }
 
     public deleteMemory(id: uid) {
+        if (id === 0) return
         const success = this._memories.delete(id)
         if (success) {
             // if the current memory is deleted, switch to another one
@@ -184,13 +189,18 @@ export class MemoryHandler {
 
     public switchMemoryToNext() {
         const keys = [...this._memories.keys()]
+        let targetId: uid
         if (keys.length === 0) {
-            const id = this.createMemory()
-            this.switchMemory(id)
+            targetId = this.createMemory()
         } else {
             let idx = keys.indexOf(this._currentMemoryId!)
             idx = (idx + 1) % keys.length
-            this.switchMemory(keys[idx])
+            targetId = keys[idx]
+            if (targetId === 0) {
+                idx = (idx + 1) % keys.length
+                targetId = keys[idx]
+            }
         }
+        return this.switchMemory(targetId)
     }
 }

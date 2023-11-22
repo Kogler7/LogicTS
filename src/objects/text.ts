@@ -19,7 +19,7 @@ import { Point, Rect } from "@/logic/common/types2D"
 import { uid_rt } from "@/logic/common/uid"
 import IRenderable from "@/logic/mixins/renderable"
 import LogicCore from "@/logic/core"
-import { IObjectArena } from "@/logic/arena/arena"
+import IObjectArena from "@/logic/arena/arena"
 import { Flexible } from "@/logic/mixins/flexible"
 import { FontStyle, FontAlign, LogicTextArea } from "@/logic/utils/text"
 import { IDisposable } from "@/logic/common/types"
@@ -27,7 +27,7 @@ import { IDisposable } from "@/logic/common/types"
 export default class TextArea extends Flexible implements IRenderable, IDisposable {
     private _moving: boolean = false
     private _resizing: boolean = false
-    private _arena: IObjectArena | null = null
+    private _arena: IObjectArena<Rect> | null = null
     private _text: LogicTextArea
     private _cacheCtx: CanvasRenderingContext2D | null = null
 

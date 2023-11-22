@@ -305,6 +305,7 @@ export default class LogicCore {
     public register = this._objectHandler.addObject.bind(this._objectHandler)
     public unregister = this._objectHandler.delObject.bind(this._objectHandler)
     public render = this._renderHandler.render.bind(this._renderHandler)
+    public clear = this._renderHandler.clear.bind(this._renderHandler)
     public renderAll = this._renderHandler.renderAll.bind(this._renderHandler)
     public markDirty = this._renderHandler.markDirty.bind(this._renderHandler)
     public mount = this._renderHandler.mountLayer.bind(this._renderHandler)

@@ -37,8 +37,20 @@ export function uid_rt(): uid {
     }
 }
 
+export function uid_add(id: uid) {
+    _uid_set.add(id)
+}
+
+export function uid_del(id: uid) {
+    _uid_set.delete(id)
+}
+
 export function uid_cnt(): uid {
     return _uid_cnt++
+}
+
+export function uid_chk(id: uid): boolean {
+    return _uid_set.has(id)
 }
 
 export function uid2hex(id: uid): string {
