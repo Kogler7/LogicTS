@@ -1,27 +1,29 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Jul. 21, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Jul. 21, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import LogicCore from "../core"
-import { Point, Rect, Vector } from "../common/types2D"
-import Timer from "../utils/timer"
+import LogicCore from '../core'
+import { Point, Rect, Vector } from '../common/types2D'
+import Timer from '../utils/timer'
 
 export default class EventHandler {
     private _core: LogicCore
     private _targetEl: HTMLElement | null = null
+
+    private _disabled = true // disable when current memory id is 0
 
     private _framing = false
     private _zooming = false
@@ -59,9 +61,17 @@ export default class EventHandler {
     constructor(core: LogicCore) {
         this._core = core
         // for any event, we should rerender part of the canvas
-        core.on('finally', () => { core.render() })
+        core.on('finally', () => {
+            core.render()
+        })
         // for any event related to relocating, we should rerender the whole canvas
-        core.on('reloc.finally', () => { core.renderAll() })
+        core.on('reloc.finally', () => {
+            core.renderAll()
+        })
+        // detect whether the current memory is valid
+        core.on('memory.switch.after', (id: number) => {
+            this._disabled = id === 0
+        })
     }
 
     public connect(el: HTMLElement) {
@@ -81,8 +91,14 @@ export default class EventHandler {
         // unbind event listeners from the target element
         // to prevent receiving unwanted events
         if (this._targetEl) {
-            this._targetEl.removeEventListener('mousedown', this._handleMouseDown)
-            this._targetEl.removeEventListener('mousemove', this._handleMouseMove)
+            this._targetEl.removeEventListener(
+                'mousedown',
+                this._handleMouseDown
+            )
+            this._targetEl.removeEventListener(
+                'mousemove',
+                this._handleMouseMove
+            )
             this._targetEl.removeEventListener('mouseup', this._handleMouseUp)
             this._targetEl.removeEventListener('wheel', this._handleWheel)
             this._targetEl.removeEventListener('keydown', this._handleKeyDown)
@@ -104,6 +120,7 @@ export default class EventHandler {
     }
 
     private _onMouseDown(e: MouseEvent) {
+        if (this._disabled) return
         if (!this._core.emit('mousedown', e)) return
         this.focusPos = new Point(e.offsetX, e.offsetY)
         this.anchorPos = this.focusPos
@@ -124,8 +141,7 @@ export default class EventHandler {
                 this._core.setCursor('all-scroll')
                 this._core.fire('slide.begin', e)
                 this._tryStartReloc()
-            }
-            else {
+            } else {
                 this._core.popCursor('all-scroll')
                 this._core.fire('slide.end', e)
                 this._tryEndReloc()
@@ -145,8 +161,7 @@ export default class EventHandler {
         if (this._waitingForDoubleClick) {
             const button = ['left', 'middle', 'right'][e.button]
             this._core.fire('doubleclick.' + button, e)
-        }
-        else {
+        } else {
             this._waitingForDoubleClick = true
             setTimeout(() => {
                 this._waitingForDoubleClick = false
@@ -155,22 +170,25 @@ export default class EventHandler {
     }
 
     private _onMouseMove(e: MouseEvent) {
+        if (this._disabled) return
         if (!this._core.emit('mousemove', e)) return
         this.focusPos = new Point(e.offsetX, e.offsetY)
         if (this._sliding) {
             this._core.fire('slide.ing', e)
             this._core.fire('reloc.ing', e)
-        }
-        else if (this._panning) {
+        } else if (this._panning) {
             this._core.fire('pan.ing', e)
             this._core.fire('reloc.ing', e)
-        }
-        else if (this._framing) {
+        } else if (this._framing) {
             const rect = Rect.fromVertices(this._frameStartPos, this.focusPos)
             this.focusRect = rect
             const newFloorRect = this._core.pos2crdRect(rect).shrink()
             if (!this.focusLogicFloorRect?.equals(newFloorRect)) {
-                this._core.fire('frame.change', this.focusLogicFloorRect, newFloorRect)
+                this._core.fire(
+                    'frame.change',
+                    this.focusLogicFloorRect,
+                    newFloorRect
+                )
                 this.focusLogicFloorRect = newFloorRect
             }
             this._core.fire('frame.ing', e, rect)
@@ -180,14 +198,14 @@ export default class EventHandler {
     }
 
     private _onMouseUp(e: MouseEvent) {
+        if (this._disabled) return
         if (!this._core.emit('mouseup', e)) return
         if (this._panning) {
             this._panning = false
             this._core.popCursor('grabbing')
             this._core.fire('pan.end', e)
             this._tryEndReloc()
-        }
-        else if (this._framing) {
+        } else if (this._framing) {
             this._framing = false
             this.focusRect = null
             this._core.fire('frame.end', e)
@@ -195,6 +213,7 @@ export default class EventHandler {
     }
 
     private _onWheel(e: WheelEvent) {
+        if (this._disabled) return
         if (!this._core.emit('wheel', e)) return
         if (this._sliding) return
         if (this._ctrlKey) {
@@ -212,50 +231,48 @@ export default class EventHandler {
             this._tryEndReloc()
         } else {
             this._tryStartReloc()
-            this._core.panTo(new Vector(0, -e.deltaY))
+            this._core.panTo(new Vector(0, e.deltaY))
             this._tryEndReloc()
         }
     }
 
     private _onKeyDown(e: KeyboardEvent) {
+        if (this._disabled) return
         if (!this._core.emit('keydown', e)) return
         let modifiers = ''
         if (e.key === 'Alt') {
             this._altKey = true
-        }
-        else if (e.key === 'Control') {
+        } else if (e.key === 'Control') {
             this._ctrlKey = true
-        }
-        else if (e.key === 'Shift') {
+        } else if (e.key === 'Shift') {
             this._shiftKey = true
-        }
-        else {
-            modifiers = (this._altKey ? 'alt.' : '') +
-                (this._ctrlKey ? 'ctrl.' : '') +
-                (this._shiftKey ? 'shift.' : '')
+        } else {
+            modifiers =
+                (this._ctrlKey ? 'control.' : '') +
+                (this._shiftKey ? 'shift.' : '') +
+                (this._altKey ? 'alt.' : '')
         }
         const event = 'keydown.' + modifiers + e.key.toLowerCase()
         this._core.fire(event, e)
     }
 
     private _onKeyUp(e: KeyboardEvent) {
+        if (this._disabled) return
         if (!this._core.emit('keyup', e)) return
         let modifiers = ''
         if (e.key === 'Alt') {
             this._altKey = false
-        }
-        else if (e.key === 'Control') {
+        } else if (e.key === 'Control') {
             this._ctrlKey = false
-        }
-        else if (e.key === 'Shift') {
+        } else if (e.key === 'Shift') {
             this._shiftKey = false
-        }
-        else {
-            modifiers = (this._altKey ? 'alt.' : '') +
-                (this._ctrlKey ? 'ctrl.' : '') +
-                (this._shiftKey ? 'shift.' : '')
+        } else {
+            modifiers =
+                (this._ctrlKey ? 'control.' : '') +
+                (this._shiftKey ? 'shift.' : '') +
+                (this._altKey ? 'alt.' : '')
         }
         const event = 'keyup.' + modifiers + e.key.toLowerCase()
         this._core.fire(event, e)
     }
-} 
+}

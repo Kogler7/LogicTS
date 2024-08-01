@@ -43,6 +43,7 @@ import {
     EVENTS_BAN_FILTER as STACKED_BAN_FILTER,
     EVENTS_BAN_EXCEPT as STACKED_BAN_EXCEPT
 } from "./notifiers/stacked"
+import { TrapSet } from "./common/types"
 
 export interface ILogicPlugin {
     install(core: LogicCore): void
@@ -164,6 +165,10 @@ export default class LogicCore {
 
     public get selectedLogicObjects(): Set<ISelectable> {
         return this._objectHandler.selectedLogicObjects
+    }
+
+    public get selectedLogicObjectsTrapSet(): TrapSet<ISelectable> {
+        return this._objectHandler.selectedLogicObjectsTrapSet
     }
 
     public get selectedLogicBoundRect(): Rect {
@@ -304,6 +309,7 @@ export default class LogicCore {
     public switchMemoryToNext = this._memoryHandler.switchMemoryToNext.bind(this._memoryHandler)
     public register = this._objectHandler.addObject.bind(this._objectHandler)
     public unregister = this._objectHandler.delObject.bind(this._objectHandler)
+    public getLayer = this._renderHandler.getLayer.bind(this._renderHandler)
     public render = this._renderHandler.render.bind(this._renderHandler)
     public clear = this._renderHandler.clear.bind(this._renderHandler)
     public renderAll = this._renderHandler.renderAll.bind(this._renderHandler)

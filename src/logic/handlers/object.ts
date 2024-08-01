@@ -1,29 +1,29 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Aug. 3, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Aug. 3, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import LogicCore from "../core"
-import IObjectArena from "../arena/arena"
-import QueryRectArena from "../arena/query-rect"
-import { Point, Rect } from "../common/types2D"
-import { ISelectable } from "../mixins/selectable"
-import { IMovable } from "../mixins/movable"
-import { IResizable } from "../mixins/resizable"
-import { uid } from "../common/uid"
-import { TrapSet } from "../common/types"
+import LogicCore from '../core'
+import IObjectArena from '../arena/arena'
+import QueryRectArena from '../arena/query-rect'
+import { Point, Rect } from '../common/types2D'
+import { ISelectable } from '../mixins/selectable'
+import { IMovable } from '../mixins/movable'
+import { IResizable } from '../mixins/resizable'
+import { uid } from '../common/uid'
+import { TrapSet } from '../common/types'
 
 export interface IObject {
     id: uid
@@ -36,9 +36,9 @@ export interface IObject {
 export class ObjectHandler {
     private _core: LogicCore
     private _logicArena: IObjectArena<Rect> = new QueryRectArena()
-    private _arenas: Map<uid, IObjectArena<Rect>> = new Map(
-        [[0, this._logicArena]]
-    )
+    private _arenas: Map<uid, IObjectArena<Rect>> = new Map([
+        [0, this._logicArena],
+    ])
     private _objects: Map<uid, IObject> = new Map()
     private _callbacks: Map<uid, (e: MouseEvent) => boolean> = new Map()
     private _recentSelectedLogicId: uid | null = null
@@ -52,7 +52,9 @@ export class ObjectHandler {
         (delta: number) => {
             if (delta <= 0) {
                 // if there are objects deselected, we need to recalculate the select bound rect
-                const rects = [...this._selectedLogicObjects.set].map((obj) => obj.rect)
+                const rects = [...this._selectedLogicObjects.set].map(
+                    (obj) => obj.rect
+                )
                 this._selectedLogicBoundRect = Rect.unionAll(rects)
             }
             this._core.fire('select.logic-changed')
@@ -94,59 +96,81 @@ export class ObjectHandler {
 
     constructor(core: LogicCore) {
         this._core = core
-        core.malloc('__object__', this, {
-            _arenas: 1,
-            _objects: 1,
-            _callbacks: 1,
-            _logicArena: 1,
-            _selectableObjects: 1,
-            _selectedLogicObjects: 1,
-            _selectedLogicBoundRect: 1,
-            _recentSelectedLogicId: 1,
-            _recentSelectedNonLogicId: 1,
-            _movableObjects: 1,
-            _movingLogicObjects: 1,
-            _movingLogicObjectStates: 1,
-            _movingNonLogicObject: 1,
-            _movingNonLogicObjectState: 1,
-            _startMovingObjectPos: 1,
-            _readyToMoveLogicObjects: 1,
-            _isMovingLogicObjects: 1,
-            _readyToMoveNonLogicObjects: 1,
-            _isMovingNonLogicObjects: 1,
-            _resizableObjects: 1,
-            _resizingLogicObject: 1,
-            _resizingLogicObjectState: 1,
-            _resizingNonLogicObject: 1,
-            _resizingNonLogicObjectState: 1,
-            _startResizingObjectPos: 1,
-            _readyToResizeLogicObject: 1,
-            _isResizingLogicObject: 1,
-        }, () => {
-            // don't forget to reset cursor
-            this._core.popCursor(this._resizingCursorStyle)
-        }, () => {
-            this._logicArena = this._arenas.get(0)!
-            // reset rest states
-            this._resizingCursorStyle = 'nwse-resize'
-            this._ctrlDown = false
-            this._oldFramedLogicRect = Rect.zero()
-            this._oldFramedLogicObjectIds = new Set()
-            this._boundRectPressed = false
-        })
+        core.malloc(
+            '__object__',
+            this,
+            {
+                _arenas: 1,
+                _objects: 1,
+                _callbacks: 1,
+                _logicArena: 1,
+                _selectableObjects: 1,
+                _selectedLogicObjects: 1,
+                _selectedLogicBoundRect: 1,
+                _recentSelectedLogicId: 1,
+                _recentSelectedNonLogicId: 1,
+                _movableObjects: 1,
+                _movingLogicObjects: 1,
+                _movingLogicObjectStates: 1,
+                _movingNonLogicObject: 1,
+                _movingNonLogicObjectState: 1,
+                _startMovingObjectPos: 1,
+                _readyToMoveLogicObjects: 1,
+                _isMovingLogicObjects: 1,
+                _readyToMoveNonLogicObjects: 1,
+                _isMovingNonLogicObjects: 1,
+                _resizableObjects: 1,
+                _resizingLogicObject: 1,
+                _resizingLogicObjectState: 1,
+                _resizingNonLogicObject: 1,
+                _resizingNonLogicObjectState: 1,
+                _startResizingObjectPos: 1,
+                _readyToResizeLogicObject: 1,
+                _isResizingLogicObject: 1,
+            },
+            () => {
+                // don't forget to reset cursor
+                this._core.popCursor(this._resizingCursorStyle)
+            },
+            () => {
+                this._logicArena = this._arenas.get(0)!
+                // reset rest states
+                this._resizingCursorStyle = 'nwse-resize'
+                this._ctrlDown = false
+                this._oldFramedLogicRect = Rect.zero()
+                this._oldFramedLogicObjectIds = new Set()
+                this._boundRectPressed = false
+            }
+        )
         // register level 0 arena callback event listener to the core
-        core.on('mousedown', this._onMousePressedLogicLevel.bind(this), -Infinity)
+        core.on(
+            'mousedown',
+            this._onMousePressedLogicLevel.bind(this),
+            -Infinity
+        )
         // register mouse down event listener to the top of the event stack
-        core.on('mousedown', this._checkIfMousePressedBoundRect.bind(this), -Infinity)
+        core.on(
+            'mousedown',
+            this._checkIfMousePressedBoundRect.bind(this),
+            -Infinity
+        )
         // if this callback is fired, it means that no object is selected
-        core.on('mousedown', this._onMousePressedBackground.bind(this), -Infinity)
+        core.on(
+            'mousedown',
+            this._onMousePressedBackground.bind(this),
+            -Infinity
+        )
         // listen to mouse up event to stop moving objects
         core.on('mouseup', this._onMouseUp.bind(this), Infinity)
         // listen to mouse move event to move objects
         core.on('mousemove', this._onMouseMove.bind(this), Infinity)
         // register ctrl key event listener to the core(level 0)
-        core.on('keydown.control', () => { this._ctrlDown = true })
-        core.on('keyup.control', () => { this._ctrlDown = false })
+        core.on('keydown.control', () => {
+            this._ctrlDown = true
+        })
+        core.on('keyup.control', () => {
+            this._ctrlDown = false
+        })
         // register frame begin event listener to the core
         core.on('frame.begin', (e: MouseEvent) => {
             // clear all selected objects
@@ -180,13 +204,19 @@ export class ObjectHandler {
         return this._selectedLogicObjects.set
     }
 
+    public get selectedLogicObjectsTrapSet(): TrapSet<ISelectable> {
+        return this._selectedLogicObjects
+    }
+
     public get selectedLogicBoundRect(): Rect {
         return this._selectedLogicBoundRect
     }
 
     public get recentSelectedLogicObject(): ISelectable | null {
         if (this._recentSelectedLogicId) {
-            return this._selectableObjects.get(this._recentSelectedLogicId) || null
+            return (
+                this._selectableObjects.get(this._recentSelectedLogicId) || null
+            )
         }
         return null
     }
@@ -214,10 +244,18 @@ export class ObjectHandler {
         if (!this._oldFramedLogicRect.equals(oldRect)) {
             // if the old frame logic rect is not the same as the cached one
             // recalculate the old framed object ids
-            this._oldFramedLogicObjectIds = this._logicArena.rectOccupiedSet(oldRect, -1, true)
+            this._oldFramedLogicObjectIds = this._logicArena.rectOccupiedSet(
+                oldRect,
+                -1,
+                true
+            )
         }
         // then we calculate the new framed object ids
-        const newFramedObjectIds = this._logicArena.rectOccupiedSet(newRect, -1, true)
+        const newFramedObjectIds = this._logicArena.rectOccupiedSet(
+            newRect,
+            -1,
+            true
+        )
         // find the newly selected objects
         for (const id of newFramedObjectIds) {
             if (!this._oldFramedLogicObjectIds.has(id)) {
@@ -249,7 +287,10 @@ export class ObjectHandler {
         // if the selected object is resizable and enabled,
         // and it's the only one selected object,
         // we set it as the resizing object
-        if (this._resizableObjects.has(obj.id) && this._selectedLogicObjects.size === 1) {
+        if (
+            this._resizableObjects.has(obj.id) &&
+            this._selectedLogicObjects.size === 1
+        ) {
             this._resizingLogicObject[0] = obj as IResizable
         }
         // recalculate the select bound rect
@@ -275,7 +316,10 @@ export class ObjectHandler {
         }
         // if the selected object is resizing,
         // set the resizing object to null
-        if (this._resizingLogicObject.length > 0 && this._resizingLogicObject[0] === obj) {
+        if (
+            this._resizingLogicObject.length > 0 &&
+            this._resizingLogicObject[0] === obj
+        ) {
             this._resizingLogicObject.pop()
         }
         // notify the object and the core
@@ -340,14 +384,18 @@ export class ObjectHandler {
             this._readyToResizeLogicObject = true
             this._readyToResizeNonLogicObject = false
             this._core.popCursor(this._resizingCursorStyle)
-            this._resizingCursorStyle = this._resizingLogicObject[0]
-                .rect.posRelativeResizeDirection(start) + '-resize'
+            this._resizingCursorStyle =
+                this._resizingLogicObject[0].rect.posRelativeResizeDirection(
+                    start
+                ) + '-resize'
         } else {
             this._readyToResizeLogicObject = false
             this._readyToResizeNonLogicObject = true
             this._core.popCursor(this._resizingCursorStyle)
-            this._resizingCursorStyle = this._resizingNonLogicObject[0]
-                .rect.posRelativeResizeDirection(start) + '-resize'
+            this._resizingCursorStyle =
+                this._resizingNonLogicObject[0].rect.posRelativeResizeDirection(
+                    start
+                ) + '-resize'
         }
         this._core.setCursor(this._resizingCursorStyle)
     }
@@ -415,7 +463,9 @@ export class ObjectHandler {
 
     private _clearSelectedNonLogicObject() {
         if (this._recentSelectedNonLogicId) {
-            const obj = this._selectableObjects.get(this._recentSelectedNonLogicId)
+            const obj = this._selectableObjects.get(
+                this._recentSelectedNonLogicId
+            )
             if (obj) {
                 obj.selected = false
                 obj.onDeselected()
@@ -489,7 +539,12 @@ export class ObjectHandler {
                 this._core.fire('movobj.logic.begin', newPos, e)
             }
             for (const obj of this._movingLogicObjects) {
-                const moved = obj.target.moveTo(Point.plus(obj.rect.pos, Point.minus(newPos, oldPos)).round())
+                const moved = obj.target.moveTo(
+                    Point.plus(
+                        obj.rect.pos,
+                        Point.minus(newPos, oldPos)
+                    ).round()
+                )
                 if (moved) {
                     const accept = obj.onMoving(oldPos, newPos)
                     this._movingLogicObjectStates.set(obj.id, accept as boolean)
@@ -506,9 +561,13 @@ export class ObjectHandler {
                 obj.onMoveBegin()
                 this._core.fire('movobj.non-logic.begin', newPos, e)
             }
-            const obj = this._movableObjects.get(this._recentSelectedNonLogicId!)
+            const obj = this._movableObjects.get(
+                this._recentSelectedNonLogicId!
+            )
             if (obj) {
-                obj.target.moveTo(Point.plus(obj.rect.pos, Point.minus(newPos, oldPos)))
+                obj.target.moveTo(
+                    Point.plus(obj.rect.pos, Point.minus(newPos, oldPos))
+                )
                 const accept = obj.onMoving(oldPos, newPos)
                 this._movingNonLogicObjectState = accept as boolean
             }
@@ -518,7 +577,11 @@ export class ObjectHandler {
         else if (this._isResizingLogicObject) {
             const pos = this._core.pos2crd(new Point(e.offsetX, e.offsetY))
             const obj = this._resizingLogicObject[0]
-            const newRect = Rect.resizeToIncludeBy(obj.rect, this._startResizingObjectPos, pos).round()
+            const newRect = Rect.resizeToIncludeBy(
+                obj.rect,
+                this._startResizingObjectPos,
+                pos
+            ).round()
             if (!newRect.equals(obj.target)) {
                 obj.target = newRect
                 const accept = obj.onResizing(obj.rect, obj.target)
@@ -526,16 +589,24 @@ export class ObjectHandler {
                 this._core.fire('resizobj.logic.step', obj.rect, obj.target, e)
             }
             this._core.fire('resizobj.logic.ing', obj.rect, obj.target, e)
-        }
-        else if (this._isResizingNonLogicObject) {
+        } else if (this._isResizingNonLogicObject) {
             const pos = new Point(e.offsetX, e.offsetY)
             const obj = this._resizingNonLogicObject![0]
-            const newRect = Rect.resizeToIncludeBy(obj.rect, this._startResizingObjectPos, pos).round()
+            const newRect = Rect.resizeToIncludeBy(
+                obj.rect,
+                this._startResizingObjectPos,
+                pos
+            ).round()
             if (!newRect.equals(obj.rect)) {
                 obj.target = newRect
                 const accept = obj.onResizing(obj.rect, obj.target)
                 this._resizingNonLogicObjectState[0] = accept as boolean
-                this._core.fire('resizobj.non-logic.step', obj.rect, obj.target, e)
+                this._core.fire(
+                    'resizobj.non-logic.step',
+                    obj.rect,
+                    obj.target,
+                    e
+                )
             }
             this._core.fire('resizobj.logic.ing', obj.rect, obj.target, e)
         }
@@ -547,13 +618,19 @@ export class ObjectHandler {
             if (
                 this._resizingLogicObject.length > 0 &&
                 !this._resizingLogicObject[0].rect.containsPoint(mouseCrd) &&
-                this._core.crd2posRect(this._resizingLogicObject[0].rect).padding(16).containsPoint(mousePos)
+                this._core
+                    .crd2posRect(this._resizingLogicObject[0].rect)
+                    .padding(16)
+                    .containsPoint(mousePos)
             ) {
                 this._setReadyToResizeObjects(mouseCrd, true)
             } else if (
                 this._resizingNonLogicObject.length > 0 &&
                 !this._resizingNonLogicObject[0].rect.containsPoint(mousePos) &&
-                Rect.padding(this._resizingNonLogicObject[0].rect, 16).containsPoint(mousePos)
+                Rect.padding(
+                    this._resizingNonLogicObject[0].rect,
+                    16
+                ).containsPoint(mousePos)
             ) {
                 this._setReadyToResizeObjects(mousePos, false)
             } else {
@@ -642,7 +719,7 @@ export class ObjectHandler {
         }
         const arena = this._arenas.get(level)!
         const success = arena.delObject(obj.id)
-        if (arena.empty) {
+        if (arena.empty && level !== 0) {
             // if the last object in the arena is deleted, delete the arena
             this._delSelectSupportForNonLogicLevel(level)
         }

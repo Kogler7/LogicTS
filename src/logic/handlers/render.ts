@@ -86,6 +86,15 @@ export default class RenderHandler {
         this._stageCtx = this._cacheCtx
     }
 
+    public getLayer(name: string): LogicLayer | null {
+        for (const layer of this._layers) {
+            if (layer.name === name) {
+                return layer
+            }
+        }
+        return null
+    }
+
     private _calcDPR() {
         if (window.devicePixelRatio > 1.5) {
             this._dpr = 2
