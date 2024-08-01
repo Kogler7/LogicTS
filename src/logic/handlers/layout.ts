@@ -59,12 +59,12 @@ export default class LayoutHandler {
         })
         core.on('pan.ing', () => {
             const { lastPos, focusPos } = this._core
-            this._panTo(Vector.fromPoints(lastPos, focusPos))
+            this.panTo(Vector.fromPoints(lastPos, focusPos))
             this._updateLogicRect()
         })
         core.on('zoom.ing', (e: WheelEvent) => {
             const { focusPos } = this._core
-            this._zoomAt(e.deltaY, focusPos)
+            this.zoomAt(e.deltaY, focusPos)
             this._updateLogicRect()
         })
         core.on('slide.ing', () => {
@@ -129,11 +129,11 @@ export default class LayoutHandler {
         return new Rect(this.pos2crd(rect.pos), Size.divide(rect.size, length))
     }
 
-    private _panTo(delta: Vector) {
+    public panTo(delta: Vector) {
         this.originBias.shift(delta.divide(this.logicWidth))
     }
 
-    private _zoomAt(angle: number, center: Point) {
+    public zoomAt(angle: number, center: Point) {
         const { logicWidth: length } = this
         const angle2zoomUnit = 1 / 293.33 // zoom unit per wheel event (deltaY)
         const factor = - this.zoomSpeed * angle2zoomUnit / this.gridWidthFactor

@@ -16,7 +16,7 @@
 */
 
 import LogicCore from "../core"
-import { Point, Rect } from "../common/types2D"
+import { Point, Rect, Vector } from "../common/types2D"
 import Timer from "../utils/timer"
 
 export default class EventHandler {
@@ -197,14 +197,24 @@ export default class EventHandler {
     private _onWheel(e: WheelEvent) {
         if (!this._core.emit('wheel', e)) return
         if (this._sliding) return
-        if (!this._zooming) {
-            this._core.fire('zoom.begin', e)
+        if (this._ctrlKey) {
+            if (!this._zooming) {
+                this._core.fire('zoom.begin', e)
+                this._tryStartReloc()
+            }
+            this._zooming = true
+            this._countdownTimer.reset().start()
+            this._core.fire('zoom.ing', e)
+            this._core.fire('reloc.ing', e)
+        } else if (this._shiftKey) {
             this._tryStartReloc()
+            this._core.panTo(new Vector(-e.deltaY, 0))
+            this._tryEndReloc()
+        } else {
+            this._tryStartReloc()
+            this._core.panTo(new Vector(0, -e.deltaY))
+            this._tryEndReloc()
         }
-        this._zooming = true
-        this._countdownTimer.reset().start()
-        this._core.fire('zoom.ing', e)
-        this._core.fire('reloc.ing', e)
     }
 
     private _onKeyDown(e: KeyboardEvent) {

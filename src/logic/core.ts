@@ -318,6 +318,8 @@ export default class LogicCore {
     public crd2posRect = this._layoutHandler.crd2posRect.bind(this._layoutHandler)
     public pos2crd = this._layoutHandler.pos2crd.bind(this._layoutHandler)
     public pos2crdRect = this._layoutHandler.pos2crdRect.bind(this._layoutHandler)
+    public panTo = this._layoutHandler.panTo.bind(this._layoutHandler)
+    public zoomAt = this._layoutHandler.zoomAt.bind(this._layoutHandler)
     public addObject = this._objectHandler.addObject.bind(this._objectHandler)
     public delObject = this._objectHandler.delObject.bind(this._objectHandler)
     public getObject = this._objectHandler.getObject.bind(this._objectHandler)
