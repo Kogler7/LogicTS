@@ -1,27 +1,27 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Sep. 8, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Sep. 8, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import LogicLayer from "../logic/layer"
-import { Rect } from "@/logic/common/types2D"
-import LogicCore from "@/logic/core"
-import { Animation, Curves } from "@/logic/utils/anime"
-import { IResizable } from "@/logic/mixins/resizable"
-import IRenderable from "@/logic/mixins/renderable"
-import LogicConfig from "@/logic/config"
+import LogicLayer from '../logic/layer'
+import { Rect } from '@/logic/common/types2D'
+import LogicCore from '@/logic/core'
+import { Animation, Curves } from '@/logic/utils/anime'
+import { IResizable } from '@/logic/mixins/resizable'
+import IRenderable from '@/logic/mixins/renderable'
+import LogicConfig from '@/logic/config'
 
 export default class ResizeObjectLayer extends LogicLayer {
     private _resizing: boolean = false
@@ -40,9 +40,9 @@ export default class ResizeObjectLayer extends LogicLayer {
     public onMounted(core: LogicCore) {
         this._resizingLogicObject = core.resizingLogicObject
         this._resizingLogicObjectState = core.resizingLogicObjectState
-        core.on("resizobj.logic.begin", this._onResizeObjectBegin.bind(this))
-        core.on("resizobj.logic.end", this._onResizeObjectEnd.bind(this))
-        core.on("resizobj.logic.step", this._onResizingObjectStep.bind(this))
+        core.on('resizobj.logic.begin', this._onResizeObjectBegin.bind(this))
+        core.on('resizobj.logic.end', this._onResizeObjectEnd.bind(this))
+        core.on('resizobj.logic.step', this._onResizingObjectStep.bind(this))
         core.on('memory.switch.before', () => {
             this._resizing = false
             this._resizingFrameElapsed = 0
@@ -79,7 +79,11 @@ export default class ResizeObjectLayer extends LogicLayer {
         const oldRect = this._currentScaledObjectRect.clone()
         const scaleAnime = new Animation(
             (progress: number) => {
-                this._currentScaledObjectRect = Rect.lerp(oldRect, obj.rect, progress)
+                this._currentScaledObjectRect = Rect.lerp(
+                    oldRect,
+                    obj.rect,
+                    progress,
+                )
                 this.core!.render()
             },
             200,
@@ -89,12 +93,16 @@ export default class ResizeObjectLayer extends LogicLayer {
             },
             () => {
                 this._scaleAnimating = false
-            }
+            },
         )
         const oldTarget = this._currentTargetObjectRect.clone()
         const targetAnime = new Animation(
             (progress: number) => {
-                this._currentTargetObjectRect = Rect.lerp(oldTarget, obj.rect, progress)
+                this._currentTargetObjectRect = Rect.lerp(
+                    oldTarget,
+                    obj.rect,
+                    progress,
+                )
                 this.core!.render()
             },
             150,
@@ -105,13 +113,13 @@ export default class ResizeObjectLayer extends LogicLayer {
             () => {
                 this._targetAnimating = false
                 this._resizing = false
-                this.core!.fire("resizobj.logic.finish")
-            }
+                this.core!.fire('resizobj.logic.finish')
+            },
         )
         scaleAnime.start()
         targetAnime.start()
-        this.core!.fire("update-bound")
-        this.core!.fire("select.logic-changed")
+        this.core!.fire('update-bound')
+        this.core!.fire('select.logic-changed')
         this.core!.renderAll()
     }
 
@@ -121,7 +129,11 @@ export default class ResizeObjectLayer extends LogicLayer {
         const oldTarget = this._currentTargetObjectRect.clone()
         const moveTargetAnime = new Animation(
             (progress: number) => {
-                this._currentTargetObjectRect = Rect.lerp(oldTarget, obj.target, progress)
+                this._currentTargetObjectRect = Rect.lerp(
+                    oldTarget,
+                    obj.target,
+                    progress,
+                )
                 this.core!.render()
             },
             150,
@@ -131,7 +143,7 @@ export default class ResizeObjectLayer extends LogicLayer {
             },
             () => {
                 this._targetAnimating = false
-            }
+            },
         )
         moveTargetAnime.start()
     }
@@ -155,8 +167,8 @@ export default class ResizeObjectLayer extends LogicLayer {
         } else {
             rect = obj.rect
         }
-        const renderRect = this.core!.crd2posRect(rect).float();
-        (obj as unknown as IRenderable).renderAt(ctx, renderRect)
+        const renderRect = this.core!.crd2posRect(rect).float()
+        ;(obj as unknown as IRenderable).renderAt(ctx, renderRect)
         return true
     }
 }

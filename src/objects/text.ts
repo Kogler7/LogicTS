@@ -1,37 +1,45 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Sep. 15, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Sep. 15, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import { Point, Rect } from "@/logic/common/types2D"
-import { uid_rt } from "@/logic/common/uid"
-import IRenderable from "@/logic/mixins/renderable"
-import LogicCore from "@/logic/core"
-import IObjectArena from "@/logic/arena/arena"
-import { Flexible } from "@/logic/mixins/flexible"
-import { FontStyle, FontAlign, LogicTextArea } from "@/logic/utils/text"
-import { IDisposable } from "@/logic/common/types"
+import { Point, Rect } from '@/logic/common/types2D'
+import { uid_rt } from '@/logic/common/uid'
+import IRenderable from '@/logic/mixins/renderable'
+import LogicCore from '@/logic/core'
+import IObjectArena from '@/logic/arena/arena'
+import { Flexible } from '@/logic/mixins/flexible'
+import { FontStyle, FontAlign, LogicTextArea } from '@/logic/utils/text'
+import { IDisposable } from '@/logic/common/types'
 
-export default class TextArea extends Flexible implements IRenderable, IDisposable {
+export default class TextArea
+    extends Flexible
+    implements IRenderable, IDisposable
+{
     private _moving: boolean = false
     private _resizing: boolean = false
     private _arena: IObjectArena<Rect> | null = null
     private _text: LogicTextArea
     private _cacheCtx: CanvasRenderingContext2D | null = null
 
-    constructor(rect: Rect, text: string = "", style: FontStyle = {}, align: FontAlign = {}) {
+    constructor(
+        rect: Rect,
+        text: string = '',
+        style: FontStyle = {},
+        align: FontAlign = {},
+    ) {
         super(uid_rt(), 0, rect)
         this._text = new LogicTextArea(this.rect, text, style, align)
     }
@@ -56,15 +64,15 @@ export default class TextArea extends Flexible implements IRenderable, IDisposab
         this._text.setCore(core)
         this._arena = core.logicArena
         this._updateCache()
-        core.on("movobj.logic.finish", this.onMoveFinished.bind(this))
-        core.on("resizobj.logic.finish", this.onResizeFinished.bind(this))
-        core.on("zoom.end", this._updateCache.bind(this))
+        core.on('movobj.logic.finish', this.onMoveFinished.bind(this))
+        core.on('resizobj.logic.finish', this.onResizeFinished.bind(this))
+        core.on('zoom.end', this._updateCache.bind(this))
         core.on('memory.switch.after', this._updateCache.bind(this))
     }
 
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {
         ctx.drawImage(this._cacheCtx!.canvas, ...rect.ltwh)
-        ctx.strokeStyle = "red"
+        ctx.strokeStyle = 'red'
         ctx.strokeRect(...rect.ltwh)
         return rect
     }
@@ -74,7 +82,7 @@ export default class TextArea extends Flexible implements IRenderable, IDisposab
         const rect = this.renderAt(ctx, renderRect)
         // if this component is moving or resizing, render a mask
         if (this._moving || this._resizing) {
-            ctx.fillStyle = "rgba(255, 255, 255, 0.5)"
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
             ctx.fillRect(...rect.ltwh)
         }
     }

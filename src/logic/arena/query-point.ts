@@ -1,21 +1,21 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Aug. 21, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Aug. 21, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import IObjectArena from "./arena"
+import IObjectArena from './arena'
 import { Point, Line, Rect, Size } from '../common/types2D'
 import { uid } from '../common/uid'
 
@@ -112,7 +112,10 @@ export default class QueryPointArena implements IObjectArena<Point> {
             }
         }
         this._objects.set(id, obj)
-        this._boundRect = new Rect(this.objects.values().next().value.clone(), new Size(0, 0))
+        this._boundRect = new Rect(
+            this.objects.values().next().value.clone(),
+            new Size(0, 0),
+        )
         for (const [k, v] of this._objects) {
             this._boundRect.expandToInclude(v)
         }
@@ -126,8 +129,13 @@ export default class QueryPointArena implements IObjectArena<Point> {
             return false
         }
         this._objects.delete(id)
-        this._boundRect = this._objects.size === 0 ? Rect.zero()
-            : new Rect(this.objects.values().next().value.clone(), new Size(0, 0))
+        this._boundRect =
+            this._objects.size === 0
+                ? Rect.zero()
+                : new Rect(
+                      this.objects.values().next().value.clone(),
+                      new Size(0, 0),
+                  )
         for (const [k, v] of this._objects) {
             this._boundRect.expandToInclude(v)
         }
@@ -136,7 +144,10 @@ export default class QueryPointArena implements IObjectArena<Point> {
     }
 
     public posOccupied(pos: Point): uid | null {
-        if (this._paddedScope !== null && !this._paddedScope.containsPoint(pos)) {
+        if (
+            this._paddedScope !== null &&
+            !this._paddedScope.containsPoint(pos)
+        ) {
             return null
         }
         if (this._tolerance === 0) {
@@ -156,18 +167,22 @@ export default class QueryPointArena implements IObjectArena<Point> {
     }
 
     public lineOccupied(line: Line, except: uid): uid | null {
-        throw new Error("Method not implemented.")
+        throw new Error('Method not implemented.')
     }
 
     public rectOccupied(rect: Rect, except: uid, fill: boolean): uid | null {
-        throw new Error("Method not implemented.")
+        throw new Error('Method not implemented.')
     }
 
     public lineOccupiedSet(line: Line, except: uid = -1): Set<uid> {
-        throw new Error("Method not implemented.")
+        throw new Error('Method not implemented.')
     }
 
-    public rectOccupiedSet(rect: Rect, except: uid = -1, fill: boolean = true): Set<uid> {
-        throw new Error("Method not implemented.")
+    public rectOccupiedSet(
+        rect: Rect,
+        except: uid = -1,
+        fill: boolean = true,
+    ): Set<uid> {
+        throw new Error('Method not implemented.')
     }
 }

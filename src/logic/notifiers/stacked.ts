@@ -1,19 +1,19 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Jul. 29, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Jul. 29, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
 export const TRACK_EMITTED_EVENTS = false
 
@@ -46,9 +46,10 @@ export default class StackedEventNotifier {
         if (!callbacks) {
             return
         }
-        const idx = callback !== null ?
-            callbacks.findIndex(item => item.callback === callback) :
-            callbacks.findIndex(item => item.level === level)
+        const idx =
+            callback !== null
+                ? callbacks.findIndex((item) => item.callback === callback)
+                : callbacks.findIndex((item) => item.level === level)
         if (idx >= 0) {
             callbacks.splice(idx, 1)
         }

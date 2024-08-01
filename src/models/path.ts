@@ -1,22 +1,22 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Oct. 13, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Oct. 13, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import LogicCore from "@/logic/core"
-import { Point, Vector, Direction, Rect } from "@/logic/common/types2D"
+import LogicCore from '@/logic/core'
+import { Point, Vector, Direction, Rect } from '@/logic/common/types2D'
 
 const SHOW_CTRL_POINTS = false
 
@@ -40,7 +40,8 @@ export default class RenderPath {
     // cache the control points for each way point
     // the control points are used to draw bezier curve
     // weak map is used to avoid memory leak
-    private _ctrlPoints: WeakMap<WayPoint, [number, Point, Point]> = new WeakMap()
+    private _ctrlPoints: WeakMap<WayPoint, [number, Point, Point]> =
+        new WeakMap()
 
     constructor(initPoint: Point, dir: Direction = Direction.RIGHT) {
         this._wayPoints.push(WayPoint.fromPoint(initPoint, dir))
@@ -142,7 +143,10 @@ export default class RenderPath {
         if (this._wayPoints.length === 0) {
             this._wayPoints.push(WayPoint.fromPoint(point, direction))
         } else {
-            this._wayPoints[this._wayPoints.length - 1] = WayPoint.fromPoint(point, direction)
+            this._wayPoints[this._wayPoints.length - 1] = WayPoint.fromPoint(
+                point,
+                direction,
+            )
         }
         this._dirty = true // the area is changed
     }
@@ -158,7 +162,11 @@ export default class RenderPath {
         for (let i = 1; i < this._wayPoints.length; i++) {
             const currP = this._wayPoints[i]
             const [ctrl1, ctrl2] = this._getCtrlPair(lastP, currP)
-            ctx.bezierCurveTo(...crd2pos(ctrl1).values, ...crd2pos(ctrl2).values, ...crd2pos(currP).values)
+            ctx.bezierCurveTo(
+                ...crd2pos(ctrl1).values,
+                ...crd2pos(ctrl2).values,
+                ...crd2pos(currP).values,
+            )
             lastP = currP
         }
         ctx.stroke()

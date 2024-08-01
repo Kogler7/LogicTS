@@ -29,7 +29,7 @@ export function uid_rt(): uid {
         now.getFullYear(),
         now.getMonth(),
         now.getDate(),
-        now.getHours()
+        now.getHours(),
     )
     const time = now.getTime() - startOfHour.getTime()
     const id = time * 0xf9 + _uid_cnt++ + 1e8

@@ -1,28 +1,28 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Sep. 7, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Sep. 7, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import LogicLayer from "../logic/layer"
-import { Point, Rect, Vector } from "@/logic/common/types2D"
-import { uid } from "@/logic/common/uid"
-import LogicCore from "@/logic/core"
-import IRenderable from "@/logic/mixins/renderable"
-import { IMovable } from "@/logic/mixins/movable"
-import { Animation, Curves } from "@/logic/utils/anime"
-import LogicConfig from "@/logic/config"
+import LogicLayer from '../logic/layer'
+import { Point, Rect, Vector } from '@/logic/common/types2D'
+import { uid } from '@/logic/common/uid'
+import LogicCore from '@/logic/core'
+import IRenderable from '@/logic/mixins/renderable'
+import { IMovable } from '@/logic/mixins/movable'
+import { Animation, Curves } from '@/logic/utils/anime'
+import LogicConfig from '@/logic/config'
 
 export default class MoveObjectLayer extends LogicLayer {
     private _moving: boolean = false
@@ -45,10 +45,10 @@ export default class MoveObjectLayer extends LogicLayer {
     public onMounted(core: LogicCore) {
         this._movingObjects = core.movingLogicObjects
         this._movingObjectStates = core.movingLogicObjectStates
-        core.on("movobj.logic.begin", this._onMoveObjectBegin.bind(this))
-        core.on("movobj.logic.end", this._onMoveObjectEnd.bind(this))
-        core.on("movobj.logic.ing", this._onMovingObject.bind(this))
-        core.on("movobj.logic.step", this._onMovingObjectStep.bind(this))
+        core.on('movobj.logic.begin', this._onMoveObjectBegin.bind(this))
+        core.on('movobj.logic.end', this._onMoveObjectEnd.bind(this))
+        core.on('movobj.logic.ing', this._onMovingObject.bind(this))
+        core.on('movobj.logic.step', this._onMovingObjectStep.bind(this))
         core.on('memory.switch.before', () => {
             this._moving = false
             this._movingFrameElapsed = 0
@@ -80,7 +80,10 @@ export default class MoveObjectLayer extends LogicLayer {
             } else {
                 scaled = Rect.scale(obj.rect, 0.7, obj.rect.center)
             }
-            this._movingScaledObjectsBias.set(obj.id, Vector.fromPoints(pos, scaled.pos))
+            this._movingScaledObjectsBias.set(
+                obj.id,
+                Vector.fromPoints(pos, scaled.pos),
+            )
             this._movingScaledObjectsRect.set(obj.id, scaled)
             this._currentScaledObjectsRect.set(obj.id, obj.rect.clone())
             this._currentTargetObjectsRect.set(obj.id, obj.target.clone())
@@ -90,7 +93,10 @@ export default class MoveObjectLayer extends LogicLayer {
             const target = this._movingScaledObjectsRect.get(obj.id)!
             const scaleAnime = new Animation(
                 (progress: number) => {
-                    this._currentScaledObjectsRect.set(obj.id, Rect.lerp(obj.rect, target, progress))
+                    this._currentScaledObjectsRect.set(
+                        obj.id,
+                        Rect.lerp(obj.rect, target, progress),
+                    )
                     this.core!.render()
                 },
                 300,
@@ -100,7 +106,7 @@ export default class MoveObjectLayer extends LogicLayer {
                 },
                 () => {
                     this._scaleAnimating = false
-                }
+                },
             )
             scaleAnime.start()
         }
@@ -115,7 +121,10 @@ export default class MoveObjectLayer extends LogicLayer {
             const curr = this._movingScaledObjectsRect.get(obj.id)!.clone()
             const scaleAnime = new Animation(
                 (progress: number) => {
-                    this._currentScaledObjectsRect.set(obj.id, Rect.lerp(curr, obj.rect, progress))
+                    this._currentScaledObjectsRect.set(
+                        obj.id,
+                        Rect.lerp(curr, obj.rect, progress),
+                    )
                     this.core!.render()
                 },
                 200,
@@ -126,25 +135,29 @@ export default class MoveObjectLayer extends LogicLayer {
                 () => {
                     this._scaleAnimating = false
                     this._moving = false
-                    this.core!.fire("movobj.logic.finish")
-                }
+                    this.core!.fire('movobj.logic.finish')
+                },
             )
             const curTarget = this._currentTargetObjectsRect.get(obj.id)!
             const oldTarget = curTarget.clone()
             const targetAnime = new Animation(
                 (progress: number) => {
-                    const targetPos = Point.lerp(oldTarget.pos, obj.rect.pos, progress)
+                    const targetPos = Point.lerp(
+                        oldTarget.pos,
+                        obj.rect.pos,
+                        progress,
+                    )
                     curTarget.pos = targetPos
                     this.core!.render()
                 },
                 150,
-                Curves.easeInOut
+                Curves.easeInOut,
             )
             scaleAnime.start()
             targetAnime.start()
         }
-        this.core!.fire("update-bound")
-        this.core!.fire("select.logic-changed")
+        this.core!.fire('update-bound')
+        this.core!.fire('select.logic-changed')
         this.core!.renderAll()
     }
 
@@ -162,7 +175,11 @@ export default class MoveObjectLayer extends LogicLayer {
             const oldTarget = curTarget.clone()
             const moveTargetAnime = new Animation(
                 (progress: number) => {
-                    const targetPos = Point.lerp(oldTarget.pos, obj.target.pos, progress)
+                    const targetPos = Point.lerp(
+                        oldTarget.pos,
+                        obj.target.pos,
+                        progress,
+                    )
                     curTarget.pos = targetPos
                     this.core!.render()
                 },
@@ -173,7 +190,7 @@ export default class MoveObjectLayer extends LogicLayer {
                 },
                 () => {
                     this._targetAnimating = false
-                }
+                },
             )
             moveTargetAnime.start()
         }
@@ -200,8 +217,8 @@ export default class MoveObjectLayer extends LogicLayer {
             } else {
                 rect = this._movingScaledObjectsRect.get(obj.id)!
             }
-            const renderRect = this.core!.crd2posRect(rect).float();
-            (obj as unknown as IRenderable).renderAt(ctx, renderRect)
+            const renderRect = this.core!.crd2posRect(rect).float()
+            ;(obj as unknown as IRenderable).renderAt(ctx, renderRect)
         }
         return true
     }

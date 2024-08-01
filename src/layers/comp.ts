@@ -1,32 +1,32 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Oct. 24, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Oct. 24, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import LogicCore from "@/logic/core"
-import LogicLayer from "@/logic/layer"
-import IRenderable from "@/logic/mixins/renderable"
-import IObjectArena from "@/logic/arena/arena"
-import QueryPointArena from "@/logic/arena/query-point"
-import Component from "@/objects/comp"
-import { Point } from "@/logic/common/types2D"
-import { PortType } from "@/models/port"
-import RenderPair from "@/models/pair"
-import { uid } from "@/logic/common/uid"
-import { Animation } from "@/logic/utils/anime"
-import { Curves } from "@/logic/utils/curve"
+import LogicCore from '@/logic/core'
+import LogicLayer from '@/logic/layer'
+import IRenderable from '@/logic/mixins/renderable'
+import IObjectArena from '@/logic/arena/arena'
+import QueryPointArena from '@/logic/arena/query-point'
+import Component from '@/objects/comp'
+import { Point } from '@/logic/common/types2D'
+import { PortType } from '@/models/port'
+import RenderPair from '@/models/pair'
+import { uid } from '@/logic/common/uid'
+import { Animation } from '@/logic/utils/anime'
+import { Curves } from '@/logic/utils/curve'
 
 export default class CompLayer extends LogicLayer {
     private _comps: Set<IRenderable> = new Set()
@@ -42,25 +42,36 @@ export default class CompLayer extends LogicLayer {
     private _acceptClick: boolean = true
 
     public onMounted(core: LogicCore): void {
-        core.malloc('comps', this, {
-            _comps: 1,
-            _portsArena: 2,
-            _portPairMap: 1,
-        }, () => {
-            this._selectedPortId = null
-            this._selectedPair = null
-            this._focusOpacity = 0
-            this._focusAnime?.cancel()
-            this._focusAnime = null
-            this._acceptClick = true
-            this._startPair = null
-            this._linking = false
-        })
+        core.malloc(
+            'comps',
+            this,
+            {
+                _comps: 1,
+                _portsArena: 2,
+                _portPairMap: 1,
+            },
+            () => {
+                this._selectedPortId = null
+                this._selectedPair = null
+                this._focusOpacity = 0
+                this._focusAnime?.cancel()
+                this._focusAnime = null
+                this._acceptClick = true
+                this._startPair = null
+                this._linking = false
+            },
+        )
         core.on('mousemove', this._onMouseMove.bind(this), 0)
         core.on('mousedown', this._onMouseDown.bind(this), 0)
-        core.on('zoom.end', () => { this._updateArena() })
-        core.on('memory.switch.after', () => { this._updateArena() })
-        core.on('pan.end', () => { this._updateArena() })
+        core.on('zoom.end', () => {
+            this._updateArena()
+        })
+        core.on('memory.switch.after', () => {
+            this._updateArena()
+        })
+        core.on('pan.end', () => {
+            this._updateArena()
+        })
         core.on('comp.move.finally', (compId: uid) => {
             const node = (core.getObject(compId) as Component).node
             for (const [id, port] of node.ports) {
@@ -89,7 +100,8 @@ export default class CompLayer extends LogicLayer {
 
     private _onHoverPort(portId: uid) {
         if (this._linking) {
-            this._acceptClick = this._startPair?.compatibleWith(this._selectedPair!) || false
+            this._acceptClick =
+                this._startPair?.compatibleWith(this._selectedPair!) || false
         } else {
             // only accept OUT port
             this._acceptClick = this._selectedPair?.typ === PortType.OUT
@@ -101,7 +113,7 @@ export default class CompLayer extends LogicLayer {
                 this.core?.render()
             },
             300,
-            Curves.easeInOut
+            Curves.easeInOut,
         )
         if (this._focusAnime) {
             this._focusAnime.cancel()
@@ -119,7 +131,7 @@ export default class CompLayer extends LogicLayer {
                 this.core?.render()
             },
             300,
-            Curves.easeInOut
+            Curves.easeInOut,
         )
         if (this._focusAnime) {
             this._focusAnime.cancel()
@@ -160,7 +172,9 @@ export default class CompLayer extends LogicLayer {
 
     public addComponent(comp: IRenderable): CompLayer {
         if (!this.core) {
-            console.warn('Components should be added after the layer is mounted.')
+            console.warn(
+                'Components should be added after the layer is mounted.',
+            )
         }
         this._comps.add(comp)
         // add ports to the arena
@@ -187,9 +201,9 @@ export default class CompLayer extends LogicLayer {
             }
             const pos = this.core!.crd2pos(crd)
             if (pair.port.typ === PortType.OUT) {
-                ctx.fillStyle = "#ff0000"
+                ctx.fillStyle = '#ff0000'
             } else {
-                ctx.fillStyle = "#0000ff"
+                ctx.fillStyle = '#0000ff'
             }
             ctx.beginPath()
             ctx.arc(pos.x, pos.y, 4, 0, 2 * Math.PI)
@@ -212,9 +226,9 @@ export default class CompLayer extends LogicLayer {
             const pos = core.crd2pos(this._selectedPair!.pos)
             const radius = 10
             const opacity = this._focusOpacity
-            ctx.fillStyle = `rgba(${this._acceptClick ? 100 : 200
-                }, ${this._acceptClick ? 200 : 0
-                }, 0, ${opacity * 0.7})`
+            ctx.fillStyle = `rgba(${this._acceptClick ? 100 : 200}, ${
+                this._acceptClick ? 200 : 0
+            }, 0, ${opacity * 0.7})`
             ctx.beginPath()
             ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI)
             ctx.fill()

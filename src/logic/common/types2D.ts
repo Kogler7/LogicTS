@@ -31,7 +31,7 @@ export enum Direction {
 }
 
 export function dirReverse(dir: Direction): Direction {
-	return (dir + 2) % 4
+    return (dir + 2) % 4
 }
 
 export function dirRotate(dir: Direction, times: number = 1): Direction {
@@ -54,7 +54,10 @@ export function dirOrthogonal(dir1: Direction, dir2: Direction): boolean {
 export class Size
     implements IComparable, IHashable, IPrintable, ICloneable<Size>
 {
-    constructor(public width: number = 0, public height: number = 0) {}
+    constructor(
+        public width: number = 0,
+        public height: number = 0,
+    ) {}
 
     static zero(): Size {
         return new Size(0, 0)
@@ -63,7 +66,7 @@ export class Size
     static lerp(s1: Size, s2: Size, factor: number): Size {
         return new Size(
             s1.width + (s2.width - s1.width) * factor,
-            s1.height + (s2.height - s1.height) * factor
+            s1.height + (s2.height - s1.height) * factor,
         )
     }
 
@@ -110,7 +113,7 @@ export class Size
     static decimal(s: Size): Size {
         return new Size(
             s.width - Math.floor(s.width),
-            s.height - Math.floor(s.height)
+            s.height - Math.floor(s.height),
         )
     }
 
@@ -203,7 +206,10 @@ export class Size
 export class Point
     implements IComparable, IHashable, IPrintable, ICloneable<Point>
 {
-    constructor(public x: number = 0, public y: number = 0) {}
+    constructor(
+        public x: number = 0,
+        public y: number = 0,
+    ) {}
 
     static zero(): Point {
         return new Point(0, 0)
@@ -212,7 +218,7 @@ export class Point
     static lerp(p1: Point, p2: Point, factor: number): Point {
         return new Point(
             p1.x + (p2.x - p1.x) * factor,
-            p1.y + (p2.y - p1.y) * factor
+            p1.y + (p2.y - p1.y) * factor,
         )
     }
 
@@ -248,7 +254,7 @@ export class Point
     static scale(p: Point, factor: number, center: Point): Point {
         return new Point(
             center.x + (p.x - center.x) * factor,
-            center.y + (p.y - center.y) * factor
+            center.y + (p.y - center.y) * factor,
         )
     }
 
@@ -355,7 +361,7 @@ export class Point
     static mod(p: Point, factor: number): Point {
         return new Point(
             p.x - Math.floor(p.x / factor) * factor,
-            p.y - Math.floor(p.y / factor) * factor
+            p.y - Math.floor(p.y / factor) * factor,
         )
     }
 
@@ -429,7 +435,10 @@ export class Point
 export class Line
     implements IComparable, IHashable, IPrintable, ICloneable<Line>
 {
-    constructor(public p1: Point, public p2: Point) {}
+    constructor(
+        public p1: Point,
+        public p2: Point,
+    ) {}
 
     public clone(): Line {
         return new Line(this.p1.clone(), this.p2.clone())
@@ -516,7 +525,7 @@ export class Line
      */
     public some(
         callback: (x: number, y: number) => boolean,
-        step = 1
+        step = 1,
     ): boolean {
         // First check the two end points.
         if (callback(this.p1.x, this.p1.y)) return true
@@ -557,7 +566,7 @@ export class Line
 
     public get length(): number {
         return Math.sqrt(
-            (this.p1.x - this.p2.x) ** 2 + (this.p1.y - this.p2.y) ** 2
+            (this.p1.x - this.p2.x) ** 2 + (this.p1.y - this.p2.y) ** 2,
         )
     }
 
@@ -580,11 +589,11 @@ export class Line
     public get hash(): hash {
         const lt = new Point(
             Math.min(this.p1.x, this.p2.x),
-            Math.min(this.p1.y, this.p2.y)
+            Math.min(this.p1.y, this.p2.y),
         )
         const rb = new Point(
             Math.max(this.p1.x, this.p2.x),
-            Math.max(this.p1.y, this.p2.y)
+            Math.max(this.p1.y, this.p2.y),
         )
         return `${lt.hash}-${rb.hash}`
     }
@@ -603,7 +612,10 @@ export class Line
 export class Vector
     implements IComparable, IHashable, IPrintable, ICloneable<Vector>
 {
-    constructor(public vx: number = 0, public vy: number = 0) {}
+    constructor(
+        public vx: number = 0,
+        public vy: number = 0,
+    ) {}
 
     static zero(): Vector {
         return new Vector(0, 0)
@@ -765,7 +777,7 @@ export class Rect
 {
     constructor(
         public pos: Point = new Point(),
-        public size: Size = new Size()
+        public size: Size = new Size(),
     ) {}
 
     /**
@@ -780,11 +792,11 @@ export class Rect
         left: number,
         top: number,
         right: number,
-        bottom: number
+        bottom: number,
     ): Rect {
         return new Rect(
             new Point(left, top),
-            new Size(right - left, bottom - top)
+            new Size(right - left, bottom - top),
         )
     }
 
@@ -792,7 +804,7 @@ export class Rect
         left: number,
         top: number,
         width: number,
-        height: number
+        height: number,
     ): Rect {
         return new Rect(new Point(left, top), new Size(width, height))
     }
@@ -800,7 +812,7 @@ export class Rect
     static fromCenter(center: Point, size: Size): Rect {
         return new Rect(
             new Point(center.x - size.width / 2, center.y - size.height / 2),
-            size
+            size,
         )
     }
 
@@ -835,7 +847,7 @@ export class Rect
     static lerp(r1: Rect, r2: Rect, factor: number): Rect {
         return new Rect(
             Point.lerp(r1.pos, r2.pos, factor),
-            Size.lerp(r1.size, r2.size, factor)
+            Size.lerp(r1.size, r2.size, factor),
         )
     }
 
@@ -864,7 +876,7 @@ export class Rect
     static shrink(r: Rect): Rect {
         return Rect.fromVertices(
             Point.ceil(r.topLeft),
-            Point.floor(r.bottomRight)
+            Point.floor(r.bottomRight),
         )
     }
 
@@ -921,7 +933,7 @@ export class Rect
     static scale(r: Rect, factor: number, center: Point = Point.zero()): Rect {
         return new Rect(
             Point.scale(r.pos, factor, center),
-            Size.scale(r.size, factor)
+            Size.scale(r.size, factor),
         )
     }
 
@@ -934,7 +946,7 @@ export class Rect
     static setCenter(r: Rect, t: Point): Rect {
         return new Rect(
             new Point(t.x - r.width / 2, t.y - r.height / 2),
-            r.size.clone()
+            r.size.clone(),
         )
     }
 
@@ -1011,7 +1023,7 @@ export class Rect
     static padding(r: Rect, val: number): Rect {
         return new Rect(
             new Point(r.pos.x - val, r.pos.y - val),
-            new Size(r.size.width + 2 * val, r.size.height + 2 * val)
+            new Size(r.size.width + 2 * val, r.size.height + 2 * val),
         )
     }
 
@@ -1098,7 +1110,7 @@ export class Rect
     public set center(p: Point) {
         this.pos = new Point(
             p.x - this.size.width / 2,
-            p.y - this.size.height / 2
+            p.y - this.size.height / 2,
         )
     }
 
@@ -1387,7 +1399,7 @@ export class Rect
      */
     public some(
         callback: (x: number, y: number) => boolean,
-        step = 1
+        step = 1,
     ): boolean {
         const { left, right, top, bottom } = this
         // First check the four corners.
@@ -1438,7 +1450,7 @@ export class Rect
 
     public get desc(): string {
         return `Rect{(${this.pos.x.toFixed(2)}, ${this.pos.y.toFixed(
-            2
+            2,
         )}), [${this.size.width.toFixed(2)}, ${this.size.height.toFixed(2)}]}`
     }
 }
@@ -1448,7 +1460,7 @@ export class Bound
 {
     constructor(
         public lftLmt: number | null = null,
-        public rgtLmt: number | null = null
+        public rgtLmt: number | null = null,
     ) {
         if (lftLmt !== null && rgtLmt !== null && lftLmt > rgtLmt) {
             throw new Error('Bound: Left limit must be less than right limit')
@@ -1540,7 +1552,10 @@ export class Bound
 export class PointBound
     implements IComparable, IPrintable, ICloneable<PointBound>
 {
-    constructor(public x: Bound, public y: Bound) {}
+    constructor(
+        public x: Bound,
+        public y: Bound,
+    ) {}
 
     public clone(): PointBound {
         return new PointBound(this.x.clone(), this.y.clone())
@@ -1587,7 +1602,10 @@ export class PointBound
 export class SizeBound
     implements IComparable, IPrintable, ICloneable<SizeBound>
 {
-    constructor(public width: Bound, public height: Bound) {}
+    constructor(
+        public width: Bound,
+        public height: Bound,
+    ) {}
 
     public clone(): SizeBound {
         return new SizeBound(this.width.clone(), this.height.clone())
@@ -1596,7 +1614,7 @@ export class SizeBound
     public restrict(size: Size): Size {
         return new Size(
             this.width.restrict(size.width),
-            this.height.restrict(size.height)
+            this.height.restrict(size.height),
         )
     }
 
@@ -1656,7 +1674,7 @@ export class RectBound {
             this._lftBound.restrict(rect.left),
             this._topBound.restrict(rect.top),
             this._rgtBound.restrict(rect.right),
-            this._btmBound.restrict(rect.bottom)
+            this._btmBound.restrict(rect.bottom),
         )
     }
 }

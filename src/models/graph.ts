@@ -1,28 +1,28 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Oct. 13, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Oct. 13, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import { HashMap } from "@/logic/common/types"
-import { uid, uid_rt } from "@/logic/common/uid"
-import RenderNode from "./node"
-import RenderPair from "./pair"
-import RenderLink from "./link"
-import RenderPath from "./path"
-import { PortType } from "./port"
-import { Point } from "@/logic/common/types2D"
+import { HashMap } from '@/logic/common/types'
+import { uid, uid_rt } from '@/logic/common/uid'
+import RenderNode from './node'
+import RenderPair from './pair'
+import RenderLink from './link'
+import RenderPath from './path'
+import { PortType } from './port'
+import { Point } from '@/logic/common/types2D'
 
 type node_id = uid
 type link_id = uid
@@ -107,16 +107,20 @@ export default class RenderGraph {
         from: RenderPair,
         to: RenderPair,
         path: RenderPath | null = null,
-        linkId: link_id | null = null
+        linkId: link_id | null = null,
     ): link_id | null {
         // make sure from and to are in different nodes
         if (from.node === to.node) {
-            console.error('RenderGraph.addLink: from and to are in the same node')
+            console.error(
+                'RenderGraph.addLink: from and to are in the same node',
+            )
             return null
         }
         // make sure from and to are in different direction/types
         if (from.typ === to.typ) {
-            console.error('RenderGraph.addLink: from and to are in the same direction')
+            console.error(
+                'RenderGraph.addLink: from and to are in the same direction',
+            )
             return null
         }
         // make sure from is the out port
@@ -138,10 +142,12 @@ export default class RenderGraph {
         }
         // add link and path objects
         this._links.set(_linkId, new RenderLink(_linkId, from, to))
-        const _path = path || RenderPath.fromPoints([
-            [from.pos, from.dir],
-            [to.pos, to.dir]
-        ])
+        const _path =
+            path ||
+            RenderPath.fromPoints([
+                [from.pos, from.dir],
+                [to.pos, to.dir],
+            ])
         this._paths.set(_linkId, _path)
         return _linkId
     }

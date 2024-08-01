@@ -1,27 +1,27 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Sep. 7, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Sep. 7, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import { Point, Rect } from "@/logic/common/types2D"
-import path from "path"
-import IRenderable from "@/logic/mixins/renderable"
-import LogicCore from "@/logic/core"
-import IObjectArena from "@/logic/arena/arena"
-import { Movable } from "@/logic/mixins/movable"
-import RenderNode from "@/models/node"
+import { Point, Rect } from '@/logic/common/types2D'
+import path from 'path'
+import IRenderable from '@/logic/mixins/renderable'
+import LogicCore from '@/logic/core'
+import IObjectArena from '@/logic/arena/arena'
+import { Movable } from '@/logic/mixins/movable'
+import RenderNode from '@/models/node'
 
 const prjRoot = 'D:\\CodeBase\\ElectronPrjs\\LogicTS\\assets\\icons'
 
@@ -50,7 +50,7 @@ export default class Component extends Movable implements IRenderable {
     public onRegistered(core: LogicCore): void {
         super.onRegistered(core)
         this._arena = core.logicArena
-        core.on("movobj.logic.finish", this.onMoveFinished.bind(this))
+        core.on('movobj.logic.finish', this.onMoveFinished.bind(this))
     }
 
     public renderAt(ctx: CanvasRenderingContext2D, rect: Rect): Rect {
@@ -64,9 +64,9 @@ export default class Component extends Movable implements IRenderable {
             ctx.drawImage(this._icon, ...rect.ltwh)
         } else {
             // render a placeholder (a white rect with a cross inside)
-            ctx.fillStyle = "#ffffff"
+            ctx.fillStyle = '#ffffff'
             ctx.fillRect(...rect.ltwh)
-            ctx.strokeStyle = "#000000"
+            ctx.strokeStyle = '#000000'
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(rect.left, rect.top)
@@ -83,7 +83,7 @@ export default class Component extends Movable implements IRenderable {
         const rect = this.renderAt(ctx, renderRect)
         // if this component is moving or resizing, render a mask
         if (this._moving || this._resizing) {
-            ctx.fillStyle = "rgba(255, 255, 255, 0.5)"
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
             ctx.fillRect(...rect.ltwh)
         }
     }

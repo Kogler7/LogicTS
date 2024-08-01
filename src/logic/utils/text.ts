@@ -1,24 +1,24 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Sep. 11, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Sep. 11, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import { Point, Rect, Size } from "../common/types2D"
-import LogicConfig from "../config"
-import LogicCore from "../core"
-import IRenderable from "../mixins/renderable"
+import { Point, Rect, Size } from '../common/types2D'
+import LogicConfig from '../config'
+import LogicCore from '../core'
+import IRenderable from '../mixins/renderable'
 
 const config = LogicConfig.objects.text
 
@@ -84,7 +84,7 @@ export class Text implements IText {
         ctx.restore()
         return new Size(
             metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight,
-            metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
+            metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent,
         )
     }
 
@@ -92,8 +92,9 @@ export class Text implements IText {
         ctx.save()
         ctx.font = getFontString(this.style)
         ctx.fillStyle = this.style.color || config.color
-        ctx.textAlign = this.align.align || config.align as CanvasTextAlign
-        ctx.textBaseline = this.align.baseline || config.baseline as CanvasTextBaseline
+        ctx.textAlign = this.align.align || (config.align as CanvasTextAlign)
+        ctx.textBaseline =
+            this.align.baseline || (config.baseline as CanvasTextBaseline)
         ctx.fillText(this.text, pos.x, pos.y)
         ctx.restore()
     }
@@ -112,10 +113,9 @@ export class TextArea implements IRenderable {
         this.align = align
         if (!align.padding) {
             align.padding = config.padding
-        }
-        else if (align.padding < 0) {
+        } else if (align.padding < 0) {
             // if padding is negative, we set it to 0
-            console.warn("padding should not be negative")
+            console.warn('padding should not be negative')
             align.padding = 0
         }
         if (!align.lineSpacing) {
@@ -126,8 +126,9 @@ export class TextArea implements IRenderable {
     protected _configCtx(ctx: CanvasRenderingContext2D): void {
         ctx.font = getFontString(this.style)
         ctx.fillStyle = this.style.color || config.color
-        ctx.textAlign = this.align.align || config.align as CanvasTextAlign
-        ctx.textBaseline = this.align.baseline || config.baseline as CanvasTextBaseline
+        ctx.textAlign = this.align.align || (config.align as CanvasTextAlign)
+        ctx.textBaseline =
+            this.align.baseline || (config.baseline as CanvasTextBaseline)
     }
 
     public renderOn(ctx: CanvasRenderingContext2D): void {
@@ -139,19 +140,21 @@ export class TextArea implements IRenderable {
         this._configCtx(ctx)
         const textRect = Rect.padding(
             rect,
-            -ctx.measureText('M').width * this.align.padding!
+            -ctx.measureText('M').width * this.align.padding!,
         ).float()
         const textLines = fitTextIntoRect(
             this.text,
             textRect,
             this.align.padding!,
             this.align.lineSpacing!,
-            ctx
+            ctx,
         )
         let curHeight = 0
         for (const textLine of textLines) {
             ctx.fillText(textLine.text, textRect.left, textRect.top + curHeight)
-            curHeight += textLine.metrics.height * (this.align.lineSpacing || config.lineSpacing)
+            curHeight +=
+                textLine.metrics.height *
+                (this.align.lineSpacing || config.lineSpacing)
         }
         ctx.restore()
         return rect
@@ -172,17 +175,22 @@ export class LogicTextArea extends TextArea {
     }
 
     protected _configCtx(ctx: CanvasRenderingContext2D): void {
-        let realSize = this.fontSize * (this._core?.logicWidth ?? 1) * config.logicFactor
+        let realSize =
+            this.fontSize * (this._core?.logicWidth ?? 1) * config.logicFactor
         this.style.size = realSize
         super._configCtx(ctx)
     }
 }
 
-function measureText(text: string, ctx: CanvasRenderingContext2D): TextLineMetrics {
+function measureText(
+    text: string,
+    ctx: CanvasRenderingContext2D,
+): TextLineMetrics {
     const metrics = ctx.measureText(text)
     return {
         width: metrics.width,
-        height: metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
+        height:
+            metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent,
     }
 }
 
@@ -190,7 +198,7 @@ function splitTextByWidth(
     text: string,
     maxWidth: number,
     padding: number,
-    ctx: CanvasRenderingContext2D
+    ctx: CanvasRenderingContext2D,
 ): TextLine[] {
     const rawWords = text.split(' ')
     const words: string[] = []
@@ -224,7 +232,7 @@ function splitTextByWidth(
         if (metrics.width > maxWidth - padding * 2) {
             lines.push({
                 text: line,
-                metrics: metrics
+                metrics: metrics,
             })
             line = word
         } else {
@@ -234,7 +242,7 @@ function splitTextByWidth(
     if (line.length > 0) {
         lines.push({
             text: line,
-            metrics: measureText(line, ctx)
+            metrics: measureText(line, ctx),
         })
     }
     return lines
@@ -245,7 +253,7 @@ function fitTextIntoRect(
     rect: Rect,
     padding: number,
     lineSpacing: number,
-    ctx: CanvasRenderingContext2D
+    ctx: CanvasRenderingContext2D,
 ): TextLine[] {
     const textLines: TextLine[] = []
     const lines = text.split(/\r?\n/)

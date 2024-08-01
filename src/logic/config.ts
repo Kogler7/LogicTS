@@ -1,23 +1,23 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN AS IS BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Sep. 10, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN AS IS BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Sep. 10, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
 const configObject = {
     core: {
-        version: "1.0.0",
+        version: '1.0.0',
         layout: {
             logicWidth: 25,
             logicWidthMin: 1,
@@ -27,29 +27,29 @@ const configObject = {
             zoomLevelMin: 0,
             zoomLevelMax: 2,
             levelUpFactor: 4,
-            gridWidthMin: 16
-        }
+            gridWidthMin: 16,
+        },
     },
     layers: {
         occupy: {
-            okColor: "#8BC34A",
-            noColor: "#FF5722"
-        }
+            okColor: '#8BC34A',
+            noColor: '#FF5722',
+        },
     },
     objects: {
         text: {
-            size : 16,
-            family : "Arial",
-            weight : "normal",
-            style : "normal",
-            color : "#000000",
-            align : "left",
-            padding : 0.5,
-            baseline : "top",
-            lineSpacing : 1.6,
-            logicFactor : 0.2,
-        }
-    }
+            size: 16,
+            family: 'Arial',
+            weight: 'normal',
+            style: 'normal',
+            color: '#000000',
+            align: 'left',
+            padding: 0.5,
+            baseline: 'top',
+            lineSpacing: 1.6,
+            logicFactor: 0.2,
+        },
+    },
 }
 
 function deepMerge(target: any, source: any) {
@@ -59,8 +59,7 @@ function deepMerge(target: any, source: any) {
                 target[key] = {}
             }
             deepMerge(target[key], source[key])
-        }
-        else {
+        } else {
             target[key] = source[key]
         }
     }

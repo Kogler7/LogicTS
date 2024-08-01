@@ -1,42 +1,44 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Oct. 24, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Oct. 24, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import LogicCore from "./logic/core"
-import FrameLayer from "@/layers/frame"
-import ScalarLayer from "@/layers/scalar"
-import MeshLayer from "@/layers/mesh"
-import SelectLayer from "@/layers/select"
-import LinkLayer from "./layers/link"
-import ToastLayer from "./layers/toast"
-import MoveObjectLayer from "@/layers/move"
-import ResizeObjectLayer from "@/layers/resize"
-import Component from "@/objects/comp"
-import TextArea from "@/objects/text"
-import CompLayer from "./layers/comp"
-import IRenderable from "./logic/mixins/renderable"
-import { IObject } from "./logic/handlers/object"
-import { graphManager } from "./plugins/graph"
+import LogicCore from './logic/core'
+import FrameLayer from '@/layers/frame'
+import ScalarLayer from '@/layers/scalar'
+import MeshLayer from '@/layers/mesh'
+import SelectLayer from '@/layers/select'
+import LinkLayer from './layers/link'
+import ToastLayer from './layers/toast'
+import MoveObjectLayer from '@/layers/move'
+import ResizeObjectLayer from '@/layers/resize'
+import Component from '@/objects/comp'
+import TextArea from '@/objects/text'
+import CompLayer from './layers/comp'
+import IRenderable from './logic/mixins/renderable'
+import { IObject } from './logic/handlers/object'
+import { graphManager } from './plugins/graph'
 
 export default class Designer {
     private _core: LogicCore
 
     private _compLayer: CompLayer
 
-    public get core() { return this._core }
+    public get core() {
+        return this._core
+    }
 
     constructor(stage: HTMLCanvasElement) {
         const core = new LogicCore()

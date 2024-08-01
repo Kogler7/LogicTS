@@ -93,11 +93,11 @@ export default class EventHandler {
         if (this._targetEl) {
             this._targetEl.removeEventListener(
                 'mousedown',
-                this._handleMouseDown
+                this._handleMouseDown,
             )
             this._targetEl.removeEventListener(
                 'mousemove',
-                this._handleMouseMove
+                this._handleMouseMove,
             )
             this._targetEl.removeEventListener('mouseup', this._handleMouseUp)
             this._targetEl.removeEventListener('wheel', this._handleWheel)
@@ -187,7 +187,7 @@ export default class EventHandler {
                 this._core.fire(
                     'frame.change',
                     this.focusLogicFloorRect,
-                    newFloorRect
+                    newFloorRect,
                 )
                 this.focusLogicFloorRect = newFloorRect
             }
@@ -231,7 +231,7 @@ export default class EventHandler {
             this._tryEndReloc()
         } else {
             this._tryStartReloc()
-            this._core.panTo(new Vector(0, e.deltaY))
+            this._core.panTo(new Vector(0, -e.deltaY))
             this._tryEndReloc()
         }
     }

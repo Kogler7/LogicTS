@@ -1,21 +1,21 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Oct. 24, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Oct. 24, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import IObjectArena from "./arena"
+import IObjectArena from './arena'
 import { Point, Line, Rect } from '../common/types2D'
 import { uid } from '../common/uid'
 
@@ -42,7 +42,7 @@ export default class QueryRectArena implements IObjectArena<Rect> {
         this._calcScope()
     }
 
-    public set tolerance(val: number) { }
+    public set tolerance(val: number) {}
 
     private _calcScope() {
         if (this._cropRect === null) {
@@ -117,8 +117,10 @@ export default class QueryRectArena implements IObjectArena<Rect> {
             return false
         }
         this._objects.delete(id)
-        this._boundRect = this._objects.size === 0 ? Rect.zero()
-            : this._objects.values().next().value.clone()
+        this._boundRect =
+            this._objects.size === 0
+                ? Rect.zero()
+                : this._objects.values().next().value.clone()
         for (let [k, v] of this._objects) {
             this._boundRect.union(v)
         }
@@ -186,7 +188,11 @@ export default class QueryRectArena implements IObjectArena<Rect> {
         return ret
     }
 
-    public rectOccupiedSet(rect: Rect, except: uid = -1, fill: boolean = true): Set<uid> {
+    public rectOccupiedSet(
+        rect: Rect,
+        except: uid = -1,
+        fill: boolean = true,
+    ): Set<uid> {
         if (this._scope !== null && !this._scope.intersectsRect(rect)) {
             return new Set()
         }

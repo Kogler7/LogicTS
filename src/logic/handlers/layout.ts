@@ -1,24 +1,24 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Jul. 29, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Jul. 29, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import { Point, Rect, Size, Vector } from "../common/types2D"
-import LogicCore from "../core"
-import { Animation, Curves } from "../utils/anime"
-import LogicConfig from "../config"
+import { Point, Rect, Size, Vector } from '../common/types2D'
+import LogicCore from '../core'
+import { Animation, Curves } from '../utils/anime'
+import LogicConfig from '../config'
 
 export default class LayoutHandler {
     private _core: LogicCore
@@ -48,15 +48,21 @@ export default class LayoutHandler {
 
     constructor(core: LogicCore) {
         this._core = core
-        core.malloc('__layout__', this, {
-            originBias: 1,
-            logicWidth: 1,
-            zoomLevel: 1,
-        }, null, () => {
-            this.gridWidthFactor = this.levelUpFactor ** this.zoomLevel
-            this.gridWidth = this.logicWidth * this.gridWidthFactor
-            this._updateLogicRect()
-        })
+        core.malloc(
+            '__layout__',
+            this,
+            {
+                originBias: 1,
+                logicWidth: 1,
+                zoomLevel: 1,
+            },
+            null,
+            () => {
+                this.gridWidthFactor = this.levelUpFactor ** this.zoomLevel
+                this.gridWidth = this.logicWidth * this.gridWidthFactor
+                this._updateLogicRect()
+            },
+        )
         core.on('pan.ing', () => {
             const { lastPos, focusPos } = this._core
             this.panTo(Vector.fromPoints(lastPos, focusPos))
@@ -70,7 +76,7 @@ export default class LayoutHandler {
         core.on('slide.ing', () => {
             const vec = Vector.fromPoints(
                 this._core.focusPos,
-                this._core.anchorPos
+                this._core.anchorPos,
             ).divide(this.logicWidth * 30)
             this._slideVector = vec
         })
@@ -87,7 +93,7 @@ export default class LayoutHandler {
         core.on('doubleclick.middle', () => {
             const origin = Rect.setCenter(
                 this._core.logicRect,
-                this._core.boundRect.center
+                this._core.boundRect.center,
             ).topLeft.reverse()
             const bias = this.originBias.clone()
             const anime = new Animation(
@@ -97,8 +103,12 @@ export default class LayoutHandler {
                 },
                 300,
                 Curves.easeInOut,
-                () => { this._core.fire('reloc.begin') },
-                () => { this._core.fire('reloc.end') }
+                () => {
+                    this._core.fire('reloc.begin')
+                },
+                () => {
+                    this._core.fire('reloc.end')
+                },
             )
             anime.start()
         })
@@ -136,7 +146,7 @@ export default class LayoutHandler {
     public zoomAt(angle: number, center: Point) {
         const { logicWidth: length } = this
         const angle2zoomUnit = 1 / 293.33 // zoom unit per wheel event (deltaY)
-        const factor = - this.zoomSpeed * angle2zoomUnit / this.gridWidthFactor
+        const factor = (-this.zoomSpeed * angle2zoomUnit) / this.gridWidthFactor
         const delta = angle * factor
         // prevent zoom out too much, in case of unexpected behavior
         if (delta < 0 && length + delta <= this.logicWidthMin) {
@@ -159,8 +169,7 @@ export default class LayoutHandler {
             if (this.zoomLevel < this.zoomLevelMax) {
                 this.zoomLevel++
             }
-        }
-        else if (this.gridWidth > this.gridWidthMax) {
+        } else if (this.gridWidth > this.gridWidthMax) {
             if (this.zoomLevel > this.zoomLevelMin) {
                 this.zoomLevel--
             }

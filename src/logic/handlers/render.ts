@@ -1,24 +1,24 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Sep. 8, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Sep. 8, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import { Point, Rect, Size } from "../common/types2D"
-import LogicCore from "../core"
-import LogicLayer from "../layer"
-import XPSChecker from "../utils/xps"
+import { Point, Rect, Size } from '../common/types2D'
+import LogicCore from '../core'
+import LogicLayer from '../layer'
+import XPSChecker from '../utils/xps'
 
 export default class RenderHandler {
     private _core: LogicCore
@@ -59,7 +59,10 @@ export default class RenderHandler {
     }
 
     public get stageRect(): Rect {
-        return new Rect(Point.zero(), new Size(this._stageWidth, this._stageHeight))
+        return new Rect(
+            Point.zero(),
+            new Size(this._stageWidth, this._stageHeight),
+        )
     }
 
     public get dpr(): number {
@@ -99,9 +102,10 @@ export default class RenderHandler {
         if (window.devicePixelRatio > 1.5) {
             this._dpr = 2
             console.warn('High resolution display detected, using 2x dpr.')
-            console.warn('High dpr mode is still under development, please report bugs.')
-        }
-        else {
+            console.warn(
+                'High dpr mode is still under development, please report bugs.',
+            )
+        } else {
             this._dpr = 1
         }
     }
@@ -110,9 +114,7 @@ export default class RenderHandler {
         if (!this._connected) return false
         const { _stageWidth: width, _stageHeight: height } = this
         if (width <= 0 || height <= 0) {
-            console.error(
-                `Invalid stage size [${width}, ${height}].`
-            )
+            console.error(`Invalid stage size [${width}, ${height}].`)
             return false
         }
         return true
@@ -123,7 +125,8 @@ export default class RenderHandler {
         if (!this._connected) return
         const stage = this._stage
         // configure stage size, with dpr considered
-        const { width: cssWidth, height: cssHeight } = stage.getBoundingClientRect()
+        const { width: cssWidth, height: cssHeight } =
+            stage.getBoundingClientRect()
         if (cssWidth <= 0 || cssHeight <= 0) return
         // resize stage element size
         stage.style.width = `${cssWidth}px`
@@ -172,7 +175,7 @@ export default class RenderHandler {
         // clear stage
         this._stageCtx.clearRect(0, 0, width, height)
         // first, paint background layers
-        this._backgroundLayers.forEach(layer => {
+        this._backgroundLayers.forEach((layer) => {
             if (layer.visible) {
                 const rendered = layer.onPaint(this._stageCtx)
                 if (rendered) {
@@ -184,7 +187,7 @@ export default class RenderHandler {
         if (this._dirty) {
             this._cacheCtx.clearRect(0, 0, width, height)
             this._xps.check('clear')
-            this._layers.forEach(layer => {
+            this._layers.forEach((layer) => {
                 if (layer.visible) {
                     const rendered = layer.onCache(this._cacheCtx)
                     if (rendered) {
@@ -200,7 +203,7 @@ export default class RenderHandler {
             this._xps.check('draw')
         }
         // last, paint foreground layers
-        this._foregroundLayers.forEach(layer => {
+        this._foregroundLayers.forEach((layer) => {
             if (layer.visible) {
                 const rendered = layer.onPaint(this._stageCtx)
                 if (rendered) {
@@ -286,10 +289,14 @@ export default class RenderHandler {
         }
         // check name duplication without blocking
         const checkDuplication = (layers: LogicLayer[]) => {
-            const names = layers.map(layer => layer.name)
-            const duplicates = names.filter((name, index) => names.indexOf(name) !== index)
+            const names = layers.map((layer) => layer.name)
+            const duplicates = names.filter(
+                (name, index) => names.indexOf(name) !== index,
+            )
             if (duplicates.length > 0) {
-                throw new Error(`Duplicated layer names detected: ${duplicates.join(', ')}`)
+                throw new Error(
+                    `Duplicated layer names detected: ${duplicates.join(', ')}`,
+                )
             }
         }
         setTimeout(() => {
@@ -344,19 +351,23 @@ export default class RenderHandler {
 
     public requireCache(tag: string, size?: Size): CanvasRenderingContext2D {
         if (this._tagCacheCanvasMap.has(tag)) {
-            return this._tagCacheCanvasMap.get(tag)!.getContext('2d') as CanvasRenderingContext2D
+            return this._tagCacheCanvasMap
+                .get(tag)!
+                .getContext('2d') as CanvasRenderingContext2D
         }
         const cache = this.createCache(size)
         this._tagCacheCanvasMap.set(tag, cache.canvas)
         return cache
     }
 
-    public destroyCache(cache: CanvasRenderingContext2D, fixed: boolean = false) {
+    public destroyCache(
+        cache: CanvasRenderingContext2D,
+        fixed: boolean = false,
+    ) {
         const canvas = cache.canvas
         if (fixed) {
             this._fixedSizeCacheCanvasSet.delete(canvas)
-        }
-        else {
+        } else {
             this._fullSizeCacheCanvasSet.delete(canvas)
         }
         cache = null as any

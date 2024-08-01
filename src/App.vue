@@ -20,19 +20,20 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue"
-import { Point, Rect, Size } from "@/logic/common/types2D"
-import Component from "@/objects/comp"
-import TextArea from "@/objects/text"
-import Designer from "./designer"
-import RenderNode from "./models/node"
-import RenderPort, { PortType, PortAspect } from "./models/port"
-import { uid_rt } from "./logic/common/uid"
+import { onMounted } from 'vue'
+import { Point, Rect, Size } from '@/logic/common/types2D'
+import Component from '@/objects/comp'
+import TextArea from '@/objects/text'
+import Designer from './designer'
+import RenderNode from './models/node'
+import RenderPort, { PortType, PortAspect } from './models/port'
+import { uid_rt } from './logic/common/uid'
 
-const testStr = 'Once upon a time, 在远古村庄中, lived a clever little fox named Lily. Their friendship taught them that with kindness and determination, anything is possible. 故事完美落幕，他们的友谊将永远闪耀在心中。'
+const testStr =
+    'Once upon a time, 在远古村庄中, lived a clever little fox named Lily. Their friendship taught them that with kindness and determination, anything is possible. 故事完美落幕，他们的友谊将永远闪耀在心中。'
 
 onMounted(() => {
-    const scene = document.getElementById("scene") as HTMLCanvasElement
+    const scene = document.getElementById('scene') as HTMLCanvasElement
 
     scene.style.width = window.innerWidth - 20 + 'px'
     scene.style.height = window.innerHeight - 20 + 'px'
@@ -49,8 +50,8 @@ onMounted(() => {
                 new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
             ],
             '',
-            'arc'
-        )
+            'arc',
+        ),
     )
     const c2 = new Component(
         new RenderNode(
@@ -62,8 +63,8 @@ onMounted(() => {
                 new RenderPort(3, PortType.OUT, PortAspect.RIGHT),
             ],
             '',
-            'ring'
-        )
+            'ring',
+        ),
     )
     const c3 = new Component(
         new RenderNode(
@@ -75,8 +76,8 @@ onMounted(() => {
                 new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
             ],
             '',
-            'fiber'
-        )
+            'fiber',
+        ),
     )
     const c4 = new Component(
         new RenderNode(
@@ -87,8 +88,8 @@ onMounted(() => {
                 new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
             ],
             '',
-            'Mzi'
-        )
+            'Mzi',
+        ),
     )
     const c5 = new Component(
         new RenderNode(
@@ -99,8 +100,8 @@ onMounted(() => {
                 new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
             ],
             '',
-            'sbend'
-        )
+            'sbend',
+        ),
     )
     const t1 = new TextArea(Rect.fromLTWH(30, 20, 16, 8), testStr, {
         size: 16,
@@ -136,7 +137,6 @@ onMounted(() => {
     console.log(core.listAllScopedEvents())
     console.log(core.listAllStackedEvents())
 })
-
 </script>
 
 <style scoped>

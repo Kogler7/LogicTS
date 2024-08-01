@@ -53,12 +53,12 @@ export class ObjectHandler {
             if (delta <= 0) {
                 // if there are objects deselected, we need to recalculate the select bound rect
                 const rects = [...this._selectedLogicObjects.set].map(
-                    (obj) => obj.rect
+                    (obj) => obj.rect,
                 )
                 this._selectedLogicBoundRect = Rect.unionAll(rects)
             }
             this._core.fire('select.logic-changed')
-        }
+        },
     )
 
     private _movableObjects: Map<uid, IMovable> = new Map()
@@ -140,25 +140,25 @@ export class ObjectHandler {
                 this._oldFramedLogicRect = Rect.zero()
                 this._oldFramedLogicObjectIds = new Set()
                 this._boundRectPressed = false
-            }
+            },
         )
         // register level 0 arena callback event listener to the core
         core.on(
             'mousedown',
             this._onMousePressedLogicLevel.bind(this),
-            -Infinity
+            -Infinity,
         )
         // register mouse down event listener to the top of the event stack
         core.on(
             'mousedown',
             this._checkIfMousePressedBoundRect.bind(this),
-            -Infinity
+            -Infinity,
         )
         // if this callback is fired, it means that no object is selected
         core.on(
             'mousedown',
             this._onMousePressedBackground.bind(this),
-            -Infinity
+            -Infinity,
         )
         // listen to mouse up event to stop moving objects
         core.on('mouseup', this._onMouseUp.bind(this), Infinity)
@@ -183,7 +183,7 @@ export class ObjectHandler {
         // recalculate the select bound rect after the objects are moved
         core.on('update-bound', () => {
             this._selectedLogicBoundRect = Rect.unionAll(
-                [...this._selectedLogicObjects.set].map((obj) => obj.rect)
+                [...this._selectedLogicObjects.set].map((obj) => obj.rect),
             )
         })
     }
@@ -247,14 +247,14 @@ export class ObjectHandler {
             this._oldFramedLogicObjectIds = this._logicArena.rectOccupiedSet(
                 oldRect,
                 -1,
-                true
+                true,
             )
         }
         // then we calculate the new framed object ids
         const newFramedObjectIds = this._logicArena.rectOccupiedSet(
             newRect,
             -1,
-            true
+            true,
         )
         // find the newly selected objects
         for (const id of newFramedObjectIds) {
@@ -386,7 +386,7 @@ export class ObjectHandler {
             this._core.popCursor(this._resizingCursorStyle)
             this._resizingCursorStyle =
                 this._resizingLogicObject[0].rect.posRelativeResizeDirection(
-                    start
+                    start,
                 ) + '-resize'
         } else {
             this._readyToResizeLogicObject = false
@@ -394,7 +394,7 @@ export class ObjectHandler {
             this._core.popCursor(this._resizingCursorStyle)
             this._resizingCursorStyle =
                 this._resizingNonLogicObject[0].rect.posRelativeResizeDirection(
-                    start
+                    start,
                 ) + '-resize'
         }
         this._core.setCursor(this._resizingCursorStyle)
@@ -464,7 +464,7 @@ export class ObjectHandler {
     private _clearSelectedNonLogicObject() {
         if (this._recentSelectedNonLogicId) {
             const obj = this._selectableObjects.get(
-                this._recentSelectedNonLogicId
+                this._recentSelectedNonLogicId,
             )
             if (obj) {
                 obj.selected = false
@@ -542,8 +542,8 @@ export class ObjectHandler {
                 const moved = obj.target.moveTo(
                     Point.plus(
                         obj.rect.pos,
-                        Point.minus(newPos, oldPos)
-                    ).round()
+                        Point.minus(newPos, oldPos),
+                    ).round(),
                 )
                 if (moved) {
                     const accept = obj.onMoving(oldPos, newPos)
@@ -562,11 +562,11 @@ export class ObjectHandler {
                 this._core.fire('movobj.non-logic.begin', newPos, e)
             }
             const obj = this._movableObjects.get(
-                this._recentSelectedNonLogicId!
+                this._recentSelectedNonLogicId!,
             )
             if (obj) {
                 obj.target.moveTo(
-                    Point.plus(obj.rect.pos, Point.minus(newPos, oldPos))
+                    Point.plus(obj.rect.pos, Point.minus(newPos, oldPos)),
                 )
                 const accept = obj.onMoving(oldPos, newPos)
                 this._movingNonLogicObjectState = accept as boolean
@@ -580,7 +580,7 @@ export class ObjectHandler {
             const newRect = Rect.resizeToIncludeBy(
                 obj.rect,
                 this._startResizingObjectPos,
-                pos
+                pos,
             ).round()
             if (!newRect.equals(obj.target)) {
                 obj.target = newRect
@@ -595,7 +595,7 @@ export class ObjectHandler {
             const newRect = Rect.resizeToIncludeBy(
                 obj.rect,
                 this._startResizingObjectPos,
-                pos
+                pos,
             ).round()
             if (!newRect.equals(obj.rect)) {
                 obj.target = newRect
@@ -605,7 +605,7 @@ export class ObjectHandler {
                     'resizobj.non-logic.step',
                     obj.rect,
                     obj.target,
-                    e
+                    e,
                 )
             }
             this._core.fire('resizobj.logic.ing', obj.rect, obj.target, e)
@@ -629,7 +629,7 @@ export class ObjectHandler {
                 !this._resizingNonLogicObject[0].rect.containsPoint(mousePos) &&
                 Rect.padding(
                     this._resizingNonLogicObject[0].rect,
-                    16
+                    16,
                 ).containsPoint(mousePos)
             ) {
                 this._setReadyToResizeObjects(mousePos, false)

@@ -1,27 +1,27 @@
 /**
-* Copyright (c) 2022 Beijing Jiaotong University
-* PhotLab is licensed under [Open Source License].
-* You can use this software according to the terms and conditions of the [Open Source License].
-* You may obtain a copy of [Open Source License] at: [https://open.source.license/]
-* 
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-* 
-* See the [Open Source License] for more details.
-* 
-* Author: Zhenjie Wei
-* Created: Sep. 26, 2023
-* Supported by: National Key Research and Development Program of China
-*/
+ * Copyright (c) 2022 Beijing Jiaotong University
+ * PhotLab is licensed under [Open Source License].
+ * You can use this software according to the terms and conditions of the [Open Source License].
+ * You may obtain a copy of [Open Source License] at: [https://open.source.license/]
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the [Open Source License] for more details.
+ *
+ * Author: Zhenjie Wei
+ * Created: Sep. 26, 2023
+ * Supported by: National Key Research and Development Program of China
+ */
 
-import LogicCore from "@/logic/core"
-import LogicLayer from "../logic/layer"
-import { Point, Direction } from "@/logic/common/types2D"
-import RenderPath from "@/models/path"
-import RenderPair from "@/models/pair"
-import { graphManager } from "@/plugins/graph"
-import { PortType } from "@/models/port"
+import LogicCore from '@/logic/core'
+import LogicLayer from '../logic/layer'
+import { Point, Direction } from '@/logic/common/types2D'
+import RenderPath from '@/models/path'
+import RenderPair from '@/models/pair'
+import { graphManager } from '@/plugins/graph'
+import { PortType } from '@/models/port'
 
 export default class LinkLayer extends LogicLayer {
     private _linking: boolean = false
@@ -54,7 +54,10 @@ export default class LinkLayer extends LogicLayer {
                     dir = 'DOWN'
                     break
             }
-            this.core?.fire('toast.show', `Direction of the link is LOCKED to ${dir}.`)
+            this.core?.fire(
+                'toast.show',
+                `Direction of the link is LOCKED to ${dir}.`,
+            )
         })
         core.on('keyup.shift', () => {
             this._dirLocked = false
@@ -86,7 +89,10 @@ export default class LinkLayer extends LogicLayer {
             this._currPath = new RenderPath(pair.position())
             this._currPath.addWayPoint(pair.position(), pair.dir)
             this.core?.fire('link.begin', pair)
-            this.core?.fire('toast.show', 'Hold down SHIFT to lock the direction of the link.')
+            this.core?.fire(
+                'toast.show',
+                'Hold down SHIFT to lock the direction of the link.',
+            )
         } else if (this._startPair?.compatibleWith(pair)) {
             this._currPath?.setLastWayPoint(pair.position(), pair.dir)
             this.core?.fire('link.add', this._startPair, pair, this._currPath)
@@ -115,7 +121,6 @@ export default class LinkLayer extends LogicLayer {
                 return false // stop propagation
             }
         }
-
     }
 
     private _onMouseMove(e: MouseEvent) {
