@@ -10,9 +10,12 @@
  *
  * See the [Open Source License] for more details.
  *
- * Author: Zhenjie Wei
+ * Original Author: Zhenjie Wei
  * Created: Oct. 24, 2023
  * Supported by: National Key Research and Development Program of China
+ * 
+ * Remake: Jiaxuan Han
+ * Date: Apr. 6, 2025
  */
 
 import LogicCore from './logic/core'
@@ -30,6 +33,8 @@ import CompLayer from './layers/comp'
 import IRenderable from './logic/mixins/renderable'
 import { IObject } from './logic/handlers/object'
 import { graphManager } from './plugins/graph'
+import { autoType } from 'd3'
+import { Rect } from './logic/common/types2D'
 
 export default class Designer {
     private _core: LogicCore
@@ -74,5 +79,13 @@ export default class Designer {
     public addComponent(comp: IObject) {
         this._core.register(comp)
         this._compLayer.addComponent(comp as unknown as IRenderable)
+    }
+
+    public reCalcLocate(layout: TextArea[][]){
+        layout.forEach((row, j)=>{
+            row.forEach((node, i) => {
+                node.recalcLoc(5 * i + 4, 5 * j + 4)
+            });
+        })
     }
 }

@@ -10,9 +10,13 @@
 *
 * See the [Open Source License] for more details.
 *
-* Author: Zhenjie Wei
+* Original Author: Zhenjie Wei
 * Created: Jul. 20, 2023
 * Supported by: National Key Research and Development Program of China
+* 
+* Remake: Jiaxuan Han
+* Date: Apr. 12, 2025
+* Tip: Add test graph by dividing nodes.
 -->
 
 <template>
@@ -31,6 +35,19 @@ import { uid_rt } from './logic/common/uid'
 
 const testStr =
     'Once upon a time, 在远古村庄中, lived a clever little fox named Lily. Their friendship taught them that with kindness and determination, anything is possible. 故事完美落幕，他们的友谊将永远闪耀在心中。'
+
+const dataNodeStyle = {
+    size: 20,
+    color: 'blue'
+}
+const actionNodeStyle = {
+    size: 20,
+    color: 'purple'
+}
+const subGraphNodeStyle = {
+    size: 30,
+    color: 'orange'
+}
 
 onMounted(() => {
     const scene = document.getElementById('scene') as HTMLCanvasElement
@@ -103,11 +120,39 @@ onMounted(() => {
             'sbend',
         ),
     )
-    const t1 = new TextArea(Rect.fromLTWH(30, 20, 16, 8), testStr, {
-        size: 16,
-        color: 'red',
-    })
 
+    var dn1 = new TextArea(Rect.fromLTWH(4, 4, 2, 2), "w", dataNodeStyle)
+    var dn2 = new TextArea(Rect.fromLTWH(8, 4, 2, 2), "x", dataNodeStyle)
+    var dn3 = new TextArea(Rect.fromLTWH(12, 4, 2, 2), "b", dataNodeStyle)
+    var dn4 = new TextArea(Rect.fromLTWH(16, 4, 2, 2), "y", dataNodeStyle)
+    var dn5 = new TextArea(Rect.fromLTWH(20, 4, 2, 2), "η", dataNodeStyle)
+
+    var an_s1 = new TextArea(Rect.fromLTWH(4, 8, 3, 3), "sub", actionNodeStyle)
+    var an_s2 = new TextArea(Rect.fromLTWH(8, 8, 3, 3), "sub", actionNodeStyle)
+    var an_s3 = new TextArea(Rect.fromLTWH(12, 8, 3, 3), "sub", actionNodeStyle)
+    var an_a = new TextArea(Rect.fromLTWH(8, 12, 3, 3), "add", actionNodeStyle)
+    var an_m1 = new TextArea(Rect.fromLTWH(4, 16, 3, 3), "mul", actionNodeStyle)
+    var an_m2 = new TextArea(Rect.fromLTWH(8, 16, 3, 3), "mul", actionNodeStyle)
+    var an_m3 = new TextArea(Rect.fromLTWH(12, 16, 3, 3), "mul", actionNodeStyle)
+    var an_m4 = new TextArea(Rect.fromLTWH(16, 16, 3, 3), "mul", actionNodeStyle)
+
+
+    const t1 = new Component(
+        new RenderNode(
+            uid_rt(),
+            Rect.fromLTWH(30, 30, 4, 4),
+            [
+                new RenderPort(2, PortType.IN, PortAspect.BOTTOM),
+                new RenderPort(2, PortType.OUT, PortAspect.RIGHT),
+            ],
+            '',
+            'sbend',
+        ),
+    )
+    
+    var sn1 = new TextArea(Rect.fromLTWH(10, 20, 4, 4), "L", subGraphNodeStyle)
+    
+    
     designer.addComponent(c1)
     designer.addComponent(c2)
     designer.addComponent(c3)
@@ -116,10 +161,35 @@ onMounted(() => {
 
     designer.addComponent(c4)
     designer.addComponent(c5)
+    designer.addComponent(t1)
 
     core.switchMemory(core.createMemory())
 
-    designer.addComponent(t1)
+    designer.addComponent(dn1)
+    designer.addComponent(dn2)
+    designer.addComponent(dn3)
+    designer.addComponent(dn4)
+    designer.addComponent(dn5)
+
+    designer.addComponent(an_s1)
+    designer.addComponent(an_s2)
+    designer.addComponent(an_s3)
+    designer.addComponent(an_a)
+    designer.addComponent(an_m1)
+    designer.addComponent(an_m2)
+    designer.addComponent(an_m3)
+    designer.addComponent(an_m4)
+
+    designer.addComponent(sn1)
+
+    let layout = [
+        [dn2, dn1, an_s1, an_s2],
+        [an_m1, dn3, an_m2, an_m3, dn5],
+        [an_a, dn4, an_m4],
+        [sn1, an_s3]
+    ]
+
+    designer.reCalcLocate(layout)
 
     console.log(core)
 

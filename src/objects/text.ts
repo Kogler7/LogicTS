@@ -13,6 +13,10 @@
  * Author: Zhenjie Wei
  * Created: Sep. 15, 2023
  * Supported by: National Key Research and Development Program of China
+ * 
+ * Remake: Jiaxuan Han
+ * Date: Apr. 12, 2025
+ * Tip: Add recalcLoc() to recalculate the location of TopLeft corner.
  */
 
 import { Point, Rect } from '@/logic/common/types2D'
@@ -28,6 +32,7 @@ export default class TextArea
     extends Flexible
     implements IRenderable, IDisposable
 {
+    [x: string]: any
     private _moving: boolean = false
     private _resizing: boolean = false
     private _arena: IObjectArena<Rect> | null = null
@@ -46,6 +51,12 @@ export default class TextArea
 
     dispose(): void {
         this.core!.destroyCache(this._cacheCtx!)
+    }
+
+    recalcLoc(locx: number, 
+        locy: number, 
+    ): void {
+        this._text.rect.moveTo(new Point(locx, locy))
     }
 
     private _updateCache() {
